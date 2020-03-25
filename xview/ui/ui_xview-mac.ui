@@ -42,11 +42,11 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_data">
      <attribute name="title">
-      <string>XAS data</string>
+      <string>Browse data</string>
      </attribute>
      <widget class="QWidget" name="verticalLayoutWidget">
       <property name="geometry">
@@ -60,9 +60,25 @@
       <layout class="QVBoxLayout" name="layout_data"/>
      </widget>
     </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Databroker</string>
+     </attribute>
+     <widget class="QWidget" name="verticalLayoutWidget_3">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>1581</width>
+        <height>816</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="layout_databroker"/>
+     </widget>
+    </widget>
     <widget class="QWidget" name="tab_project">
      <attribute name="title">
-      <string>XAS project</string>
+      <string>Project</string>
      </attribute>
      <widget class="QWidget" name="verticalLayoutWidget_2">
       <property name="geometry">

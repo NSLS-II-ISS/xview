@@ -21,9 +21,9 @@ from xas.file_io import load_binned_df_from_file
 
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('isstools', 'ui/ui_xview_data-mac.ui')
+    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('isstools', 'ui/ui_xview_data.ui')
+    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data.ui')
 
 
 class UIXviewData(*uic.loadUiType(ui_path)):

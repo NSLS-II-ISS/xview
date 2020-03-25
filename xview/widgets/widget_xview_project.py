@@ -21,9 +21,9 @@ from xas.file_io import load_binned_df_from_file
 from isstools.xasproject.xasproject import XASDataSet
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('isstools', 'ui/ui_xview_project-mac.ui')
+    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('isstools', 'ui/ui_xview_project.ui')
+    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project.ui')
 
 
 class UIXviewProject(*uic.loadUiType(ui_path)):
