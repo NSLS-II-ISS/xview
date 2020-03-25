@@ -1,7 +1,7 @@
 import sys
 import pkg_resources
 from PyQt5 import  QtWidgets, uic
-from isstools.xasproject.xasproject import XASProject
+from xview.xasproject.xasproject import XASProject
 
 from xview.widgets import widget_xview_data, widget_xview_project
 
