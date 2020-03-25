@@ -3,7 +3,7 @@ import pkg_resources
 from PyQt5 import  QtWidgets, uic
 from isstools.xasproject.xasproject import XASProject
 
-from isstools.widgets import widget_xview_data, widget_xview_project
+from xview.widgets import widget_xview_data, widget_xview_project
 
 if sys.platform == 'darwin':
     ui_path = pkg_resources.resource_filename('isstools', 'ui/ui_xview-mac.ui')
