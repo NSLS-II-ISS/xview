@@ -11,6 +11,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
     NavigationToolbar2QT as NavigationToolbar
 
 from sys import platform
+import datetime
+import os
 from pathlib import Path
 
 from matplotlib.figure import Figure
@@ -32,20 +34,58 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
         self.setupUi(self)
 
         self.db = db
-
+        self.range = 30
         self.parent = parent
-        self.push_show_latest.clicked.connect(self.show_latest)
-        self.counter=0;
 
+        self.counter=0
+        self.list_uids.itemSelectionChanged.connect(self.show_start_doc)
+        self.push_show_latest.clicked.connect(self.show_latest)
+        self.push_show_later.clicked.connect(self.show_later)
+        self.push_show_earlier.clicked.connect(self.show_earlier)
 
     def show_latest(self):
-        uids = []
-        for indx in range(50):
-            record = -(indx+1)-50 * self.counter
-            uid = self.db[record].start['uid']
-            uids.append(uid)
+        self.counter = 0
+        self.show_record_list()
 
-        self.list_uids.addItems(uids)
+    def show_record_list(self):
+        self.list_uids.clear()
+        self.uids = []
+        self.entries = []
+        print(f'Counter {self.counter}')
+        for indx in range(self.range):
+            record = -(indx+1)-self.range * self.counter
+            document = self.db[record]
+            uid = document.start['uid']
+            timestamp = datetime.datetime.fromtimestamp(document.start['time'])
+            try:
+                filename = os.path.basename(document.start['interp_filename'])
+            except:
+                filename = 'tuning scan'
+            time = timestamp.strftime('%m/%d/%y %H:%M:%S')
+            entry = f'{time}...{uid[0:6]}...{filename}'
+            self.entries.append(entry)
+            self.uids.append(uid)
+
+        self.list_uids.addItems(self.entries)
+
+    def show_later(self):
+        self.counter += 1
+        self.show_record_list()
+
+    def show_earlier(self):
+        if self.counter > 0:
+            self .counter -= 1
+            self.show_record_list()
+        else:
+            print('Stupido')
+
+
+    def show_start_doc(self):
+        indx = self.list_uids.currentIndex().row()
+        print(indx)
+        uid = self.uids[indx]
+        start_doc = self.db[uid].start
+        self.textEdit_start_doc.setText(str(start_doc))
 
 
 
