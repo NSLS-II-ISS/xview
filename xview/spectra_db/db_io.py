@@ -2,10 +2,20 @@ from event_model import compose_run
 from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
 from suitcase.mongo_normalized import Serializer
 import time as ttime
+import pkg_resources
 
+spectrum_start_path = pkg_resources.resource_filename('xview', 'spectra_db/spectrum_start.json')
+import json
+import jsonschema
 #metadata = {'Sample_name': 'Pt', 'compound': 'Pt', 'Element' : 'Pt', 'Edge' : 'L3', 'E0': 11564}
 # data = {'Energy': [1, 2, 3], 'mu_norm': [0.1, 0.2, 0.3]}
 # timestamps = {'Energy': 0, 'mu_norm': 0}
+
+def validate_schema(input_dict, schema_path):
+    with open(schema_path) as f:
+        contents = json.load(f)
+    jsonschema.validate(input_dict, contents)
+
 
 def generate_timestamps(keys):
     timestamps = {}
@@ -18,6 +28,7 @@ def generate_timestamps(keys):
 def _save_spectrum_to_db(serializer, metadata, data):
     bundle = compose_run(metadata=metadata)
     output_start = bundle.start_doc
+    validate_schema(output_start, spectrum_start_path)
     serializer('start', output_start)
     bundle_descriptor = bundle.compose_descriptor(data_keys={'Energy': {'dtype': 'array', 'source': '', 'shape': [-1]},
                                                              'mu_norm': {'dtype': 'array', 'source': '', 'shape': [-1]}},
