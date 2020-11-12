@@ -1,0 +1,10 @@
+{
+	"type": "object",
+	"description": "spectrum",
+	"properties": {
+    "Energy":  { "type": "array", "items": {"type": "number"}},
+	"mu_norm": { "type": "array", "items": {"type": "number"}}
+	},
+	"required" : ["Energy", "mu_norm"],
+	"additionalProperties" : false
+}

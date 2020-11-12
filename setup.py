@@ -52,9 +52,8 @@ setup(
     include_package_data=True,
     package_data={
         'xview': [
-            # When adding files here, remember to update MANIFEST.in as well,
-            # or else they will not be included in the distribution on PyPI!
-            # 'path/to/data_file',
+            'xview/spectra_db/*.json',
+            'xview/ui/*.ui',
         ]
     },
     install_requires=requirements,
