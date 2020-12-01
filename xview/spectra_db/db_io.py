@@ -1,12 +1,19 @@
+from bluesky_live.run_builder import RunBuilder
+
+
+
 from event_model import compose_run
-from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
 from suitcase.mongo_normalized import Serializer
 import time as ttime
 import pkg_resources
-
 spectrum_start_path = pkg_resources.resource_filename('xview', 'spectra_db/spectrum_start.json')
 import json
 import jsonschema
+
+
+
+
+
 #metadata = {'Sample_name': 'Pt', 'compound': 'Pt', 'Element' : 'Pt', 'Edge' : 'L3', 'E0': 11564}
 # data = {'Energy': [1, 2, 3], 'mu_norm': [0.1, 0.2, 0.3]}
 # timestamps = {'Energy': 0, 'mu_norm': 0}
@@ -26,21 +33,21 @@ def generate_timestamps(keys):
 
 
 def _save_spectrum_to_db(serializer, metadata, data):
-    bundle = compose_run(metadata=metadata)
-    output_start = bundle.start_doc
-    validate_schema(output_start, spectrum_start_path)
-    serializer('start', output_start)
-    bundle_descriptor = bundle.compose_descriptor(data_keys={'Energy': {'dtype': 'array', 'source': '', 'shape': [-1]},
-                                                             'mu_norm': {'dtype': 'array', 'source': '', 'shape': [-1]}},
-                                                  name='primary')
-    output_descriptor = bundle_descriptor.descriptor_doc
-    serializer('descriptor', output_descriptor)
-    output_event = bundle_descriptor.compose_event(data=data,
-                                                   timestamps=generate_timestamps(data.keys()))
-    serializer('event', output_event)
-    output_stop = bundle.compose_stop()
-    serializer('stop', output_stop)
-    return output_start['uid']
+
+    with RunBuilder(metadata=metadata) as builder:
+        # builder = RunBuilder(metadata=metadata)
+        run = builder.get_run()
+        builder.add_stream(
+            "primary",
+            data=data
+        )
+    # builder.close()
+    for name, doc in run._document_cache._ordered:
+        # TODO Use public API when available.
+        serializer(name, doc)
+    return run.metadata['start']['uid']
+
+
 
 
 uri = "mongodb://xf08id-ca1:27017/dev_analyzed_data"
@@ -51,8 +58,23 @@ def save_spectrum_to_db(metadata, data):
     return uid
 
 
+
+
+# from distutils.version import LooseVersion
+# if LooseVersion(databroker.__version__) >= LooseVersion('1.0.0'):
+#     from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
+#     def get_spectrum_catalog():
+#         return BlueskyMongoCatalog(uri, uri)
+# else:
 def get_spectrum_catalog():
-    return BlueskyMongoCatalog(uri, uri)
+    from databroker import Broker
+    return Broker.named("iss_dev_analyzed_data")
+
+
+        # return BlueskyMongoCatalog(uri, uri)
+
+
+
 
 
 
