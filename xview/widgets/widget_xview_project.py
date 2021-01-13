@@ -480,12 +480,10 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             selection = self.list_project.selectedIndexes()
             if selection != []:
 
-                # mu = self.parent.project._datasets[selection[0].row()].mu
+                mu = self.parent.project._datasets[selection[0].row()].mu
                 energy_master = self.parent.project._datasets[selection[0].row()].energy
-                mu_array = np.zeros([len(selection), len(energy_master)])
-                print(mu_array.size, energy_master.size)
-
-                # energy = self.parent.project._datasets[selection[0].row()].energy
+                mu_array = np.zeros([len(selection), len(mu)])
+                energy = self.parent.project._datasets[selection[0].row()].energy
                 md = ['# merged \n']
                 for indx, obj in enumerate(selection):
                     energy = self.parent.project._datasets[selection[indx].row()].energy
@@ -495,10 +493,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     md.append('# ' + self.parent.project._datasets[selection[indx].row()].filename + '\n')
 
                 mu_merged = np.average(mu_array, axis=0)
-
-                print(mu_array.size, energy_master.size, mu_merged.size)
-
-                merged = XASDataSet(name='merge', md=md, energy=energy_master, mu=mu_merged, filename='',
+                merged = XASDataSet(name='merge', md=md, energy=energy, mu=mu_merged, filename='',
                                                datatype='processed')
                 merged.header = "".join(merged.md)
                 self.parent.project.append(merged)

@@ -4,7 +4,7 @@ import numpy as np
 import pkg_resources
 
 from PyQt5 import  QtWidgets, QtCore, uic
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QThread
 from PyQt5.QtWidgets import QMenu
 from PyQt5.Qt import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, \
@@ -13,6 +13,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from sys import platform
 import datetime
 import os
+import time
 from pathlib import Path
 
 from matplotlib.figure import Figure
@@ -20,6 +21,7 @@ from isstools.xasproject.xasproject import XASDataSet
 from isstools.elements.figure_update import update_figure
 from isstools.dialogs.BasicDialogs import message_box
 from xas.file_io import load_binned_df_from_file
+
 
 
 if platform == 'darwin':
@@ -42,6 +44,7 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
         self.push_show_latest.clicked.connect(self.show_latest)
         self.push_show_later.clicked.connect(self.show_later)
         self.push_show_earlier.clicked.connect(self.show_earlier)
+        self.thread = check_status(self)
 
     def show_latest(self):
         self.counter = 0
@@ -87,6 +90,13 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
         start_doc = self.db[uid].start
         self.textEdit_start_doc.setText(str(start_doc))
 
+class check_status(QThread):
+    def run(self):
+        count = 0
+        while count < 5:
+            time.sleep(2)
+            print(f'A Increasing {count}')
+            count += 1
 
 
 
