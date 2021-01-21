@@ -15,9 +15,11 @@ from os.path import isfile, join, getmtime
 import numpy as np
 import matplotlib.pyplot as plt
 from xas.file_io import load_interpolated_df_from_file
+
+
 #metadata = {'Sample_name': 'Pt', 'compound': 'Pt', 'Element' : 'Pt', 'Edge' : 'L3', 'E0': 11564}
 # data = {'Energy': [1, 2, 3], 'mu_norm': [0.1, 0.2, 0.3]}
-# timestamps = {'Energy': 0, 'mu_norm': 0}
+
 
 def validate_schema(input_dict, schema_path):
     with open(schema_path) as f:
