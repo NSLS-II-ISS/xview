@@ -15,6 +15,7 @@ import datetime
 import os
 import time
 from pathlib import Path
+import pandas as pd
 
 from matplotlib.figure import Figure
 from isstools.xasproject.xasproject import XASDataSet
@@ -38,13 +39,21 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
         self.db = db
         self.range = 30
         self.parent = parent
+        self.uid_list = []
 
         self.counter=0
-        self.list_uids.itemSelectionChanged.connect(self.show_start_doc)
+        #self.tableWidget_data.selectionChanged.connect(self.show_start_doc)
         self.push_show_latest.clicked.connect(self.show_latest)
         self.push_show_later.clicked.connect(self.show_later)
         self.push_show_earlier.clicked.connect(self.show_earlier)
+        self.push_search.clicked.connect(self.search_db)
         self.thread = check_status(self)
+
+        self.tableWidget_data.setColumnCount(3)
+        self.tableWidget_data.setHorizontalHeaderLabels(['Date', 'UID', 'Filename'])
+        self.tableWidget_data.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.tableWidget_data.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+
 
     def show_latest(self):
         self.counter = 0
@@ -54,6 +63,7 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
         self.list_uids.clear()
         self.uids = []
         self.entries = []
+
         print(f'Counter {self.counter}')
         for indx in range(self.range):
             record = -(indx+1)-self.range * self.counter
@@ -70,6 +80,53 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
             self.uids.append(uid)
 
         self.list_uids.addItems(self.entries)
+
+
+    def search_db(self):
+        self.uid_list  = list(self.db.v2.search({'element': self.lineEdit_element.text()}))
+        self.get_records()
+
+    def get_records(self):
+        timestamps = []
+        filenames = []
+        uids =self.uid_list[0:100]
+        for uid in uids:
+            document = self.db[uid]
+            timestamps.append(datetime.datetime.fromtimestamp(document.start['time']))
+            try:
+                filenames.append(document.start['interp_filename'])
+            except:
+                filenames.append('empty')
+        self.record = pd.DataFrame(list(zip(timestamps, uids, filenames)),columns = ['Timestamp','Uid','Filename'])
+        self.populate_table()
+
+    def populate_table(self):
+        ptable_row_index = 0
+        for jj in range(len(self.record)):
+            self.tableWidget_data.insertRow(ptable_row_index)
+            self.tableWidget_data.setItem(ptable_row_index, 0,
+                                              QtWidgets.QTableWidgetItem(
+                                                  str(self.record['Timestamp'][jj]).split('.')[0]))
+            self.tableWidget_data.setItem(ptable_row_index, 1,
+                                              QtWidgets.QTableWidgetItem(
+                                                  self.record['Uid'][jj][:6]))
+            self.tableWidget_data.setItem(ptable_row_index, 2,
+                                              QtWidgets.QTableWidgetItem(
+                                                  os.path.basename(self.record['Filename'][jj])))
+
+            ptable_row_index += 1
+
+        for jj in range(3):
+            self.tableWidget_data.resizeColumnToContents(jj)
+
+
+
+
+
+
+
+
+
 
     def show_later(self):
         self.counter += 1
