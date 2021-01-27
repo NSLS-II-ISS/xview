@@ -92,26 +92,29 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.working_folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select a folder", self.working_folder,
                                                                         QtWidgets.QFileDialog.ShowDirsOnly)
         if self.working_folder:
-            self.settings.setValue('working_folder', self.working_folder)
-            if len(self.working_folder) > 50:
-                self.label_working_folder.setText(self.working_folder[1:20] + '...' + self.working_folder[-30:])
-            else:
-                self.label_working_folder.setText(self.working_folder)
-            self.get_file_list()
+            self.set_working_folder()
+
+    def set_working_folder(self):
+        self.settings.setValue('working_folder', self.working_folder)
+        if len(self.working_folder) > 50:
+            self.label_working_folder.setText(self.working_folder[1:20] + '...' + self.working_folder[-30:])
+        else:
+            self.label_working_folder.setText(self.working_folder)
+        self.get_file_list()
 
     def get_file_list(self):
         if self.working_folder:
             self.list_data.clear()
 
-            files_bin = [f for f in os.listdir(self.working_folder) if f.endswith('.dat')]
+            self.file_list = [f for f in os.listdir(self.working_folder) if f.endswith('.dat')]
 
             if self.comboBox_sort_files_by.currentText() == 'Name':
-                files_bin.sort()
+                self.file_list.sort()
             elif self.comboBox_sort_files_by.currentText() == 'Time':
-                files_bin.sort(key=lambda x: os.path.getmtime('{}/{}'.format(self.working_folder, x)))
+                self.file_list.sort(key=lambda x: os.path.getmtime('{}/{}'.format(self.working_folder, x)))
 
-                files_bin.reverse()
-            self.list_data.addItems(files_bin)
+                self.file_list.reverse()
+            self.list_data.addItems(self.file_list)
 
     def select_files_to_plot(self):
         df, header = load_binned_df_from_file(f'{self.working_folder}/{self.list_data.currentItem().text()}')
@@ -223,6 +226,21 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 self.parent.statusBar().showMessage('Scans added to the project successfully')
         else:
             message_box('Error', 'Select numerator and denominator columns')
+
+
+    def set_selection(self, name):
+        index = 0
+        names = []
+        for index in range(self.list_data.count()):
+            names.append(self.list_data.item(index).text().split('.')[0])
+        try:
+            index = names.index(name)
+            print(index)
+        except:
+            print('not found')
+        if index:
+            self.list_data.setCurrentRow(index)
+
 
 
 
