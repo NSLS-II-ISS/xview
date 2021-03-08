@@ -78,6 +78,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             self.pushButton_push_norm_param_to_all.clicked.connect(self.push_param)
             self.pushButton_push_bkg_param_to_selected.clicked.connect(self.push_param)
             self.pushButton_push_bkg_param_to_all.clicked.connect(self.push_param)
+            self.pushButton_push_ft_param_to_selected.clicked.connect(self.push_param)
+            self.pushButton_push_ft_param_to_all.clicked.connect(self.push_param)
 
             self.pushButton_truncate_below.clicked.connect(self.truncate)
             self.pushButton_truncate_above.clicked.connect(self.truncate)
@@ -184,10 +186,12 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 'kmin',
                 'kmax',
                 'clamp_lo',
-                'clamp_hi'
+                'clamp_hi',
+                'rbkg',
+                'kweight'
             ]
             self.ft_param_list = [
-
+                'kmin_ft', 'kmax_ft'
             ]
             selection = self.list_project.selectedIndexes()
             if selection != []:
@@ -212,6 +216,15 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 if sender_object == 'pushButton_push_bkg_param_to_all':
                     for indx, obj in enumerate(self.parent.project):
                         for param in self.bkg_param_list:
+                            setattr(self.parent.project[indx], param, getattr(ds_master, param))
+                if sender_object == 'pushButton_push_ft_param_to_selected':
+                    for indx, obj in enumerate(selection):
+                        ds = self.parent.project[selection[indx].row()]
+                        for param in self.ft_param_list:
+                            setattr(ds, param, getattr(ds_master, param))
+                if sender_object == 'pushButton_push_ft_param_to_all':
+                    for indx, obj in enumerate(self.parent.project):
+                        for param in self.ft_param_list:
                             setattr(self.parent.project[indx], param, getattr(ds_master, param))
 
         # here we begin to work on the second pre-processing tab

@@ -1462,6 +1462,9 @@
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_range_k_hi">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>484</x>
@@ -1631,6 +1634,9 @@
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_range_k_lo">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>413</x>
@@ -1938,6 +1944,9 @@
     </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_force_range_k">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>484</x>
@@ -2086,6 +2095,44 @@
      </rect>
     </property>
     <layout class="QVBoxLayout" name="layout_plot_project"/>
+   </widget>
+   <widget class="QPushButton" name="pushButton_push_ft_param_to_selected">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>320</y>
+      <width>25</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>&gt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_push_ft_param_to_all">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>320</y>
+      <width>30</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>25</width>
+      <height>25</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>40</width>
+      <height>45</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>&gt;&gt;</string>
+    </property>
    </widget>
   </widget>
   <action name="action_open_project">
