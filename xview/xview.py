@@ -12,8 +12,9 @@ else:
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview.ui')
 
 class XviewGui(*uic.loadUiType(ui_path)):
-    def __init__(self, db=None,*args, **kwargs):
+    def __init__(self, db=None, db_proc=None, *args, **kwargs):
         self.db = db
+        self.db_proc = db_proc
         super().__init__(*args, **kwargs)
         self.setupUi(self)
 
@@ -22,7 +23,7 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_data = widget_xview_data.UIXviewData(db=db, parent=self)
         self.layout_data.addWidget(self.widget_data)
 
-        self.widget_project = widget_xview_project.UIXviewProject(parent=self)
+        self.widget_project = widget_xview_project.UIXviewProject(db_proc=db_proc, parent=self)
         self.layout_project.addWidget(self.widget_project)
 
         self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)

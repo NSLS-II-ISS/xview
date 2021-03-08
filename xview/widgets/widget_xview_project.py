@@ -27,11 +27,12 @@ else:
 
 
 class UIXviewProject(*uic.loadUiType(ui_path)):
-        def __init__(self, parent=None,*args, **kwargs):
+        def __init__(self, db_proc=None, parent=None,*args, **kwargs):
 
             super().__init__(*args, **kwargs)
             self.setupUi(self)
             self.parent = parent
+            self.db_proc = db_proc
             self.parent.project.datasets_changed.connect(self.update_project_list)
             self.addCanvas()
             self.label_E0.setText("E<sub>0</sub>")
