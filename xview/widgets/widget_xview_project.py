@@ -44,19 +44,22 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             self.push_plot_project_in_K.clicked.connect(self.plot_project_in_K)
             self.push_plot_project_in_R.clicked.connect(self.plot_project_in_R)
 
-
-
-            self.lineEdit_e0.textEdited.connect(self.update_ds_params)
-            self.lineEdit_preedge_lo.textEdited.connect(self.update_ds_params)
-            self.lineEdit_preedge_hi.textEdited.connect(self.update_ds_params)
-            self.lineEdit_postedge_lo.textEdited.connect(self.update_ds_params)
-            self.lineEdit_postedge_hi.textEdited.connect(self.update_ds_params)
-            self.lineEdit_spline_lo.textEdited.connect(self.update_ds_params)
-            self.lineEdit_spline_hi.textEdited.connect(self.update_ds_params)
-            self.lineEdit_clamp_lo.textEdited.connect(self.update_ds_params)
-            self.lineEdit_clamp_hi.textEdited.connect(self.update_ds_params)
-            self.lineEdit_k_ft_lo.textEdited.connect(self.update_ds_params)
-            self.lineEdit_k_ft_hi.textEdited.connect(self.update_ds_params)
+            foos = [self.lineEdit_e0.textEdited,
+                    self.lineEdit_preedge_lo.textEdited,
+                    self.lineEdit_preedge_hi.textEdited,
+                    self.lineEdit_postedge_lo.textEdited,
+                    self.lineEdit_postedge_hi.textEdited,
+                    self.lineEdit_spline_lo.textEdited,
+                    self.lineEdit_spline_hi.textEdited,
+                    self.lineEdit_clamp_lo.textEdited,
+                    self.lineEdit_clamp_hi.textEdited,
+                    self.lineEdit_clamp_hi.textEdited,
+                    self.lineEdit_rbkg.textEdited,
+                    self.spinBox_k_weight.valueChanged,
+                    self.lineEdit_k_ft_lo.textEdited,
+                    self.lineEdit_k_ft_hi.textEdited]
+            for foo in foos:
+                foo.connect(self.update_ds_params)
 
             self.pushButton_e0_set.clicked.connect(self.set_ds_params_from_plot)
             self.pushButton_preedge_lo_set.clicked.connect(self.set_ds_params_from_plot)
@@ -99,6 +102,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 'lineEdit_spline_hi':   'kmax',
                 'lineEdit_clamp_lo':    'clamp_lo',
                 'lineEdit_clamp_hi':    'clamp_hi',
+                'lineEdit_rbkg':        'rbkg',
+                'spinBox_k_weight':     'kweight',
                 'lineEdit_truncate_at': 'truncate',
                 'lineEdit_k_ft_lo':     'kmin_ft',
                 'lineEdit_k_ft_hi':     'kmax_ft'
@@ -217,7 +222,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             selection = self.list_project.selectedIndexes()
             if selection != []:
                 index = selection[0].row()
-                ds = self.parent.xasproject[index]
+                ds = self.parent.project[index]
                 try:
                     self.parent.statusBar().showMessage(sender_object)
                     print(getattr(self, sender_object).text())
@@ -322,15 +327,24 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.parent.project.removeDatasetIndex(index.row())
                 self.parent.statusBar().showMessage('Datasets deleted')
 
+
+        def _normalize_ds_in_full(self, ds, window=None):
+            ds.normalize_force()
+            ds.extract_chi_force()
+            ds.extract_ft_force(window=window)
+
         def plot_project_in_E(self):
             if self.list_project.selectedIndexes():
                 update_figure([self.figure_project.ax], self.toolbar_project, self.canvas_project)
 
                 for index in self.list_project.selectedIndexes():
                     ds = self.parent.project[index.row()]
-                    ds.normalize_force()
-                    ds.extract_chi_force()
-                    ds.extract_ft()
+                    self._normalize_ds_in_full(ds)
+                    # ds.normalize_force()
+                    # ds.extract_chi_force()
+                    # ds.extract_ft_force()
+                    # ds.extract_ft()
+                    ds.extract_ft_force()
                     energy = ds.energy
                     if self.radioButton_mu_xasproject.isChecked():
                         data = ds.mu
@@ -367,8 +381,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 window = self.set_ft_window()
                 for index in self.list_project.selectedIndexes():
                     ds = self.parent.project[index.row()]
-                    ds.extract_chi_force()
-                    ds.extract_ft_force(window=window)
+                    self._normalize_ds_in_full(ds, window=window)
 
                     data = ds.chi * np.power(ds.k, self.spinBox_k_weight.value())
 
@@ -392,7 +405,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 window = self.set_ft_window()
                 for index in self.list_project.selectedIndexes():
                     ds = self.parent.project[index.row()]
-                    ds.extract_ft_force(window=window)
+                    # ds.extract_ft_force(window=window)
+                    self._normalize_ds_in_full(ds, window=window)
                     if self.checkBox_show_chir_mag.checkState():
                         self.figure_project.ax.plot(ds.r, ds.chir_mag, label=ds.name)
                     if self.checkBox_show_chir_im.checkState():

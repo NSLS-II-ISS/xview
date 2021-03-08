@@ -139,11 +139,11 @@ class UIXviewData(*uic.loadUiType(ui_path)):
 
     def update_current_numerator(self):
         self.last_numerator= self.comboBox_data_numerator.currentText()
-        print(f'Chanhin last num to {self.last_numerator}')
+        # print(f'Chanhin last num to {self.last_numerator}')
 
     def update_current_denominator(self):
         self.last_denominator= self.comboBox_data_denominator.currentText()
-        print(f'I am there {self.last_denominator}')
+        # print(f'I am there {self.last_denominator}')
 
     def plot_xas_data(self):
         selected_items = (self.list_data.selectedItems())
