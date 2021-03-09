@@ -19,6 +19,9 @@ from isstools.elements.figure_update import update_figure
 from xas.xray import k2e, e2k
 from xas.file_io import load_binned_df_from_file
 from isstools.xasproject.xasproject import XASDataSet
+from xview.dialogs.MetadataDialog import MetadataDialog
+from xview.spectra_db.db_io import save_spectrum_to_db
+
 
 if platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project-mac.ui')
@@ -138,6 +141,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             remove_action = menu.addAction("&Remove")
             save_datasets_as_text_action = menu.addAction("&Save datasets as text")
             combine_and_save_datasets_as_text_action = menu.addAction("&Combine and save datasets as text")
+            save_dataset_to_database_action = menu.addAction("&Save to processed database")
             parentPosition = self.list_project.mapToGlobal(QtCore.QPoint(0, 0))
             menu.move(parentPosition + QPos)
             action = menu.exec_()
@@ -151,6 +155,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.combine_and_save_datasets_as_text()
             elif action == save_datasets_as_text_action:
                 self.save_datasets_as_text()
+            elif action == save_dataset_to_database_action:
+                self.save_datasets_to_database()
 
         def xas_project_double_clicked(self):
             selection = self.list_project.selectedIndexes()
@@ -584,6 +590,35 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 if ok:
                     self.parent.project._datasets[selection[0].row()].name = new_name
                     self.parent.project.project_changed()
+
+        def save_datasets_to_database(self):
+            selection = self.list_project.selectedIndexes()
+            if selection != []:
+
+                for indx, _ in enumerate(selection):
+                    ds = self.parent.project._datasets[selection[indx].row()]
+                    sample_name = ds.name
+                    compound = ds.name
+                    element = ds.md['element']
+                    edge = ds.md['edge']
+                    e0 = ds.e0
+                    reference = 0
+                    dlg = MetadataDialog(sample_name, compound, element, edge, e0, reference, parent=self)
+                    if dlg.exec_():
+                        sample_name, compound, element, edge, e0, reference = dlg.getValues()
+                        metadata = {'Sample_name': sample_name,
+                                    'compound': compound,
+                                    'Element' : element,
+                                    'Edge' : edge,
+                                    'E0': e0,
+                                    'Reference' : reference}
+                        try:
+                            mu_norm = ds.flat.values
+                        except AttributeError:
+                            mu_norm = ds.flat
+                        energy = ds.energy
+                        data = {'Energy': energy, 'mu_norm': mu_norm}
+                        save_spectrum_to_db(metadata, data)
 
         def truncate(self):
             sender = QObject()
