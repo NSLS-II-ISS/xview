@@ -603,15 +603,17 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     edge = ds.md['edge']
                     e0 = ds.e0
                     reference = 0
-                    dlg = MetadataDialog(sample_name, compound, element, edge, e0, reference, parent=self)
-                    if dlg.exec_():
-                        sample_name, compound, element, edge, e0, reference = dlg.getValues()
+                    uid = ds.md['uid']
+                    self._dlg = MetadataDialog(sample_name, compound, element, edge, e0, reference, uid, parent=self)
+                    if self._dlg.exec_():
+                        sample_name, compound, element, edge, e0, reference, uid = self._dlg.getValues()
                         metadata = {'Sample_name': sample_name,
                                     'compound': compound,
                                     'Element' : element,
                                     'Edge' : edge,
                                     'E0': e0,
-                                    'Reference' : reference}
+                                    'Reference' : reference,
+                                    'ISS_DB_uid' : uid}
                         try:
                             mu_norm = ds.flat.values
                         except AttributeError:
