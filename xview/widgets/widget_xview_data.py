@@ -193,6 +193,26 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.canvas.draw_idle()
 
 
+    # def merge_xas_data(self):
+    #     selected_items = (self.list_data.selectedItems())
+    #     energy_key = 'energy'
+    #     i0_key, it_key, ir_key, if_key = 'i0', 'it', 'ir', 'iff'
+    #
+    #
+    #
+    #     mus_array = []
+    #     for i, item in enumerate(selected_items):
+    #
+    #         path = f'{self.working_folder}/{item.text()}'
+    #         print('merging', path)
+    #         df, header = load_binned_df_from_file(path)
+    #         if i == 0:
+    #             enregy_master = df[energy_key]
+    #             mus_array_all =
+
+
+
+
     def add_data_to_project(self):
         if self.comboBox_data_numerator.currentText() != -1 and self.comboBox_data_denominator.currentText() != -1:
             for item in self.list_data.selectedItems():

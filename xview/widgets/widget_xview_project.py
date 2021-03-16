@@ -510,6 +510,22 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         np.savetxt(fid, table)
                         fid.close()
 
+        def _intersect_metadata_dicts(self, md_list):
+
+            keys1 = [k for k in md_list[0].keys()]
+            values1 = [md_list[0][k] for k in keys1]
+            keys_intersected = []
+            for k in keys1:
+                this_key_cond = True
+                for each_md in md_list:
+                    if each_md[k] not in values1:
+                        this_key_cond = False
+                if this_key_cond:
+                    keys_intersected.append(k)
+            md_common = {k : md_list[0][k] for k in md_list[0].keys() if k in keys_intersected}
+            return md_common
+
+
         def merge_datasets(self):
             selection = self.list_project.selectedIndexes()
             if selection != []:
@@ -518,18 +534,30 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 energy_master = self.parent.project._datasets[selection[0].row()].energy
                 mu_array = np.zeros([len(selection), len(mu)])
                 energy = self.parent.project._datasets[selection[0].row()].energy
-                md = ['# merged \n']
+                merged_files_string = ['# merged files\n']
+                merged_uids_string = ['# merged uids\n']
+                merged_uids_string_for_md = []
+                merged_md_list = []
                 for indx, obj in enumerate(selection):
                     energy = self.parent.project._datasets[selection[indx].row()].energy
                     mu = self.parent.project._datasets[selection[indx].row()].mu.mu
                     mu = np.interp(energy_master, energy, mu)
                     mu_array[indx, :] = mu
-                    md.append('# ' + self.parent.project._datasets[selection[indx].row()].filename + '\n')
+                    merged_md_list.append(self.parent.project._datasets[selection[indx].row()].md)
+                    merged_files_string.append('# ' + self.parent.project._datasets[selection[indx].row()].filename + '\n')
+                    this_uid = self.parent.project._datasets[selection[indx].row()].md['uid']
+                    merged_uids_string.append('# ' + this_uid + '\n')
+                    merged_uids_string_for_md.append(this_uid)
+
 
                 mu_merged = np.average(mu_array, axis=0)
-                merged = XASDataSet(name='merge', md=md, energy=energy, mu=mu_merged, filename='',
+                merged = XASDataSet(name='merge', md=merged_files_string, energy=energy_master, mu=mu_merged, filename='',
                                                datatype='processed')
                 merged.header = "".join(merged.md)
+                merged.md = self._intersect_metadata_dicts(merged_md_list)
+                merged.md['merged files'] = "".join(merged_files_string)
+                merged.md['merged uids'] = "".join(merged_uids_string)
+                merged.md['uid'] = str(merged_uids_string_for_md)
                 self.parent.project.append(merged)
                 self.parent.project.project_changed()
 
