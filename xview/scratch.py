@@ -161,17 +161,6 @@ if __name__ == "__main__":
 ##########
 
 
-from qtpy.QtWidgets import (
-    QApplication,
-    QPushButton,
-    QVBoxLayout,
-    QLabel,
-    QMainWindow,
-    QWidget,
-)
-from bluesky_widgets.models.search import Search
-from bluesky_widgets.qt.search import QtSearch
-from bluesky_live.event import Event
 
 
 class SearchAndOpen(Search):

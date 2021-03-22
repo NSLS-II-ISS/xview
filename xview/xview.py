@@ -2,7 +2,6 @@ import sys
 import pkg_resources
 from PyQt5 import  QtWidgets, uic
 from xview.xasproject.xasproject import XASProject
-
 from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker
 
 if sys.platform == 'darwin':
@@ -26,8 +25,11 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_project = widget_xview_project.UIXviewProject(db_proc=db_proc, parent=self)
         self.layout_project.addWidget(self.widget_project)
 
-        self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
+        # self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
+        self.widget_databroker = widget_xview_databroker.get_SearchAndOpen_widget()
         self.layout_databroker.addWidget(self.widget_databroker)
+
+
 
 
 
