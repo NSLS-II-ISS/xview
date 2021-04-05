@@ -211,9 +211,10 @@ class QtSearchListWithButton(QWidget):
     Combines the QtSearches widget with a button.
     """
 
-    def __init__(self, model: SearchAndOpen, *args, **kwargs):
+    def __init__(self, model: SearchAndOpen, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = model
+        self.parent = parent
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.addWidget(QtSearch(model))
@@ -233,6 +234,28 @@ class QtSearchListWithButton(QWidget):
         Include a list of BlueskyRuns corresponding to the current selection.
         """
         self.model.events.open(selected_runs=self.model.selected_runs)
+        run_list = self.model.selected_runs
+
+
+        if len(run_list) == 1:
+            try:
+                run_start = run_list[0].metadata['start']
+                folder = os.path.dirname(run_start['interp_filename'])
+                print(folder)
+                self.parent.widget_data.working_folder = folder
+                self.parent.widget_data.set_working_folder()
+                self.parent.tabWidget.setCurrentWidget(self.parent.tabWidget.widget(0))
+                filename = os.path.basename(run_start['interp_filename']).split('.')[0]
+                print(f'Filename {filename}')
+                self.parent.widget_data.set_selection(filename)
+            except KeyError:
+                print('This DB entry is not an experiment')
+        else:
+            print('Multiple scan selection is not supported yet')
+
+
+
+
 
 headings = (
     "Unique ID",
@@ -279,12 +302,12 @@ catalog = databroker.catalog[CATALOG_NAME]
 
 # search_model = SearchAndOpen(catalog, columns=columns)
 
-def get_SearchAndOpen_widget():
+def get_SearchAndOpen_widget(parent):
     search_model = SearchAndOpen(catalog, columns=columns)
-    search_model.events.open.connect(
-        lambda event: print(f"Opening {event.selected_runs}")
-    )
-    search_view = QtSearchListWithButton(search_model)
+    # search_model.events.open.connect(
+    #     lambda event: print(f"Opening {event.selected_runs}")
+    # )
+    search_view = QtSearchListWithButton(search_model, parent)
     return search_view
 
 

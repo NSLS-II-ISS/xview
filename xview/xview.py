@@ -26,7 +26,7 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.layout_project.addWidget(self.widget_project)
 
         # self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
-        self.widget_databroker = widget_xview_databroker.get_SearchAndOpen_widget()
+        self.widget_databroker = widget_xview_databroker.get_SearchAndOpen_widget(parent=self)
         self.layout_databroker.addWidget(self.widget_databroker)
 
 
