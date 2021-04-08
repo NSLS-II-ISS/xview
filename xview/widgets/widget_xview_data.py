@@ -68,6 +68,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         menu = QMenu()
         plot_action = menu.addAction("&Plot")
         add_to_project_action = menu.addAction("&Add to project")
+        # merge_action = menu.addAction("&Add to project")
         parentPosition = self.list_data.mapToGlobal(QtCore.QPoint(0, 0))
         menu.move(parentPosition+QPos)
         action = menu.exec_()
