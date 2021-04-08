@@ -171,13 +171,6 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
 
 
 
-
-
-
-
-
-
-
     #     self.push_refresh_folder.clicked.connect(self.get_file_list)
     #     self.push_plot_data.clicked.connect(self.plot_xas_data)
     #     self.comboBox_sort_files_by.addItems(['Time','Name'])
