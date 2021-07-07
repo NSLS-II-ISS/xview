@@ -18,7 +18,7 @@ from isstools.xasproject.xasproject import XASDataSet
 from isstools.elements.figure_update import update_figure
 from isstools.dialogs.BasicDialogs import message_box
 from xas.file_io import load_binned_df_from_file
-
+import copy
 
 if platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
@@ -216,13 +216,14 @@ class UIXviewData(*uic.loadUiType(ui_path)):
 
     def add_data_to_project(self):
         if self.comboBox_data_numerator.currentText() != -1 and self.comboBox_data_denominator.currentText() != -1:
-            for item in self.list_data.selectedItems():
+            for i, item in enumerate(self.list_data.selectedItems()):
                 filepath = str(Path(self.working_folder) / Path(item.text()))
 
                 name = Path(filepath).resolve().stem
                 df, header = load_binned_df_from_file(filepath)
-                uid = header[header.find('UID:')+5:header.find('\n', header.find('UID:'))]
-
+                uid_idx1 = header.find('Scan.uid:') + 10
+                uid_idx2 = header.find('\n', header.find('Scan.uid:'))
+                uid = header[uid_idx1 : uid_idx2]
 
                 try:
                     md = self.db[uid]['start']
@@ -240,8 +241,18 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 if self.checkBox_inv_bin.checkState():
                     mu = -mu
                 mu=np.array(mu)
+                # print(i)
+                if i == 0:
+                    ds = XASDataSet(name=name, md=md, energy=df['energy'], mu=mu, filename=filepath,
+                                    datatype='experiment')
+                    ds_first = ds
+                    # print('make first dataset')
+                else:
+                    ds = XASDataSet(name=name, md=md, energy=df['energy'], mu=mu, filename=filepath,
+                                    datatype='experiment', process=False, xasdataset=ds_first)
+                    # print('copying parameters from the first dataset')
 
-                ds = XASDataSet(name=name,md=md,energy=df['energy'],mu=mu, filename=filepath,datatype='experiment')
+                # print('dataset energy id', ds.energy)
                 ds.header = header
                 self.parent.project.append(ds)
                 self.parent.statusBar().showMessage('Scans added to the project successfully')

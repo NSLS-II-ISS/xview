@@ -540,7 +540,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 merged_md_list = []
                 for indx, obj in enumerate(selection):
                     energy = self.parent.project._datasets[selection[indx].row()].energy
-                    mu = self.parent.project._datasets[selection[indx].row()].mu.mu
+                    # mu = self.parent.project._datasets[selection[indx].row()].mu.mu
+                    mu = self.parent.project._datasets[selection[indx].row()].mu
                     mu = np.interp(energy_master, energy, mu)
                     mu_array[indx, :] = mu
                     merged_md_list.append(self.parent.project._datasets[selection[indx].row()].md)
