@@ -3,7 +3,7 @@ import pkg_resources
 from PyQt5 import  QtWidgets, uic
 from xview.xasproject.xasproject import XASProject
 
-from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker
+from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker, widget_xview_rixs
 
 if sys.platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview-mac.ui')
@@ -29,7 +29,8 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
         self.layout_databroker.addWidget(self.widget_databroker)
 
-
+        self.widget_rixs = widget_xview_rixs.UIXviewRIXS(db=db, parent=self)
+        self.layout_rixs.addWidget(self.widget_rixs)
 
     def  set_figure(self, axis, canvas, label_x='', label_y=''):
         axis.legend(fontsize='small')

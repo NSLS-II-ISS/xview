@@ -536,7 +536,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 energy = self.parent.project._datasets[selection[0].row()].energy
                 merged_files_string = ['# merged files\n']
                 merged_uids_string = ['# merged uids\n']
-                merged_uids_string_for_md = []
+                # merged_uids_string_for_md = []
                 merged_md_list = []
                 for indx, obj in enumerate(selection):
                     energy = self.parent.project._datasets[selection[indx].row()].energy
@@ -545,9 +545,9 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     mu_array[indx, :] = mu
                     merged_md_list.append(self.parent.project._datasets[selection[indx].row()].md)
                     merged_files_string.append('# ' + self.parent.project._datasets[selection[indx].row()].filename + '\n')
-                    this_uid = self.parent.project._datasets[selection[indx].row()].md['uid']
-                    merged_uids_string.append('# ' + this_uid + '\n')
-                    merged_uids_string_for_md.append(this_uid)
+                    # this_uid = self.parent.project._datasets[selection[indx].row()].md['uid']
+                    # merged_uids_string.append('# ' + this_uid + '\n')
+                    # merged_uids_string_for_md.append(this_uid)
 
 
                 mu_merged = np.average(mu_array, axis=0)
@@ -556,8 +556,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 merged.header = "".join(merged.md)
                 merged.md = self._intersect_metadata_dicts(merged_md_list)
                 merged.md['merged files'] = "".join(merged_files_string)
-                merged.md['merged uids'] = "".join(merged_uids_string)
-                merged.md['uid'] = str(merged_uids_string_for_md)
+                # merged.md['merged uids'] = "".join(merged_uids_string)
+                # merged.md['uid'] = str(merged_uids_string_for_md)
                 self.parent.project.append(merged)
                 self.parent.project.project_changed()
 
@@ -708,5 +708,10 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 window['tapering'] = 1
 
             return window
+
+
+########
+
+
 
 
