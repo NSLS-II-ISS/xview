@@ -374,8 +374,12 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         else:
                             data = ds.norm
                     if self.checkBox_deriv.isChecked():
+                        if not hasattr(ds, 'mu_deriv'):
+                            ds.deriv()
                         data = ds.mu_deriv
                         energy = ds.energy_deriv
+
+
                     self.figure_project.ax.plot(energy, data, label=ds.name)
 
                     if self.radioButton_mu_xasproject.isChecked() and not self.checkBox_deriv.isChecked():
@@ -538,21 +542,24 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 merged_uids_string = ['# merged uids\n']
                 # merged_uids_string_for_md = []
                 merged_md_list = []
+                name_list = []
                 for indx, obj in enumerate(selection):
-                    energy = self.parent.project._datasets[selection[indx].row()].energy
+                    _ds = self.parent.project._datasets[selection[indx].row()]
+                    energy = _ds.energy
                     # mu = self.parent.project._datasets[selection[indx].row()].mu.mu
-                    mu = self.parent.project._datasets[selection[indx].row()].mu
+                    mu = _ds.mu
                     mu = np.interp(energy_master, energy, mu)
                     mu_array[indx, :] = mu
-                    merged_md_list.append(self.parent.project._datasets[selection[indx].row()].md)
-                    merged_files_string.append('# ' + self.parent.project._datasets[selection[indx].row()].filename + '\n')
+                    merged_md_list.append(_ds.md)
+                    merged_files_string.append('# ' + _ds.filename + '\n')
+                    name_list.append(_ds.name)
                     # this_uid = self.parent.project._datasets[selection[indx].row()].md['uid']
                     # merged_uids_string.append('# ' + this_uid + '\n')
                     # merged_uids_string_for_md.append(this_uid)
 
-
+                merged_name = os.path.commonprefix(name_list) + ' merged'
                 mu_merged = np.average(mu_array, axis=0)
-                merged = XASDataSet(name='merge', md=merged_files_string, energy=energy_master, mu=mu_merged, filename='',
+                merged = XASDataSet(name=merged_name, md=merged_files_string, energy=energy_master, mu=mu_merged, filename='',
                                                datatype='processed')
                 merged.header = "".join(merged.md)
                 merged.md = self._intersect_metadata_dicts(merged_md_list)
