@@ -10,6 +10,19 @@ from PyQt5.Qt import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, \
     NavigationToolbar2QT as NavigationToolbar
 
+from qtpy.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QVBoxLayout,
+    QLabel,
+    QMainWindow,
+    QWidget,
+)
+from bluesky_widgets.models.search import Search
+from bluesky_widgets.qt.search import QtSearch
+from bluesky_live.event import Event
+
+
 from sys import platform
 import datetime
 import os
@@ -168,6 +181,134 @@ class UIXviewDatabroker(*uic.loadUiType(ui_path)):
             filename = os.path.basename(document.start['interp_filename']).split('.')[0]
             print(f'Filename {filename}')
             self.parent.widget_data.set_selection(filename)
+
+
+
+#######
+
+class SearchAndOpen(Search):
+    """
+    Extend Search model with a signal for when a result is "opened".
+
+    In your application, you might have multiple such signals associated with
+    different buttons.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.events.add(open=Event)
+
+    @property
+    def selected_runs(self):
+        # This property would be useful in general and should be added to the
+        # Search itself in bluesky-widgets.
+        return [self.results[uid] for uid in self.selected_uids]
+
+class QtSearchListWithButton(QWidget):
+    """
+    A view for SearchAndOpen.
+
+    Combines the QtSearches widget with a button.
+    """
+
+    def __init__(self, model: SearchAndOpen, parent, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model = model
+        self.parent = parent
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(QtSearch(model))
+
+        # Add a button that does something with the currently-selected Runs
+        # when you click it.
+        self._open_button = QPushButton("Open")
+        layout.addWidget(self._open_button)
+
+        # Register a callback (slot) for the button qt click signal.
+        self._open_button.clicked.connect(self._on_click_open_button)
+
+    def _on_click_open_button(self):
+        """
+        Receive the Qt signal and emit a bluesky-widgets one.
+
+        Include a list of BlueskyRuns corresponding to the current selection.
+        """
+        self.model.events.open(selected_runs=self.model.selected_runs)
+        run_list = self.model.selected_runs
+
+
+        if len(run_list) == 1:
+            try:
+                run_start = run_list[0].metadata['start']
+                folder = os.path.dirname(run_start['interp_filename'])
+                print(folder)
+                self.parent.widget_data.working_folder = folder
+                self.parent.widget_data.set_working_folder()
+                self.parent.tabWidget.setCurrentWidget(self.parent.tabWidget.widget(0))
+                filename = os.path.basename(run_start['interp_filename']).split('.')[0]
+                print(f'Filename {filename}')
+                self.parent.widget_data.set_selection(filename)
+            except KeyError:
+                print('This DB entry is not an experiment')
+        else:
+            print('Multiple scan selection is not supported yet')
+
+
+
+
+
+headings = (
+    "Unique ID",
+    "Transient Scan ID",
+    "Plan Name",
+    "Scanning",
+    "Start Time",
+    "Duration",
+    "Exit Status",
+)
+
+def extract_results_row_from_run(run):
+    """
+    Given a BlueskyRun, format a row for the table of search results.
+    """
+    from datetime import datetime
+
+    metadata = run.describe()["metadata"]
+    start = metadata["start"]
+    stop = metadata["stop"]
+    start_time = datetime.fromtimestamp(start["time"])
+    if stop is None:
+        str_duration = "-"
+    else:
+        duration = datetime.fromtimestamp(stop["time"]) - start_time
+        str_duration = str(duration)
+        str_duration = str_duration[: str_duration.index(".")]
+    return (
+        start["uid"][:8],
+        start.get("scan_id", "-"),
+        start.get("plan_name", "-"),
+        str(start.get("motors", "-")),
+        start_time.strftime("%Y-%m-%d %H:%M:%S"),
+        str_duration,
+        "-" if stop is None else stop["exit_status"],
+    )
+
+columns = (headings, extract_results_row_from_run)
+
+CATALOG_NAME = "iss"
+import databroker
+
+catalog = databroker.catalog[CATALOG_NAME]
+
+# search_model = SearchAndOpen(catalog, columns=columns)
+
+def get_SearchAndOpen_widget(parent):
+    search_model = SearchAndOpen(catalog, columns=columns)
+    # search_model.events.open.connect(
+    #     lambda event: print(f"Opening {event.selected_runs}")
+    # )
+    search_view = QtSearchListWithButton(search_model, parent)
+    return search_view
 
 
 
