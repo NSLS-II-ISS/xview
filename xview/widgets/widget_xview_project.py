@@ -490,7 +490,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         filename = ds.name
                         if ret == 0:
                             xx = ds.energy
-                            yy = np.array(ds.mu.mu)
+                            yy = np.array(ds.mu)
                             keys = '# energy(eV), mu(E)\n'
                         elif ret == 1:
                             xx = ds.energy
@@ -589,7 +589,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     ds = ds_list[indx]
                     energy = ds.energy
                     if ret == 0:
-                        yy = np.array(ds.mu.mu)
+                        yy = np.array(ds.mu)
                         keys = '# energy(eV), mu(E)\n'
                     elif ret == 1:
                         yy = ds.norm

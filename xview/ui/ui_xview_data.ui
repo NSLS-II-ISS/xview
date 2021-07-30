@@ -31,7 +31,7 @@
       <x>5</x>
       <y>115</y>
       <width>316</width>
-      <height>581</height>
+      <height>491</height>
      </rect>
     </property>
    </widget>
@@ -40,7 +40,6 @@
      <rect>
       <x>10</x>
       <y>80</y>
-
       <width>61</width>
       <height>20</height>
      </rect>
@@ -271,6 +270,26 @@
      <string>Select folder</string>
     </property>
    </widget>
+   <widget class="QListWidget" name="listWidget_data_numerator">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>620</y>
+      <width>61</width>
+      <height>81</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listWidget_data_denominator">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>620</y>
+      <width>61</width>
+      <height>81</height>
+     </rect>
+    </property>
+   </widget>
    <zorder>label_5</zorder>
    <zorder>verticalLayoutWidget</zorder>
    <zorder>list_data</zorder>
@@ -290,6 +309,8 @@
    <zorder>label_4</zorder>
    <zorder>push_refresh_folder</zorder>
    <zorder>push_select_folder</zorder>
+   <zorder>listWidget_data_numerator</zorder>
+   <zorder>listWidget_data_denominator</zorder>
   </widget>
   <action name="action_open_project">
    <property name="text">

@@ -55,6 +55,8 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.binned_data = []
         self.last_numerator= ''
         self.last_denominator = ''
+        self.listWidget_data_numerator.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
         # Persistent settings
         self.settings = QSettings('ISS Beamline', 'Xview')
         self.working_folder = self.settings.value('working_folder', defaultValue='/GPFS/xf08id/User Data', type=str)
@@ -124,6 +126,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         for key in keys:
             if not (('timestamp' in key) or ('energy' in key)):
                 refined_keys.append(key)
+
         self.keys = refined_keys
         if self.keys != self.last_keys:
             self.last_keys = self.keys
@@ -131,6 +134,13 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             self.comboBox_data_denominator.clear()
             self.comboBox_data_numerator.insertItems(0, self.keys)
             self.comboBox_data_denominator.insertItems(0, self.keys)
+
+
+            self.listWidget_data_numerator.clear()
+            self.listWidget_data_denominator.clear()
+            self.listWidget_data_numerator.addItems(self.keys)
+            self.listWidget_data_denominator.addItems(self.keys)
+
             if self.last_numerator!= '' and self.last_numerator in self.keys:
                 indx = self.comboBox_data_numerator.findText(self.last_numerator)
                 self.comboBox_data_numerator.setCurrentIndex(indx)
@@ -153,8 +163,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             message_box('Warning','Please select numerator and denominator')
             return
 
-        self.last_numerator = self.comboBox_data_numerator.currentText()
-        self.last_denominator = self.comboBox_data_denominator.currentText()
+        #self.last_numerator = self.comboBox_data_numerator.currentText()
+        #self.last_denominator = self.comboBox_data_denominator.currentText()
+
+
 
         energy_key = 'energy'
 
@@ -164,8 +176,19 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             path = f'{self.working_folder}/{i.text()}'
             print(path)
             df, header = load_binned_df_from_file(path)
-            numer = np.array(df[self.comboBox_data_numerator.currentText()])
-            denom = np.array(df[self.comboBox_data_denominator.currentText()])
+
+
+
+            #numer = np.array(df[self.comboBox_data_numerator.currentText()])
+            #denom = np.array(df[self.comboBox_data_denominator.currentText()])
+            numerators_names = [b.text() for b in self.listWidget_data_numerator.selectedItems()]
+            denominator_name = self.listWidget_data_denominator.selectedItems()[0].text()
+
+            numerators =[]
+            for num in numerators_names:
+                numerators.append(np.array(df[num]))
+
+
             if self.checkBox_ratio.checkState():
                 y_label = (f'{self.comboBox_data_numerator.currentText()} / '
                            f'{self.comboBox_data_denominator.currentText()}')
@@ -222,7 +245,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 name = Path(filepath).resolve().stem
                 df, header = load_binned_df_from_file(filepath)
 
-
+                md = {}
                 try:
                     uid_idx1 = header.find('Scan.uid:') + 10
                     uid_idx2 = header.find('\n', header.find('Scan.uid:'))
@@ -231,9 +254,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 except KeyError:
                     uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
                     md = self.db[uid]['start']
-                else:
+
+                if md == {}:
                     print('Metadata not found')
-                    md={}
+
 
                 df = df.sort_values('energy')
                 num_key = self.comboBox_data_numerator.currentText()
