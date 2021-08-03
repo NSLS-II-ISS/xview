@@ -490,7 +490,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         filename = ds.name
                         if ret == 0:
                             xx = ds.energy
-                            yy = np.array(ds.mu.mu)
+                            yy = np.array(ds.mu)
                             keys = '# energy(eV), mu(E)\n'
                         elif ret == 1:
                             xx = ds.energy
@@ -553,10 +553,10 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     merged_md_list.append(_ds.md)
                     merged_files_string.append('# ' + _ds.filename + '\n')
                     name_list.append(_ds.name)
-                    this_uid = _ds.md['uid']
-                        # self.parent.project._datasets[selection[indx].row()].md['uid']
-                    # merged_uids_string.append('# ' + this_uid + '\n')
-                    merged_uids_string_for_md.append(this_uid)
+                    # this_uid = _ds.md['uid']
+                    #     # self.parent.project._datasets[selection[indx].row()].md['uid']
+                    # # merged_uids_string.append('# ' + this_uid + '\n')
+                    # merged_uids_string_for_md.append(this_uid)
 
                 merged_name = os.path.commonprefix(name_list) + ' merged'
                 mu_merged = np.average(mu_array, axis=0)
@@ -566,7 +566,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 merged.md = self._intersect_metadata_dicts(merged_md_list)
                 merged.md['merged files'] = "".join(merged_files_string)
                 # merged.md['merged uids'] = "".join(merged_uids_string)
-                merged.md['uid'] = str(merged_uids_string_for_md)
+                #merged.md['uid'] = str(merged_uids_string_for_md)
                 self.parent.project.append(merged)
                 self.parent.project.project_changed()
 
@@ -589,7 +589,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     ds = ds_list[indx]
                     energy = ds.energy
                     if ret == 0:
-                        yy = np.array(ds.mu.mu)
+                        yy = np.array(ds.mu)
                         keys = '# energy(eV), mu(E)\n'
                     elif ret == 1:
                         yy = ds.norm
