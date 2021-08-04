@@ -135,11 +135,6 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             self.listWidget_data_numerator.addItems(self.keys)
             self.listWidget_data_denominator.addItems(self.keys)
 
-
-
-
-
-
     def plot_xas_data(self):
         selected_items = (self.list_data.selectedItems())
         update_figure([self.figure_data.ax], self.toolbar, self.canvas)
@@ -164,16 +159,17 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 numerators.append(np.array(df[numerator_name]))
 
             denominator = np.array(df[denominator_name])
-            y_label =''
             spectra = []
+            y_label = ''
             for numerator, numerator_name in zip(numerators, numerators_names):
                 if self.checkBox_ratio.checkState():
-                    y_label += f'{numerator_name}/{denominator_name} '
+                    mu_channel = f'{numerator_name}/{denominator_name}'
+
                     spectra.append(numerator/denominator)
                 else:
-                    y_label = (f'{numerator_name}')
+                    mu_channel = f'{numerator_name}'
                     spectra.append(numerator)
-
+                y_label += mu_channel
             for spectrum in spectra:
                 if self.checkBox_log_bin.checkState():
                     spectrum = np.log(spectrum)
@@ -181,17 +177,17 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 if self.checkBox_inv_bin.checkState():
                     spectrum = -spectrum
                     y_label = f'- {y_label}'
-                self.figure_data.ax.plot(df[energy_key], spectrum)
+                self.figure_data.ax.plot(df[energy_key], spectrum, label = i.text().split('.')[0] + ' ' + mu_channel)
 
             self.parent.set_figure(self.figure_data.ax,self.canvas,label_x='Energy (eV)', label_y=y_label)
 
             self.figure_data.ax.set_xlabel('Energy (eV)')
             self.figure_data.ax.set_ylabel(y_label)
-            last_trace = self.figure_data.ax.get_lines()[len(self.figure_data.ax.get_lines()) - 1]
-            patch = mpatches.Patch(color=last_trace.get_color(), label=i.text())
-            handles.append(patch)
+            # last_trace = self.figure_data.ax.get_lines()[len(self.figure_data.ax.get_lines()) - 1]
+            # patch = mpatches.Patch(color=last_trace.get_color(), label=i.text())
+            # handles.append(patch)
 
-        self.figure_data.ax.legend(handles=handles)
+        self.figure_data.ax.legend()
         self.figure_data.tight_layout()
         self.canvas.draw_idle()
 
