@@ -30,11 +30,9 @@ import time
 from pathlib import Path
 import pandas as pd
 
-from matplotlib.figure import Figure
-from isstools.xasproject.xasproject import XASDataSet
-from isstools.elements.figure_update import update_figure
+
 from isstools.dialogs.BasicDialogs import message_box
-from xas.file_io import load_binned_df_from_file
+
 
 
 
