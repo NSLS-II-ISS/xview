@@ -39,8 +39,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.comboBox_sort_files_by.addItems(['Time','Name'])
         self.comboBox_sort_files_by.currentIndexChanged.connect((self.get_file_list))
 
-        self.comboBox_data_numerator.currentIndexChanged.connect(self.update_current_numerator)
-        self.comboBox_data_denominator.currentIndexChanged.connect(self.update_current_denominator)
+
 
         self.list_data.itemSelectionChanged.connect(self.select_files_to_plot)
         self.push_add_to_project.clicked.connect(self.add_data_to_project)
@@ -55,6 +54,8 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.binned_data = []
         self.last_numerator= ''
         self.last_denominator = ''
+        self.listWidget_data_numerator.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
         # Persistent settings
         self.settings = QSettings('ISS Beamline', 'Xview')
         self.working_folder = self.settings.value('working_folder', defaultValue='/GPFS/xf08id/User Data', type=str)
@@ -124,37 +125,22 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         for key in keys:
             if not (('timestamp' in key) or ('energy' in key)):
                 refined_keys.append(key)
+
         self.keys = refined_keys
         if self.keys != self.last_keys:
             self.last_keys = self.keys
-            self.comboBox_data_numerator.clear()
-            self.comboBox_data_denominator.clear()
-            self.comboBox_data_numerator.insertItems(0, self.keys)
-            self.comboBox_data_denominator.insertItems(0, self.keys)
-            if self.last_numerator!= '' and self.last_numerator in self.keys:
-                indx = self.comboBox_data_numerator.findText(self.last_numerator)
-                self.comboBox_data_numerator.setCurrentIndex(indx)
-            if self.last_denominator!= '' and self.last_denominator in self.keys:
-                indx = self.comboBox_data_denominator.findText(self.last_denominator)
-                self.comboBox_data_denominator.setCurrentIndex(indx)
 
-    def update_current_numerator(self):
-        self.last_numerator= self.comboBox_data_numerator.currentText()
-        # print(f'Chanhin last num to {self.last_numerator}')
-
-    def update_current_denominator(self):
-        self.last_denominator= self.comboBox_data_denominator.currentText()
-        # print(f'I am there {self.last_denominator}')
+            self.listWidget_data_numerator.clear()
+            self.listWidget_data_denominator.clear()
+            self.listWidget_data_numerator.addItems(self.keys)
+            self.listWidget_data_denominator.addItems(self.keys)
 
     def plot_xas_data(self):
         selected_items = (self.list_data.selectedItems())
         update_figure([self.figure_data.ax], self.toolbar, self.canvas)
-        if self.comboBox_data_numerator.currentText() == -1 or self.comboBox_data_denominator.currentText() == -1:
+        if not(self.listWidget_data_denominator.selectedItems() and self.listWidget_data_numerator.selectedItems()):
             message_box('Warning','Please select numerator and denominator')
             return
-
-        self.last_numerator = self.comboBox_data_numerator.currentText()
-        self.last_denominator = self.comboBox_data_denominator.currentText()
 
         energy_key = 'energy'
 
@@ -164,32 +150,44 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             path = f'{self.working_folder}/{i.text()}'
             print(path)
             df, header = load_binned_df_from_file(path)
-            numer = np.array(df[self.comboBox_data_numerator.currentText()])
-            denom = np.array(df[self.comboBox_data_denominator.currentText()])
-            if self.checkBox_ratio.checkState():
-                y_label = (f'{self.comboBox_data_numerator.currentText()} / '
-                           f'{self.comboBox_data_denominator.currentText()}')
-                spectrum = numer/denom
-            else:
-                y_label = (f'{self.comboBox_data_numerator.currentText()}')
-                spectrum = numer
-            if self.checkBox_log_bin.checkState():
-                spectrum = np.log(spectrum)
-                y_label = f'ln ({y_label})'
-            if self.checkBox_inv_bin.checkState():
-                spectrum = -spectrum
-                y_label = f'- {y_label}'
 
-            self.figure_data.ax.plot(df[energy_key], spectrum)
+            denominator_name = self.listWidget_data_denominator.selectedItems()[0].text()
+            numerators_names = [b.text() for b in self.listWidget_data_numerator.selectedItems()]
+
+            numerators =[]
+            for numerator_name in numerators_names:
+                numerators.append(np.array(df[numerator_name]))
+
+            denominator = np.array(df[denominator_name])
+            spectra = []
+            y_label = ''
+            for numerator, numerator_name in zip(numerators, numerators_names):
+                if self.checkBox_ratio.checkState():
+                    mu_channel = f'{numerator_name}/{denominator_name}'
+
+                    spectra.append(numerator/denominator)
+                else:
+                    mu_channel = f'{numerator_name}'
+                    spectra.append(numerator)
+                y_label += mu_channel
+            for spectrum in spectra:
+                if self.checkBox_log_bin.checkState():
+                    spectrum = np.log(spectrum)
+                    y_label = f'ln ({y_label})'
+                if self.checkBox_inv_bin.checkState():
+                    spectrum = -spectrum
+                    y_label = f'- {y_label}'
+                self.figure_data.ax.plot(df[energy_key], spectrum, label = i.text().split('.')[0] + ' ' + mu_channel)
+
             self.parent.set_figure(self.figure_data.ax,self.canvas,label_x='Energy (eV)', label_y=y_label)
 
             self.figure_data.ax.set_xlabel('Energy (eV)')
             self.figure_data.ax.set_ylabel(y_label)
-            last_trace = self.figure_data.ax.get_lines()[len(self.figure_data.ax.get_lines()) - 1]
-            patch = mpatches.Patch(color=last_trace.get_color(), label=i.text())
-            handles.append(patch)
+            # last_trace = self.figure_data.ax.get_lines()[len(self.figure_data.ax.get_lines()) - 1]
+            # patch = mpatches.Patch(color=last_trace.get_color(), label=i.text())
+            # handles.append(patch)
 
-        self.figure_data.ax.legend(handles=handles)
+        self.figure_data.ax.legend()
         self.figure_data.tight_layout()
         self.canvas.draw_idle()
 
@@ -215,53 +213,70 @@ class UIXviewData(*uic.loadUiType(ui_path)):
 
 
     def add_data_to_project(self):
-        if self.comboBox_data_numerator.currentText() != -1 and self.comboBox_data_denominator.currentText() != -1:
-            for i, item in enumerate(self.list_data.selectedItems()):
-                filepath = str(Path(self.working_folder) / Path(item.text()))
+        if not(self.listWidget_data_denominator.selectedItems() and self.listWidget_data_numerator.selectedItems()):
+            message_box('Warning', 'Please select numerator and denominator')
+            return
 
-                name = Path(filepath).resolve().stem
-                df, header = load_binned_df_from_file(filepath)
+        ds_first = None
+        for item in self.list_data.selectedItems():
+            filepath = str(Path(self.working_folder) / Path(item.text()))
+            name = Path(filepath).resolve().stem
+            df, header = load_binned_df_from_file(filepath)
 
+            md = {}
+            try:
+                uid_idx1 = header.find('Scan.uid:') + 10
+                uid_idx2 = header.find('\n', header.find('Scan.uid:'))
+                uid = header[uid_idx1: uid_idx2]
+                md = self.db[uid]['start']
+            except KeyError:
+                uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
+                md = self.db[uid]['start']
 
-                try:
-                    uid_idx1 = header.find('Scan.uid:') + 10
-                    uid_idx2 = header.find('\n', header.find('Scan.uid:'))
-                    uid = header[uid_idx1: uid_idx2]
-                    md = self.db[uid]['start']
-                except KeyError:
-                    uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
-                    md = self.db[uid]['start']
+            if md == {}:
+                print('Metadata not found')
+
+            df = df.sort_values('energy')
+            denominator_name = self.listWidget_data_denominator.selectedItems()[0].text()
+            numerators_names = [b.text() for b in self.listWidget_data_numerator.selectedItems()]
+
+            numerators = []
+            for numerator_name in numerators_names:
+                numerators.append(np.array(df[numerator_name]))
+            denominator = np.array(df[denominator_name])
+
+            for numerator, numerator_name in zip(numerators, numerators_names):
+                if self.checkBox_ratio.checkState():
+                    spectrum = (numerator / denominator)
+                    mu_channel = f'{numerator_name}/{denominator_name}'
                 else:
-                    print('Metadata not found')
-                    md={}
-
-                df = df.sort_values('energy')
-                num_key = self.comboBox_data_numerator.currentText()
-                den_key = self.comboBox_data_denominator.currentText()
-                mu = df[num_key] / df[den_key]
+                    spectrum = numerator
+                    mu_channel = f'{numerator_name}/{denominator_name}'
 
                 if self.checkBox_log_bin.checkState():
-                    mu = np.log(mu)
+                    spectrum = np.log(spectrum)
                 if self.checkBox_inv_bin.checkState():
-                    mu = -mu
-                mu=np.array(mu)
-                # print(i)
-                if i == 0:
-                    ds = XASDataSet(name=name, md=md, energy=df['energy'], mu=mu, filename=filepath,
-                                    datatype='experiment')
-                    ds_first = ds
-                    # print('make first dataset')
-                else:
-                    ds = XASDataSet(name=name, md=md, energy=df['energy'], mu=mu, filename=filepath,
-                                    datatype='experiment', process=False, xasdataset=ds_first)
-                    # print('copying parameters from the first dataset')
+                    spectrum = -spectrum
 
-                # print('dataset energy id', ds.energy)
+
+                # attempt to add dictionary
+                #md['mu_channel']= mu_channel
+                #print(f'Channel {mu_channel}')
+                if ds_first is None:
+                    ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
+                                datatype='experiment')
+                    ds_first = ds
+                # print('make first dataset')
+                else:
+                    ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
+                                datatype='experiment', process=False, xasdataset=ds_first)
+                # print('copying parameters from the first dataset')
+
+            # print('dataset energy id', ds.energy)
                 ds.header = header
                 self.parent.project.append(ds)
                 self.parent.statusBar().showMessage('Scans added to the project successfully')
-        else:
-            message_box('Error', 'Select numerator and denominator columns')
+
 
 
     def set_selection(self, name):
