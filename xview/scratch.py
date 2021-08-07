@@ -5,6 +5,18 @@ from xas.file_io import load_binned_df_from_file
 
 
 
+bender_current_position = bender.pos.user_readback.get()
+bender_positions = bender_current_position + np.arange(-15, 20, 5)
+x = xlive_gui.widget_run
+
+for bender_position in bender_positions:
+    RE(bps.mv(bender.pos, bender_position))
+    RE(bps.sleep(3))
+    loading = bender.load_cell.get()
+    x.parameter_values[0].setText(f'Cu foil - {loading} N - {bender_position} um')
+    x.run_scan()
+
+
 results =  list( db.v2.search({'element': 'Co'}))
 hfile = h5py.File('/nsls2/xf08id/Sandbox/database/Co_ISS_data.h5', 'w')
 
