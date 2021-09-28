@@ -55,7 +55,51 @@ plotting
 '''
 
 
+'''
+Test RIXS normalization using CIE cuts correction
+'''
 
+x = xview_gui.widget_rixs
+x.parse_rixs_scan(xes_normalization=False)
+plt.figure()
+plt.imshow(-x.rixs_dict['pil100_ROI1']/x.rixs_dict['i0'], vmin=0, vmax=2)
+
+rixs = -(x.rixs_dict['pil100_ROI1']/x.rixs_dict['i0'])
+energy_in = x.rixs_dict['energy_in']
+energy_out = x.rixs_dict['energy_out']
+
+
+cie_intensity = np.array([i.mu for i in xview_gui.project])
+cie_energy_in = np.array([7712, 7708, 7709.5])
+cie_energy_out = xview_gui.project[0].energy
+cie_intensity = cie_intensity / cie_intensity[:, 70:71] * rixs[[53,37,43], 70:71]
+
+plt.figure()
+plt.plot(cie_energy_out, cie_intensity.T)
+
+rixs_cuts = rixs[[53,37,43], :-1]
+conc_norm = np.zeros(rixs_cuts.shape[1])
+
+for i in range(conc_norm.size):
+    result = np.linalg.lstsq(rixs_cuts[:, i][:, None], cie_intensity[:, i][:, None], rcond=-1)
+    conc_norm[i] = result[0]
+
+rixs_norm = rixs[:, :-1]*conc_norm[None, :]
+
+plt.figure()
+plt.contourf(energy_out[:-1], energy_in, rixs_norm)
+
+
+plt.figure()
+n_in = 53
+
+plt.plot(energy_out[:-1], rixs_norm[n_in, :], label=f'RIXS 1 @ {np.round(energy_in[n_in],2)} eV')
+plt.plot(energy_out[:-1], rixs_norm_[n_in, :], label=f'RIXS 2 @ {np.round(energy_in[n_in],2)} eV')
+
+plt.legend()
+
+
+################
 plt.figure(666)
 for k in fff.keys():
     energy = fff[k]['energy'][()]

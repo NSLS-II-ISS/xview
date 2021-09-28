@@ -170,11 +170,11 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         self.last_denominator= self.comboBox_data_denominator.currentText()
         # print(f'I am there {self.last_denominator}')
 
-    def parse_rixs_scan(self):
+    def parse_rixs_scan(self, xes_normalization=True):
         selected_items = (self.list_data.selectedItems())
         update_figure([self.figure_rixs.ax], self.toolbar, self.canvas)
         path = f'{self.working_folder}/{selected_items[0].text()}'
-        self.rixs_dict = parse_rixslog_scan(self.db, path)
+        self.rixs_dict = parse_rixslog_scan(self.db, path, xes_normalization=xes_normalization)
 
         self.process_rixs_dict()
         self.doubleSpinBox_contourf_vmin.setValue(self._plot_data.min())
