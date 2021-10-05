@@ -248,10 +248,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             for numerator, numerator_name in zip(numerators, numerators_names):
                 if self.checkBox_ratio.checkState():
                     spectrum = (numerator / denominator)
-                    mu_channel = f'{numerator_name}/{denominator_name}'
+                    mu_channel = f'{numerator_name}-{denominator_name}'
                 else:
                     spectrum = numerator
-                    mu_channel = f'{numerator_name}/{denominator_name}'
+                    mu_channel = f'{numerator_name}-{denominator_name}'
 
                 if self.checkBox_log_bin.checkState():
                     spectrum = np.log(spectrum)

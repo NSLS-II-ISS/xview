@@ -2,7 +2,8 @@ import sys
 import pkg_resources
 from PyQt5 import  QtWidgets, uic
 from xview.xasproject.xasproject import XASProject
-
+from isscloudtools.cloud_dispatcher import CloudDispatcher
+from isscloudtools.initialize import get_dropbox_service
 from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker, widget_xview_rixs
 
 if sys.platform == 'darwin':
@@ -20,10 +21,20 @@ class XviewGui(*uic.loadUiType(ui_path)):
 
         self.project = XASProject()
 
+        try:
+            self.dropbox_service = get_dropbox_service()
+        except:
+            print("Cloud services cannot be connected")
+            self.dropbox_service = None
+
+        self.cloud_dispatcher = CloudDispatcher(dropbox_service=self.dropbox_service)
+
         self.widget_data = widget_xview_data.UIXviewData(db=db, parent=self)
         self.layout_data.addWidget(self.widget_data)
 
-        self.widget_project = widget_xview_project.UIXviewProject(db_proc=db_proc, parent=self)
+        self.widget_project = widget_xview_project.UIXviewProject(db_proc=db_proc,
+                                                                  cloud_dispatcher = self.cloud_dispatcher,
+                                                                  parent=self)
         self.layout_project.addWidget(self.widget_project)
 
         # self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
@@ -32,6 +43,15 @@ class XviewGui(*uic.loadUiType(ui_path)):
 
         self.widget_rixs = widget_xview_rixs.UIXviewRIXS(db=db, parent=self)
         self.layout_rixs.addWidget(self.widget_rixs)
+
+        try:
+            self.dropbox_service = get_dropbox_service()
+        except:
+            print("Cloud services cannot be connected")
+            self.dropbox_service = None
+
+        self.cloud_dispatcher = CloudDispatcher(dropbox_service=self.dropbox_service)
+
 
     def  set_figure(self, axis, canvas, label_x='', label_y=''):
         axis.legend(fontsize='small')

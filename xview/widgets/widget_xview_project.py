@@ -22,6 +22,8 @@ from xas.xasproject import XASDataSet
 from xview.dialogs.MetadataDialog import MetadataDialog
 from xview.spectra_db.db_io import save_spectrum_to_db
 
+from os.path import expanduser
+
 
 if platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project-mac.ui')
@@ -30,11 +32,14 @@ else:
 
 
 class UIXviewProject(*uic.loadUiType(ui_path)):
-        def __init__(self, db_proc=None, parent=None,*args, **kwargs):
+        def __init__(self, db_proc=None,
+                     cloud_dispatcher = None,
+                     parent=None,*args, **kwargs):
 
             super().__init__(*args, **kwargs)
             self.setupUi(self)
             self.parent = parent
+            self.cloud_dispatcher = cloud_dispatcher
             self.db_proc = db_proc
             self.parent.project.datasets_changed.connect(self.update_project_list)
             self.addCanvas()
@@ -141,6 +146,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             remove_action = menu.addAction("&Remove")
             save_datasets_as_text_action = menu.addAction("&Save datasets as text")
             combine_and_save_datasets_as_text_action = menu.addAction("&Combine and save datasets as text")
+            save_dataset_to_dropbox = menu.addAction("&Save to Dropbox")
             save_dataset_to_database_action = menu.addAction("&Save to processed database")
             parentPosition = self.list_project.mapToGlobal(QtCore.QPoint(0, 0))
             menu.move(parentPosition + QPos)
@@ -154,9 +160,12 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             elif action == combine_and_save_datasets_as_text_action:
                 self.combine_and_save_datasets_as_text()
             elif action == save_datasets_as_text_action:
-                self.save_datasets_as_text()
+                self.save_datasets_as_text( )
             elif action == save_dataset_to_database_action:
                 self.save_datasets_to_database()
+            elif action == save_dataset_to_dropbox:
+                self.save_datasets_as_text(send_to_dropbox = True)
+
 
         def xas_project_double_clicked(self):
             selection = self.list_project.selectedIndexes()
@@ -472,17 +481,18 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     for i in self.parent.project_loaded_from_file._datasets:
                         self.parent.project.append(i)
 
-        def save_datasets_as_text(self):
-            # options = QtWidgets.QFileDialog.DontUseNativeDialog
-            # filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save XAS project as', self.parent.widget_data.working_folder,
-            #                                          'XAS project files (*.xas)', options=options)
+        def save_datasets_as_text(self, send_to_dropbox=False):
+
             selection = self.list_project.selectedIndexes()
             if selection != []:
                 ret = self.message_box_save_datasets_as()
                 options = QtWidgets.QFileDialog.DontUseNativeDialog
-                pathname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose folder...',
+                if not send_to_dropbox:
+                    pathname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose folder...',
                                                                       self.parent.widget_data.working_folder,
                                                                       options=options)
+                else:
+                    pathname = f'{expanduser("~")}/tmp'
                 separator = '#______________________________________________________\n'
                 if pathname is not '':
                     for indx, obj in enumerate(selection):
@@ -513,6 +523,12 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         fid = open(filename_new, 'a')
                         np.savetxt(fid, table)
                         fid.close()
+                        if send_to_dropbox:
+                            self.cloud_dispatcher.load_to_dropbox(filename_new,
+                                                                  year = ds.md['year'],
+                                                                  cycle = ds.md['cycle'],
+                                                                  proposal = ds.md['PROPOSAL'])
+
 
         def _intersect_metadata_dicts(self, md_list):
 
@@ -563,6 +579,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 merged = XASDataSet(name=merged_name, md=merged_files_string, energy=energy_master, mu=mu_merged, filename='',
                                                datatype='processed')
                 merged.header = "".join(merged.md)
+
                 merged.md = self._intersect_metadata_dicts(merged_md_list)
                 merged.md['merged files'] = "".join(merged_files_string)
                 # merged.md['merged uids'] = "".join(merged_uids_string)
