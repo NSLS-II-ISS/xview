@@ -42,7 +42,7 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="tab_visualize">
      <attribute name="title">
@@ -110,6 +110,22 @@
        </rect>
       </property>
       <layout class="QVBoxLayout" name="layout_rixs"/>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>MCR Project</string>
+     </attribute>
+     <widget class="QWidget" name="verticalLayoutWidget_5">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>1581</width>
+        <height>821</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="layout_mcr"/>
      </widget>
     </widget>
    </widget>
