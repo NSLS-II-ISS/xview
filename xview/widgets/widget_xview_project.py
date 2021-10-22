@@ -168,7 +168,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.save_datasets_as_text(send_to_dropbox = True)
 
             elif action == export_to_mcr_project:
-                self.export_data_to_mcr_project
+                self.export_data_to_mcr_project()
 
         def xas_project_double_clicked(self):
             selection = self.list_project.selectedIndexes()

@@ -1,7 +1,8 @@
 import sys
 import pkg_resources
 from PyQt5 import  QtWidgets, uic
-from xview.xasproject.xasproject import XASProject
+# from xview.xasproject.xasproject import XASProject
+from xas.xasproject import XASProject
 from isscloudtools.cloud_dispatcher import CloudDispatcher
 from isscloudtools.initialize import get_dropbox_service
 from issfactortools.widgets import widget_main as widget_mcr
