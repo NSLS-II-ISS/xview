@@ -61,8 +61,27 @@ def save_spectrum_to_db(metadata, data):
     return uid
 
 
+class ISSBlueskyMongoCatalog(BlueskyMongoCatalog):
+
+    def search_foil_data(self, element, edge):
+        return list(self.search({'Sample_name' : f'{element} foil', 'Edge' : edge})
+
+    def validate_foil_edge(self, element, edge):
+        uids = self.search_foil_data(element, edge)
+        if len(uids) == 0:
+            raise Exception(f'Error: No {element} foil {edge}-edge was found in the databse')
+
+    def foil_spectrum(self, element, edge):
+        all_uids = self.search_foil_data(element, edge)
+        uid = all_uids[0] # latest
+        ds = db_proc[uid].primary.read()
+        energy = ds['Energy'].values
+        mu = ds['mu_norm'].values
+        return energy, mu
+
+
 def get_spectrum_catalog():
-    return BlueskyMongoCatalog(uri, uri)
+    return ISSBlueskyMongoCatalog(uri, uri)
 
 
 

@@ -350,8 +350,11 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
 
         def _normalize_ds_in_full(self, ds, window=None):
             ds.normalize_force()
-            ds.extract_chi_force()
-            ds.extract_ft_force(window=window)
+            try:
+                ds.extract_chi_force()
+                ds.extract_ft_force(window=window)
+            except:
+                pass
 
         def plot_project_in_E(self):
             if self.list_project.selectedIndexes():
