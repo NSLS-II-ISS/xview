@@ -64,7 +64,7 @@ def save_spectrum_to_db(metadata, data):
 class ISSBlueskyMongoCatalog(BlueskyMongoCatalog):
 
     def search_foil_data(self, element, edge):
-        return list(self.search({'Sample_name' : f'{element} foil', 'Edge' : edge})
+        return list(self.search({'Sample_name' : f'{element} foil', 'Edge' : edge}))
 
     def validate_foil_edge(self, element, edge):
         uids = self.search_foil_data(element, edge)
