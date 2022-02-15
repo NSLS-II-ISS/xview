@@ -656,11 +656,17 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     ds = self.parent.project._datasets[selection[indx].row()]
                     sample_name = ds.name
                     compound = ds.name
-                    element = ds.md['element']
-                    edge = ds.md['edge']
+                    try:
+                        element = ds.md['element']
+                        edge = ds.md['edge']
+                        uid = ds.md['uid']
+                    except:
+                        element = ''
+                        edge = ''
+                        uid = ''
+
                     e0 = ds.e0
                     reference = 0
-                    uid = ds.md['uid']
                     self._dlg = MetadataDialog(sample_name, compound, element, edge, e0, reference, uid, parent=self)
                     if self._dlg.exec_():
                         sample_name, compound, element, edge, e0, reference, uid = self._dlg.getValues()
