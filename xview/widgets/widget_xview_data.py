@@ -19,6 +19,7 @@ from isstools.elements.figure_update import update_figure
 from isstools.dialogs.BasicDialogs import message_box
 from xas.file_io import load_binned_df_from_file
 import copy
+from xview.dialogs.FileMetadataDialog import FileMetadataDialog
 
 if platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
@@ -69,6 +70,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         menu = QMenu()
         plot_action = menu.addAction("&Plot")
         add_to_project_action = menu.addAction("&Add to project")
+        show_metadata_action = menu.addAction("&Show file metadata")
         # merge_action = menu.addAction("&Add to project")
         parentPosition = self.list_data.mapToGlobal(QtCore.QPoint(0, 0))
         menu.move(parentPosition+QPos)
@@ -77,6 +79,16 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             self.plot_xas_data()
         elif action == add_to_project_action:
             self.add_data_to_project()
+        elif action == show_metadata_action:
+            self.show_file_metadata()
+
+    def show_file_metadata(self):
+        selected_items = (self.list_data.selectedItems())
+        for i in selected_items:
+            path = f'{self.working_folder}/{i.text()}'
+            _, header = load_binned_df_from_file(path)
+            self.file_md_widget = FileMetadataDialog(path, header, parent=self)
+            self.file_md_widget.show()
 
     def addCanvas(self):
         self.figure_data = Figure()
@@ -224,17 +236,17 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             df, header = load_binned_df_from_file(filepath)
 
             md = {}
-            # try:
-            #     uid_idx1 = header.find('Scan.uid:') + 10
-            #     uid_idx2 = header.find('\n', header.find('Scan.uid:'))
-            #     uid = header[uid_idx1: uid_idx2]
-            #     md = self.db[uid]['start']
-            # except KeyError:
-            #     uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
-            #     md = self.db[uid]['start']
-            #
-            # if md == {}:
-            #     print('Metadata not found')
+            try:
+                uid_idx1 = header.find('Scan.uid:') + 10
+                uid_idx2 = header.find('\n', header.find('Scan.uid:'))
+                uid = header[uid_idx1: uid_idx2]
+                md = self.db[uid]['start']
+            except KeyError:
+                uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
+                md = self.db[uid]['start']
+
+            if md == {}:
+                print('Metadata not found')
 
             df = df.sort_values('energy')
             denominator_name = self.listWidget_data_denominator.selectedItems()[0].text()
