@@ -58,6 +58,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     self.lineEdit_preedge_hi.textEdited,
                     self.lineEdit_postedge_lo.textEdited,
                     self.lineEdit_postedge_hi.textEdited,
+                    self.lineEdit_postedge_nnorm.textEdited,
                     self.lineEdit_spline_lo.textEdited,
                     self.lineEdit_spline_hi.textEdited,
                     self.lineEdit_clamp_lo.textEdited,
@@ -104,20 +105,21 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             # self.action_remove.triggered.connect(self.remove_from_xas_project)
 
             self.lineEdit_to_ds_parameter_dict = {
-                'lineEdit_preedge_lo':  'pre1',
-                'lineEdit_preedge_hi':  'pre2',
-                'lineEdit_postedge_lo': 'norm1',
-                'lineEdit_postedge_hi': 'norm2',
-                'lineEdit_e0':          'e0',
-                'lineEdit_spline_lo':   'kmin',
-                'lineEdit_spline_hi':   'kmax',
-                'lineEdit_clamp_lo':    'clamp_lo',
-                'lineEdit_clamp_hi':    'clamp_hi',
-                'lineEdit_rbkg':        'rbkg',
-                'spinBox_k_weight':     'kweight',
-                'lineEdit_truncate_at': 'truncate',
-                'lineEdit_k_ft_lo':     'kmin_ft',
-                'lineEdit_k_ft_hi':     'kmax_ft'
+                'lineEdit_preedge_lo':     'pre1',
+                'lineEdit_preedge_hi':     'pre2',
+                'lineEdit_postedge_lo':    'norm1',
+                'lineEdit_postedge_hi':    'norm2',
+                'lineEdit_postedge_nnorm': 'nnorm',
+                'lineEdit_e0':             'e0',
+                'lineEdit_spline_lo':      'kmin',
+                'lineEdit_spline_hi':      'kmax',
+                'lineEdit_clamp_lo':       'clamp_lo',
+                'lineEdit_clamp_hi':       'clamp_hi',
+                'lineEdit_rbkg':           'rbkg',
+                'spinBox_k_weight':        'kweight',
+                'lineEdit_truncate_at':    'truncate',
+                'lineEdit_k_ft_lo':        'kmin_ft',
+                'lineEdit_k_ft_hi':        'kmax_ft'
             }
 
             self.pushButton_set_to_lineEdit_dict = {
@@ -196,6 +198,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 'pre2',
                 'norm1',
                 'norm2',
+                'nnorm'
             ]
 
             self.bkg_param_list = [
@@ -334,6 +337,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.lineEdit_preedge_hi.setText('{:.1f}'.format(ds.pre2))
                 self.lineEdit_postedge_lo.setText('{:.1f}'.format(ds.norm1))
                 self.lineEdit_postedge_hi.setText('{:.1f}'.format(ds.norm2))
+                self.lineEdit_postedge_nnorm.setText('{:.1f}'.format(ds.nnorm))
                 self.lineEdit_spline_lo.setText('{:.1f}'.format(ds.kmin))
                 self.lineEdit_spline_hi.setText('{:.1f}'.format(ds.kmax))
                 self.lineEdit_clamp_lo.setText('{:.1f}'.format(ds.clamp_lo))
