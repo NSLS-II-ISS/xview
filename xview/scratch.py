@@ -433,3 +433,32 @@ plt.clf()
 plt.plot(mycalib.energy, en_res)
 plt.plot(mycalib.energy, np.sqrt(en_res**2 - (1.3e-4*mycalib.energy)**2))
 
+##############
+
+x = xview_gui.project
+k = x[-1].k
+chi = x[-1].chi
+window = x[-1].kwin
+
+plt.figure(1, clear=True)
+plt.subplot(211)
+plt.plot(k, k**2 * chi)
+plt.plot(k, window)
+
+r = np.fft.fftfreq(k.size*10, d=(k[1] - k[0])/np.pi)
+chi_r = np.fft.fft(k**2 * chi * window, n=k.size*10) / (np.sqrt(k.size-2)*2)
+
+plt.subplot(212)
+plt.plot(r, np.abs(chi_r))
+plt.plot(x[-1].r, x[-1].chir_mag)
+
+
+
+
+
+
+
+
+
+
+
