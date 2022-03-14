@@ -688,7 +688,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 # TODO: turn t into time
                 energy, t, data = self.parent.project.convert_into_2d_dataset(np.sort(index))
 
-                self.parent.widget_mcr._create_dataset(energy, t, data, name='bla')
+                self.parent.widget_mcr._create_dataset(energy, t, data, name='New Dataset')
 
 
 
