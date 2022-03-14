@@ -453,12 +453,255 @@ plt.plot(r, np.abs(chi_r))
 plt.plot(x[-1].r, x[-1].chir_mag)
 
 
+I = np.eye(chi.size)
+Afft = np.fft.fft(I * window[:, None], n=k.size*10) / (np.sqrt(k.size-2)*2)
+
+r_mask = (r>0) & (r<10)
+Afft = Afft[:, r_mask]
+
+Afft_re = np.real(Afft)
+Afft_im = np.imag(Afft)
+
+Afft_reim = np.hstack((Afft_re, Afft_im))
+
+Ainv = np.linalg.pinv(Afft_reim)
+
+chi_r_inv = Ainv @ (k**2 * chi)
+
+N = np.sum(r_mask)
+chi_r_inv_re = chi_r_inv[:N]
+chi_r_inv_im = chi_r_inv[N:]
+
+chi_r_inv_abs = np.sqrt(chi_r_inv_re**2 + chi_r_inv_im**2)
+
+
+plt.plot(r[r_mask], chi_r_inv_abs)
+
+
+##############
+
+def cov2corr(C):
+    err = np.sqrt(np.diag(C))
+    return np.diag(1 / err) @ C @ np.diag(1 / err)
+
+x = xview_gui.project
+
+energy = x[0].energy
+k = x[0].k
+r = x[0].r
+e0 = x[0].e0
+mus = np.array([ds.flat for ds in x]).T
+chis = np.array([ds.chi for ds in x]).T
+chirmags = np.array([ds.chir_mag for ds in x]).T
+
+n = mus.shape[1]
+
+mus_av = np.mean(mus, axis=1)
+cov_ee = np.cov(mus)/(n - 1)
+mus_err = np.sqrt(np.diag(cov_ee))
+cor_ee = cov2corr(cov_ee)
+
+chis_av = np.mean(chis, axis=1)
+cov_kk = np.cov(chis)/(n - 1)
+chis_err = np.sqrt(np.diag(cov_kk))
+cor_kk = cov2corr(cov_kk)
+
+chirmags_av = np.mean(chis, axis=1)
+cov_rr = np.cov(chirmags)/(n - 1)
+chirmags_err = np.sqrt(np.diag(cov_kk))
+cor_rr = cov2corr(cov_rr)
+
+def band_matrix(A, d=1):
+    A_out = A.copy()
+    a, b = A.shape
+    for i in range(a):
+        for j in range(b):
+            if np.abs((j-i)) > d:
+                A_out[i, j] = 0
+
+    return A_out
+
+
+def get_score(x, t, tmin=0, tmax=1):
+    x_av = np.mean(x, axis=1)
+    _nn = x.shape[1]
+    cov = np.cov(x) / (_nn - 1)
+    x_err = np.sqrt(np.diag(cov))
+    t_mask = (t > tmin) & (t < tmax)
+
+    x_norm = (x_av / x_err)
+
+    # rho = 0.5
+    # cov_cond = (1 - rho) * cov + rho * np.diag(np.diag(cov))
+    # L = np.linalg.cholesky(np.linalg.pinv(cov_cond))
+    # x_norm = L.T @ x_av
+
+    # cov_cond = band_matrix(cor_kk, d=1)
+    # rho = 0.5
+    # cov_cond = (1 - rho) * cov_cond + rho * np.diag(np.diag(cov_cond))
+    # L = np.linalg.cholesky(np.linalg.pinv(cov_cond))
+    # x_norm = L.T @ x_av
+
+    score = np.sqrt(np.sum((x_norm[t_mask]) ** 2) / np.sum(t_mask))
+    # score = np.sum((x_norm[t_mask]) ** 2) / np.sum(t_mask)
+    # score = np.sum((1/x_err[t_mask]) ** 2) / ((np.sum(t_mask) - 1))
+    return score, x_av, x_err
+
+n_curves = np.arange(5, n)
+scores_1 = np.zeros(n_curves.shape)
+scores_2 = np.zeros(n_curves.shape)
+scores_3 = np.zeros(n_curves.shape)
+scores_4 = np.zeros(n_curves.shape)
+
+for i, _n in enumerate(n_curves):
+    scores_1[i], _, _ = get_score(chis[:, :_n], k, 3, 6)
+    scores_2[i], _, _ = get_score(chis[:, :_n], k, 6, 9)
+    scores_3[i], _, _ = get_score(chis[:, :_n], k, 9, 12)
+    scores_4[i], _, _ = get_score(chis[:, :_n], k, 12, 16)
+
+    # scores_1[i], _, _ = get_score(mus[:, :_n], energy, 9600, 9700)
+    # scores_2[i], _, _ = get_score(mus[:, :_n], energy, 9700, 9900)
+    # scores_3[i], _, _ = get_score(mus[:, :_n], energy, 9900, 10200)
+
+_, x_av_040, x_err_040 = get_score(chis[:, :40], k, 9, 12)
+_, x_av_075, x_err_075 = get_score(chis[:, :75], k, 9, 12)
+_, x_av_120, x_err_120 = get_score(chis[:, :120], k, 9, 12)
+
+def fit_power(t, x):
+    logt = np.log(t)
+    logx = np.log(x)
+    p = np.polyfit(logt, logx, 1)
+    x_fit = np.exp(np.polyval(p, logt))
+    return p, x_fit
+
+
+
+plt.figure(5, clear=True)
+# plt.plot(n_curves, scores_1 / scores_1[-1], '.-')
+# plt.plot(n_curves, scores_2 / scores_2[-1], '.-')
+# plt.plot(n_curves, scores_3 / scores_3[-1], '.-')
+#
+# plt.plot(n_curves, scores_1, '.-')
+# plt.plot(n_curves, scores_2, '.-')
+# plt.plot(n_curves, scores_3, '.-')
+
+plt.semilogy(n_curves, scores_1, '.-')
+plt.semilogy(n_curves, scores_2, '.-')
+plt.semilogy(n_curves, scores_3, '.-')
+plt.semilogy(n_curves, scores_4, '.-')
+
+# plt.loglog(n_curves, scores_1, '.-')
+# plt.loglog(n_curves, scores_2, '.-')
+# plt.loglog(n_curves, scores_3, '.-')
+
+n_curves_sel = n_curves > 20
+p1, scores_1_fit = fit_power(n_curves[n_curves_sel], scores_1[n_curves_sel])
+p2, scores_2_fit = fit_power(n_curves[n_curves_sel], scores_2[n_curves_sel])
+p3, scores_3_fit = fit_power(n_curves[n_curves_sel], scores_3[n_curves_sel])
+p4, scores_4_fit = fit_power(n_curves[n_curves_sel], scores_4[n_curves_sel])
+
+plt.plot(n_curves[n_curves_sel], scores_1_fit, 'k-')
+plt.plot(n_curves[n_curves_sel], scores_2_fit, 'k-')
+plt.plot(n_curves[n_curves_sel], scores_3_fit, 'k-')
+plt.plot(n_curves[n_curves_sel], scores_4_fit, 'k-')
+# plt.plot(n_curves, F2 / F2[-1], 'r-')
+# plt.plot(n_curves, F3 / F3[-1], 'b-')
+
+# F1 = n_curves**2
+# F1 = F1 / F1[-1]
+# F1 = F1 + 0.2
+#
+# F2 = n_curves
+# F2 = F2 / F2[-1]
+# F2 = F2 + 0.2
+#
+# F3 = n_curves
+# F3 = F3 / F3[-1]
+# F3 = F3 + 0.0
 
 
 
 
+# plt.plot(n_curves, scores_1, '.-')
+# plt.plot(n_curves, scores_2, '.-')
+# plt.plot(n_curves, scores_3, '.-')
+
+plt.figure(6, clear=True)
+plt.errorbar(k, k**2 * x_av_040, k**2 * x_err_040)
+plt.errorbar(k, k**2 * x_av_075, k**2 * x_err_075)
+plt.errorbar(k, k**2 * x_av_120, k**2 * x_err_120)
+
+plt.figure(7, clear=True)
+plt.plot(k, k**2 * x_err_040)
+plt.plot(k, k**2 * x_err_075)
+plt.plot(k, k**2 * x_err_120)
 
 
 
+# score = chis_av[:, None].T @ np.linalg.pinv(cov_kk_cond) @ chis_av[:, None]/k.size
+# np.linalg.matrix_rank(cov_kk)
+
+# uu,ss,vv = np.linalg.svd(mus)
 
 
+rho = 0.5
+cov_kk_cond = (1 - rho) * cov_kk + rho * np.diag(np.diag(cov_kk))
+L = np.linalg.cholesky(np.linalg.pinv(cov_kk_cond))
+
+
+# cov_mask = np.abs(cor_kk) < 0.3
+# cov_kk_cond2 = cov_kk.copy()
+# cov_kk_cond2[cov_mask] = 0
+# L2 = np.linalg.cholesky(np.linalg.pinv(cov_kk_cond2))
+
+# plt.matshow(cov2corr(cov_kk_cond2))
+
+xanes_mask = np.abs(energy -e0) < 30
+score_xanes = np.sum(((mus_av / mus_err)[xanes_mask])**2) / (np.sum(xanes_mask) - 1)
+
+exafs_lo = (k > 2.5) & (k < 10)
+score_exafs_lo = np.sum(((chis_av / chis_err)[exafs_lo])**2) / (np.sum(exafs_lo) - 1)**2
+
+exafs_hi = (k > 10) & (k < 16)
+score_exafs_hi = np.sum(((chis_av / chis_err)[exafs_hi])**2) / ((np.sum(exafs_hi) - 1))
+
+plt.figure(1, clear=True)
+plt.plot(k, L.T @ chis_av)
+# plt.plot(k, L2.T @ chis_av)
+plt.plot(k, chis_av / chis_err)
+plt.plot(k, +savgol_filter(np.abs(chis_av / chis_err), 71, 0))
+plt.plot(k, -savgol_filter(np.abs(chis_av / chis_err), 71, 0))
+
+# plt.plot(k, chis_av * k**2)
+# plt.errorbar(k, chis_av * k**2, chis_err * k**2)
+# plt.plot(k, (mus_av[-k.size:]-1) * k**2)
+# plt.plot(energy, uu[:, :3])
+
+plt.figure(2, clear=True)
+
+ndiag = 1
+plt.plot(k[:-ndiag], np.diag(cor_kk,ndiag))
+
+ndiag = 2
+plt.plot(k[:-ndiag], np.diag(cor_kk,ndiag))
+
+
+plt.figure(3, clear=True)
+
+ndiag = 1
+plt.plot(r[:-ndiag], np.diag(cor_rr,ndiag))
+
+ndiag = 2
+plt.plot(r[:-ndiag], np.diag(cor_rr,ndiag))
+
+plt.matshow(cov_ee)
+plt.matshow(cor_ee)
+
+
+
+plt.matshow(cov_kk)
+
+plt.matshow(np.diag(k**2) @ cov_kk @ np.diag(k**2))
+
+
+plt.matshow(cor_kk)

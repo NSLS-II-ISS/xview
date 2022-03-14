@@ -2178,6 +2178,19 @@
      <string>Polynom order</string>
     </property>
    </widget>
+   <widget class="QCheckBox" name="checkBox">
+    <property name="geometry">
+     <rect>
+      <x>1480</x>
+      <y>720</y>
+      <width>96</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>No legend</string>
+    </property>
+   </widget>
   </widget>
   <action name="action_open_project">
    <property name="text">
