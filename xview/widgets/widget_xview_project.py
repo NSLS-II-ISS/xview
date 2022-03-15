@@ -686,9 +686,9 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 index = [i.row() for i in selection]
                 # TODO: add metadata to the output
                 # TODO: turn t into time
-                energy, t, data = self.parent.project.convert_into_2d_dataset(np.sort(index))
+                energy, t_dict, data = self.parent.project.convert_into_2d_dataset(np.sort(index))
 
-                self.parent.widget_mcr._create_dataset(energy, t, data, name='New Dataset')
+                self.parent.widget_mcr._create_dataset(energy, t_dict, data, name='New Dataset')
 
 
 
