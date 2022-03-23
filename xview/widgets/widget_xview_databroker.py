@@ -209,21 +209,31 @@ class QtSearchListWithButton(QWidget):
     Combines the QtSearches widget with a button.
     """
 
-    def __init__(self, model: SearchAndOpen, parent, *args, **kwargs):
+    def __init__(self, model: SearchAndOpen, parent, add_open_button=True, add_mcr_button=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = model
+        self.db = self.model.current_catalog
         self.parent = parent
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-        layout.addWidget(QtSearch(model))
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.layout.addWidget(QtSearch(model))
 
+        if add_open_button:
+            self.add_open_button()
+
+        if add_mcr_button:
+            self.add_mcr_button()
+
+
+    def add_open_button(self):
         # Add a button that does something with the currently-selected Runs
         # when you click it.
         self._open_button = QPushButton("Open")
-        layout.addWidget(self._open_button)
+        self.layout.addWidget(self._open_button)
 
         # Register a callback (slot) for the button qt click signal.
         self._open_button.clicked.connect(self._on_click_open_button)
+
 
     def _on_click_open_button(self):
         """
@@ -231,7 +241,7 @@ class QtSearchListWithButton(QWidget):
 
         Include a list of BlueskyRuns corresponding to the current selection.
         """
-        self.model.events.open(selected_runs=self.model.selected_runs)
+        # self.model.events.open(selected_runs=self.model.selected_runs)
         run_list = self.model.selected_runs
 
 
@@ -251,6 +261,27 @@ class QtSearchListWithButton(QWidget):
         else:
             print('Multiple scan selection is not supported yet')
 
+    def add_mcr_button(self):
+        self._mcr_button = QPushButton("Add to MCR project as reference")
+        self.layout.addWidget(self._mcr_button)
+
+        # Register a callback (slot) for the button qt click signal.
+        self._mcr_button.clicked.connect(self._on_click_mcr_button)
+
+
+    def _on_click_mcr_button(self):
+        # self.model.events.open(selected_runs=self.model.selected_runs)
+        run_list = self.model.selected_runs
+
+        x_list, data_list, label_list = [], [], []
+        for run in run_list:
+            uid = run.metadata['start']['uid']
+            x, data, label = self.db.read_spectrum(uid)
+            x_list.append(x)
+            data_list.append(data)
+            label_list.append(label)
+
+        self.parent.widget_mcr.add_references_to_specific_set(x_list, data_list, label_list)
 
 
 
@@ -259,6 +290,8 @@ headings = (
     "Unique ID",
     "Transient Scan ID",
     "Plan Name",
+    "Sample Name",
+    "Sample Comment",
     "Scanning",
     "Start Time",
     "Duration",
@@ -285,6 +318,8 @@ def extract_results_row_from_run(run):
         start["uid"][:8],
         start.get("scan_id", "-"),
         start.get("plan_name", "-"),
+        start.get("name", "-"),
+        start.get("comment", "-"),
         str(start.get("motors", "-")),
         start_time.strftime("%Y-%m-%d %H:%M:%S"),
         str_duration,
@@ -293,6 +328,49 @@ def extract_results_row_from_run(run):
 
 columns = (headings, extract_results_row_from_run)
 
+
+headings_proc = (
+    "Unique ID",
+    "Sample name",
+    "Compound",
+    "Element",
+    "Edge",
+    "E0",
+    "Start Time",
+)
+
+def extract_results_row_from_run_proc(run):
+    """
+    Given a BlueskyRun, format a row for the table of search results.
+    """
+    from datetime import datetime
+
+    metadata = run.describe()["metadata"]
+    start = metadata["start"]
+    # stop = metadata["stop"]
+    start_time = datetime.fromtimestamp(start["time"])
+    # if stop is None:
+    #     str_duration = "-"
+    # else:
+    #     duration = datetime.fromtimestamp(stop["time"]) - start_time
+    #     str_duration = str(duration)
+    #     str_duration = str_duration[: str_duration.index(".")]
+
+    return (
+        start["uid"][:8],
+        start.get("Sample_name", "-"),
+        start.get("compound", "-"),
+        start.get("Element", "-"),
+        start.get("Edge", "-"),
+        start.get("E0", "-"),
+        start_time.strftime("%Y-%m-%d %H:%M:%S"),
+    )
+
+columns_proc = (headings_proc, extract_results_row_from_run_proc)
+
+columns_dict = {'columns' : columns,
+                'columns_proc' : columns_proc}
+
 CATALOG_NAME = "iss"
 import databroker
 
@@ -300,12 +378,12 @@ catalog = databroker.catalog[CATALOG_NAME]
 
 # search_model = SearchAndOpen(catalog, columns=columns)
 
-def get_SearchAndOpen_widget(parent):
-    search_model = SearchAndOpen(catalog, columns=columns)
+def get_SearchAndOpen_widget(parent, catalog=catalog, columns='columns', add_open_button=True, add_mcr_button=False):
+    search_model = SearchAndOpen(catalog, columns=columns_dict[columns])
     # search_model.events.open.connect(
     #     lambda event: print(f"Opening {event.selected_runs}")
     # )
-    search_view = QtSearchListWithButton(search_model, parent)
+    search_view = QtSearchListWithButton(search_model, parent, add_open_button=add_open_button, add_mcr_button=add_mcr_button)
     return search_view
 
 

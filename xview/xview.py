@@ -43,6 +43,12 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_databroker = widget_xview_databroker.get_SearchAndOpen_widget(parent=self)
         self.layout_databroker.addWidget(self.widget_databroker)
 
+        self.widget_databroker_proc = widget_xview_databroker.get_SearchAndOpen_widget(parent=self, catalog=db_proc,
+                                                                                       columns='columns_proc',
+                                                                                       add_open_button=False,
+                                                                                       add_mcr_button=True)
+        self.layout_databroker_proc.addWidget(self.widget_databroker_proc)
+
         self.widget_rixs = widget_xview_rixs.UIXviewRIXS(db=db, parent=self)
         self.layout_rixs.addWidget(self.widget_rixs)
 

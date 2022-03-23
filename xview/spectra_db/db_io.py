@@ -79,6 +79,15 @@ class ISSBlueskyMongoCatalog(BlueskyMongoCatalog):
         mu = ds['mu_norm'].values
         return energy, mu
 
+    def read_spectrum(self, uid):
+        run = self[uid]
+        data = run.primary.read()
+        energy = data.Energy.values
+        mu = data.mu_norm.values
+        name = run.metadata['start']['Sample_name']
+        return energy, mu, name
+
+
 
 def get_spectrum_catalog():
     return ISSBlueskyMongoCatalog(uri, uri)
