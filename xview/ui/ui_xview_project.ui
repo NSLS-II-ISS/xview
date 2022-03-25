@@ -2178,6 +2178,27 @@
      <string>Polynom order</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="push_plot_project_in_E_norm_by_max">
+    <property name="geometry">
+     <rect>
+      <x>1460</x>
+      <y>750</y>
+      <width>100</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>plot E
+norm by max</string>
+    </property>
+   </widget>
   </widget>
   <action name="action_open_project">
    <property name="text">
