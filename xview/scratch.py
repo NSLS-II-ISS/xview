@@ -697,11 +697,109 @@ plt.plot(r[:-ndiag], np.diag(cor_rr,ndiag))
 plt.matshow(cov_ee)
 plt.matshow(cor_ee)
 
-
-
-plt.matshow(cov_kk)
-
 plt.matshow(np.diag(k**2) @ cov_kk @ np.diag(k**2))
-
-
 plt.matshow(cor_kk)
+
+plt.matshow(cov_rr)
+plt.matshow(cor_rr)
+
+
+
+''' Eli is trying to download Japaese database'''
+
+
+import urllib.request
+plt.figure();
+for i in range(1,50):
+    print(i)
+    s = f'https://www.cat.hokudai.ac.jp/catdb/index.php?action=xafs_dbinpbrowsedetail&opnid=2&resid={i}&r=76'
+    fp = urllib.request.urlopen(s)
+    mybytes = fp.read()
+    mystr = mybytes.decode("utf8")
+    fp.close()
+
+
+    a=mystr.split('<textarea name')[1]
+    b=a.split('>')[1]
+    c= b.split(',')[0]
+    d=c.split('\n')
+    e=dict([i.replace('    ','').split('=') for i in d][:-4])
+    print(e)
+
+
+    s=f'https://www.cat.hokudai.ac.jp/catdb/index.php?action=xafs_dbinpbrowsedetail&opnid=2&resid={i}&d=3'
+    fp = urllib.request.urlopen(s)
+    mybytes = fp.read()
+    mystr = mybytes.decode("utf8")
+    fp.close()
+    try:
+        sss= np.array([[float(k) for k in i.split('    \t')] for i in mystr.split('\r\n')])
+    except:
+        try:
+            sss = np.array([[float(k) for k in i.split('  ')] for i in mystr.split('\r\n')])
+        except:
+            sss = np.array([[float(k) for k in i.split('\t')] for i in mystr.split('\r\n')])
+
+    plt.plot(sss[:,0],sss[:,1])
+
+
+############################
+'''Denis checks calibration'''
+
+from xas.db_io import get_fly_uids_for_proposal
+from xas.energy_calibration import get_energy_offset
+# from xas.file_io import load_binned_df_from_file
+# from xas.xasproject import XASDataSet
+from xas.fitting import fit_gaussian_with_estimation
+from xas.energy_calibration import compute_shift_between_spectra
+from scipy.signal import medfilt
+
+uids = get_fly_uids_for_proposal(db, 2022, 1, 309864)
+
+e0_list = []
+time_e0_list = []
+# for uid in uids[:50]:
+for uid in uids:
+    hdr = db[uid]
+    if hdr.stop['exit_status']:
+        _e_ref, _e_obs = get_energy_offset(uid, db, db_proc, attempts=1, sleep_time=0)
+        print(f'_e_obs={_e_obs}')
+        if _e_obs:
+            e0_list.append(_e_obs)
+
+            _time = hdr.start['time']
+            time_e0_list.append(_time)
+
+e0 = np.array(e0_list)
+time_e0 = np.array(time_e0_list)
+
+x = xview_gui.project
+fwhm_list = []
+ecen_list = []
+time_xes_list = []
+names_xes_list = []
+for ds in x:
+    _energy = ds.energy
+    _intensity = ds.mu
+    # ecen_list.append(_energy[np.argmax(_intensity)])
+    _ecen, _fwhm, _, _, _ = fit_gaussian_with_estimation(_energy, _intensity)
+    # ecen_list.append(_ecen)
+    _e_shift, _ = compute_shift_between_spectra(_energy, _intensity, x[0].energy, x[0].mu)
+    ecen_list.append(_e_shift)
+    fwhm_list.append(_fwhm)
+    time_xes_list.append(ds.md['time'])
+    names_xes_list.append(ds.name)
+
+ecen = np.array(ecen_list)
+fwhm = np.array(fwhm_list)
+time_xes = np.array(time_xes_list)
+names_xes_sorted = [names_xes_list[i] for i in np.argsort(time_xes_list)]
+
+
+plt.figure(1)
+plt.clf()
+# plt.plot(time_obs, e0_obs - 11564, 'k.-')
+plt.plot(time_obs, medfilt(e0_obs - 11564), 'k.-')
+plt.plot(time_xes, ecen - ecen[1], 'r*')
+
+
