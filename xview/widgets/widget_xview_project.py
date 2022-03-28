@@ -53,6 +53,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             self.push_plot_project_in_K.clicked.connect(self.plot_project_in_K)
             self.push_plot_project_in_R.clicked.connect(self.plot_project_in_R)
 
+            self.push_plot_project_in_E_norm_by_max.clicked.connect(self.plot_project_in_E_norm_by_max)
+
             foos = [self.lineEdit_e0.textEdited,
                     self.lineEdit_preedge_lo.textEdited,
                     self.lineEdit_preedge_hi.textEdited,
@@ -365,8 +367,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
 
 
         def _normalize_ds_in_full(self, ds, window=None):
-            ds.normalize_force()
             try:
+                ds.normalize_force()
                 ds.extract_chi_force()
                 ds.extract_ft_force(window=window)
             except:
@@ -383,7 +385,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     # ds.extract_chi_force()
                     # ds.extract_ft_force()
                     # ds.extract_ft()
-                    ds.extract_ft_force()
+                    # ds.extract_ft_force()
                     energy = ds.energy
                     if self.radioButton_mu_xasproject.isChecked():
                         data = ds.mu
@@ -770,6 +772,54 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
 
             return window
 
+
+        def plot_project_in_E_norm_by_max(self):
+            if self.list_project.selectedIndexes():
+                update_figure([self.figure_project.ax], self.toolbar_project, self.canvas_project)
+
+                for index in self.list_project.selectedIndexes():
+                    ds = self.parent.project[index.row()]
+                    # self._normalize_ds_in_full(ds)
+                    # ds.normalize_force()
+                    # ds.extract_chi_force()
+                    # ds.extract_ft_force()
+                    # ds.extract_ft()
+                    # ds.extract_ft_force()
+                    energy = ds.energy
+                    # if self.radioButton_mu_xasproject.isChecked():
+                    data = ds.mu
+                    data -= data[0]
+                    data /= data.max()
+                    # elif self.radioButton_norm_xasproject.isChecked():
+                    #     if self.checkBox_norm_flat_xasproject.checkState():
+                    #         data = ds.flat
+                    #     else:
+                    #         data = ds.norm
+                    # if self.checkBox_deriv.isChecked():
+                    #     if not hasattr(ds, 'mu_deriv'):
+                    #         ds.deriv()
+                    #     data = ds.mu_deriv
+                    #     energy = ds.energy_deriv
+
+
+                    self.figure_project.ax.plot(energy, data, label=ds.name)
+
+                    # if self.radioButton_mu_xasproject.isChecked() and not self.checkBox_deriv.isChecked():
+                    #     if self.checkBox_preedge_show.checkState():
+                    #         self.figure_project.ax.plot(ds.energy, ds.pre_edge, label='Preedge', linewidth=0.75)
+                    #     if self.checkBox_postedge_show.checkState():
+                    #         self.figure_project.ax.plot(ds.energy, ds.post_edge, label='Postedge', linewidth=0.75)
+                    #     if self.checkBox_background_show.checkState():
+                    #         self.figure_project.ax.plot(ds.energy, ds.bkg, label='Background', linewidth=0.75)
+
+                self.parent.set_figure(self.figure_project.ax, self.canvas_project, label_x='Energy /eV',
+                                label_y=r'$\chi  \mu$' + '(E)'),
+
+                # if self.checkBox_force_range_E.checkState():
+                #     self.figure_project.ax.set_xlim(
+                #         (float(self.lineEdit_e0.text()) + float(self.lineEdit_range_E_lo.text())),
+                #         (float(self.lineEdit_e0.text()) + float(self.lineEdit_range_E_hi.text())))
+                self.current_plot_in = 'e'
 
 ########
 
