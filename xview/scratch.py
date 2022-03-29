@@ -625,25 +625,118 @@ plt.plot(n_curves_fit, scores_1_fit, 'k-')
 plt.plot(n_curves_fit, scores_2_fit, 'k-')
 plt.plot(n_curves_fit, scores_3_fit, 'k-')
 plt.plot(n_curves_fit, scores_4_fit, 'k-')
-# plt.plot(n_curves[n_curves_sel], scores_2_fit, 'k-')
-# plt.plot(n_curves[n_curves_sel], scores_3_fit, 'k-')
-# plt.plot(n_curves[n_curves_sel], scores_4_fit, 'k-')
-# plt.plot(n_curves, F2 / F2[-1], 'r-')
-# plt.plot(n_curves, F3 / F3[-1], 'b-')
 
-# F1 = n_curves**2
-# F1 = F1 / F1[-1]
-# F1 = F1 + 0.2
+
+from xas.file_io import load_interpolated_df_from_file
+from xas.bin import bin as bin_func
+from xas.xasproject import XASDataSet
+
+df_bin, _ = load_interpolated_df_from_file("/nsls2/xf08id/users/2022/1/309682/s061-TiO2-0p5Vref_5sccmN2_0Msty_25C (pos 021) Rh-K  0001.dat")
+df_raw, _ = load_interpolated_df_from_file("/nsls2/xf08id/users/2022/1/309682/s061-TiO2-0p5Vref_5sccmN2_0Msty_25C (pos 021) Rh-K  0001.raw")
+
+def get_e_mu_from_df(df):
+    _e = df.energy.values
+    _mu = -np.log(df.ir / df.i0).values
+    return _e, _mu
+
+e_bin, mu_bin = get_e_mu_from_df(df_bin)
+e_raw, mu_raw = get_e_mu_from_df(df_raw)
+
+def bin_process(df_interp):
+    return  bin_func(df_interp, 23220, edge_start=-30, edge_end=50, preedge_spacing=5,
+                xanes_spacing=-1, exafs_k_spacing=0.04, skip_binning=False)
+
+def sequential_boot(df_interp, n_tries=700):
+
+    mus = np.zeros((x[0].energy.size, n_tries))
+    chis = np.zeros((x[0].k.size, n_tries))
+    chirs = np.zeros((x[0].r.size*2, n_tries))
+
+    npt_raw = df_interp.shape[0]
+    for i in range(n_tries):
+        idx = np.sort(np.random.choice(npt_raw, npt_raw))
+        df_interp_resampled = df_interp.loc[idx]
+        _df_bin = bin_process(df_interp_resampled)
+        e_bin_boot, mu_bin_boot = get_e_mu_from_df(_df_bin)
+        ds = XASDataSet(name=f'bin_boot_{i}', energy=e_bin_boot, mu=mu_bin_boot, xasdataset=x[0], process=False)
+        ds.normalize_force()
+        ds.extract_chi_force()
+        ds.extract_ft_force(window=None)
+
+        mus[:, i] = ds.flat
+        chis[:, i] = ds.chi
+        chirs[:, i] = np.hstack((ds.chir_re, ds.chir_im))
+
+    return mus, chis, chirs
+
+mus_boot, chis_boot, chirs_boot = sequential_boot(df_raw)
+
+n_boot = mus_boot.shape[1]
+cov_ee_boot = np.cov(mus_boot) / (n_boot - 1)
+cov_kk_boot = np.cov(chis_boot) / (n_boot - 1)
+cov_rr_boot = np.cov(chirs_boot) / (n_boot - 1)
+
+cor_ee_boot = cov2corr(cov_ee_boot)
+cor_kk_boot = cov2corr(cov_kk_boot)
+cor_rr_boot = cov2corr(cov_rr_boot)
+
+mus_boot_err =   np.sqrt(np.diag(cov_ee_boot))
+chis_boot_err =  np.sqrt(np.diag(cov_kk_boot))
+chirs_boot_err = np.sqrt(np.diag(cov_rr_boot))
+
+plt.figure(77, clear=True)
+plt.subplot(211)
+plt.plot(energy, mus_boot, 'k-', alpha=0.5)
+plt.plot(energy, mus_av)
+
+plt.subplot(212)
+plt.plot(k, k[:, None]**2 * chis_boot, 'k-', alpha=0.5)
+plt.plot(k, k**2 * chis_av)
+
+plt.figure(78, clear=True)
+plt.subplot(121)
+plt.plot(energy, mus_err)
+plt.plot(energy, mus_boot_err)
+
+plt.subplot(122)
+plt.plot(k, chis_err)
+plt.plot(k, chis_boot_err)
+
+
+plt.figure(79, clear=True)
+plt.subplot(211)
+plt.matshow(cor_ee, fignum=0)
+
+plt.subplot(212)
+plt.matshow(cor_ee_boot, fignum=0)
+
+plt.figure(80, clear=True)
+plt.subplot(211)
+plt.matshow(cor_kk, fignum=0)
+
+plt.subplot(212)
+plt.matshow(cor_kk_boot, fignum=0)
+
+
+# chirmags = np.array([ds.chir_mag for ds in x]).T
+
+# n = mus.shape[1]
 #
-# F2 = n_curves
-# F2 = F2 / F2[-1]
-# F2 = F2 + 0.2
+# mus_av = np.mean(mus, axis=1)
+# cov_ee = np.cov(mus) / (n - 1)
+# mus_err = np.sqrt(np.diag(cov_ee))
+# cor_ee = cov2corr(cov_ee)
 #
-# F3 = n_curves
-# F3 = F3 / F3[-1]
-# F3 = F3 + 0.0
-
-
+# chis_av = np.mean(chis, axis=1)
+# cov_kk = np.cov(chis) / (n - 1)
+# chis_err = np.sqrt(np.diag(cov_kk))
+# cor_kk = cov2corr(cov_kk)
+#
+# # chirmags_av = np.mean(chis, axis=1)
+# chirs_av = np.mean(chirs, axis=1)
+# cov_rr = np.cov(chirs) / (n - 1)
+# chirs_err = np.sqrt(np.diag(cov_kk))
+# cor_rr = cov2corr(cov_rr)
 
 
 # plt.plot(n_curves, scores_1, '.-')
