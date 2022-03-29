@@ -630,6 +630,7 @@ plt.plot(n_curves_fit, scores_4_fit, 'k-')
 from xas.file_io import load_interpolated_df_from_file
 from xas.bin import bin as bin_func
 from xas.xasproject import XASDataSet
+from xas.xray import e2k
 
 df_bin, _ = load_interpolated_df_from_file("/nsls2/xf08id/users/2022/1/309682/s061-TiO2-0p5Vref_5sccmN2_0Msty_25C (pos 021) Rh-K  0001.dat")
 df_raw, _ = load_interpolated_df_from_file("/nsls2/xf08id/users/2022/1/309682/s061-TiO2-0p5Vref_5sccmN2_0Msty_25C (pos 021) Rh-K  0001.raw")
@@ -646,7 +647,7 @@ def bin_process(df_interp):
     return  bin_func(df_interp, 23220, edge_start=-30, edge_end=50, preedge_spacing=5,
                 xanes_spacing=-1, exafs_k_spacing=0.04, skip_binning=False)
 
-def sequential_boot(df_interp, n_tries=700):
+def sequential_boot(df_interp, n_tries=n):
 
     mus = np.zeros((x[0].energy.size, n_tries))
     chis = np.zeros((x[0].k.size, n_tries))
@@ -684,38 +685,7 @@ mus_boot_err =   np.sqrt(np.diag(cov_ee_boot))
 chis_boot_err =  np.sqrt(np.diag(cov_kk_boot))
 chirs_boot_err = np.sqrt(np.diag(cov_rr_boot))
 
-plt.figure(77, clear=True)
-plt.subplot(211)
-plt.plot(energy, mus_boot, 'k-', alpha=0.5)
-plt.plot(energy, mus_av)
 
-plt.subplot(212)
-plt.plot(k, k[:, None]**2 * chis_boot, 'k-', alpha=0.5)
-plt.plot(k, k**2 * chis_av)
-
-plt.figure(78, clear=True)
-plt.subplot(121)
-plt.plot(energy, mus_err)
-plt.plot(energy, mus_boot_err)
-
-plt.subplot(122)
-plt.plot(k, chis_err)
-plt.plot(k, chis_boot_err)
-
-
-plt.figure(79, clear=True)
-plt.subplot(211)
-plt.matshow(cor_ee, fignum=0)
-
-plt.subplot(212)
-plt.matshow(cor_ee_boot, fignum=0)
-
-plt.figure(80, clear=True)
-plt.subplot(211)
-plt.matshow(cor_kk, fignum=0)
-
-plt.subplot(212)
-plt.matshow(cor_kk_boot, fignum=0)
 
 
 # chirmags = np.array([ds.chir_mag for ds in x]).T
@@ -838,6 +808,99 @@ r_dummy_pos = r_dummy[r_dummy_mask]
 A_fft_imre = np.vstack((np.real(A_fft[r_dummy_mask, :]), np.imag(A_fft[r_dummy_mask, :])))
 c_dummy = (A_fft_imre @ A_fft_imre.T)
 
+
+
+
+def prenorm(t, x_orig, tmin=0, tmax=1):
+    x = x_orig.copy()
+    t_lo = t <= tmin
+    t_hi = t >= tmax
+    x_norm_lo = np.mean(x[t_lo, :], axis=0)
+    x -= x_norm_lo[None, :]
+    x_norm_hi = np.mean(x[t_hi, :], axis=0)
+    x /= x_norm_hi[None, :]
+    return x
+
+mus_nn = np.array([ds.mu for ds in x]).T
+mus_nn = prenorm(energy, mus_nn, 23100, 23285)
+
+mus_nn_av = np.mean(mus_nn, axis=1)
+_proj = XASDataSet(energy=energy, mu=mus_nn_av, xasdataset=x[0], process=False)
+_proj.normalize_force()
+_proj.extract_chi_force()
+# _proj.extract_ft_force(window=None)
+mus_nn_flat = (mus_nn - _proj.pre_edge[:, None]) / (_proj.post_edge - _proj.pre_edge)[:, None]
+
+_bkg_nn = (_proj.bkg - _proj.pre_edge) / (_proj.post_edge - _proj.pre_edge)
+chis_nn = np.zeros((k.size, n))
+for i in range(n):
+    chis_nn[:, i] = np.interp(k, e2k(energy, _proj.e0)[111:], (mus_nn_flat[:, i] - _bkg_nn)[111:])
+
+
+cov_ee_nn = np.cov(mus_nn_flat) / (n - 1)
+cov_kk_nn = np.cov(chis_nn) / (n - 1)
+
+cor_ee_nn = cov2corr(cov_ee_nn)
+cor_kk_nn = cov2corr(cov_kk_nn)
+# cor_rr_boot = cov2corr(cov_rr_boot)
+
+mus_nn_err =   np.sqrt(np.diag(cov_ee_nn))
+chis_nn_err =  np.sqrt(np.diag(cov_kk_nn))
+# chirs_boot_err = np.sqrt(np.diag(cov_rr_boot))
+
+
+plt.figure(65, clear=True)
+# plt.plot(energy, mus_nn)
+
+plt.plot(energy, (mus_nn_av - _proj.pre_edge) / (_proj.post_edge - _proj.pre_edge))
+# plt.plot(energy, mus_av, 'r-')
+# plt.plot(energy, _proj.pre_edge)
+# plt.plot(energy, _proj.post_edge)
+plt.plot(energy, (_proj.bkg - _proj.pre_edge) / (_proj.post_edge - _proj.pre_edge))
+# plt.plot(energy, _proj.norm)
+
+plt.figure(77, clear=True)
+plt.subplot(211)
+plt.plot(energy, mus_nn_flat, 'm-', alpha=0.5)
+plt.plot(energy, mus_boot, 'k-', alpha=0.5)
+plt.plot(energy, mus_av)
+
+plt.subplot(212)
+plt.plot(k, k[:, None]**2 * chis_nn, 'm-', alpha=0.5)
+plt.plot(k, k[:, None]**2 * chis_boot, 'k-', alpha=0.5)
+plt.plot(k, k**2 * chis_av)
+
+plt.figure(78, clear=True)
+plt.subplot(121)
+plt.plot(energy, mus_err)
+plt.plot(energy, mus_nn_err)
+plt.plot(energy, mus_boot_err)
+
+plt.subplot(122)
+plt.plot(k, chis_err)
+plt.plot(k, chis_nn_err)
+plt.plot(k, chis_boot_err)
+
+
+plt.figure(79, clear=True)
+plt.subplot(311)
+plt.matshow(cor_ee, fignum=0)
+
+plt.subplot(312)
+plt.matshow(cor_ee_nn, fignum=0)
+
+plt.subplot(313)
+plt.matshow(cor_ee_boot, fignum=0)
+
+plt.figure(80, clear=True)
+plt.subplot(311)
+plt.matshow(cor_kk, fignum=0)
+
+plt.subplot(312)
+plt.matshow(cor_kk_nn, fignum=0)
+
+plt.subplot(313)
+plt.matshow(cor_kk_boot, fignum=0)
 
 
 
