@@ -492,6 +492,8 @@ r = x[0].r
 e0 = x[0].e0
 mus = np.array([ds.flat for ds in x]).T
 chis = np.array([ds.chi for ds in x]).T
+
+chirs = np.array([np.hstack((ds.chir_re, ds.chir_im)) for ds in x]).T
 chirmags = np.array([ds.chir_mag for ds in x]).T
 
 n = mus.shape[1]
@@ -506,9 +508,10 @@ cov_kk = np.cov(chis)/(n - 1)
 chis_err = np.sqrt(np.diag(cov_kk))
 cor_kk = cov2corr(cov_kk)
 
-chirmags_av = np.mean(chis, axis=1)
-cov_rr = np.cov(chirmags)/(n - 1)
-chirmags_err = np.sqrt(np.diag(cov_kk))
+# chirmags_av = np.mean(chis, axis=1)
+chirs_av = np.mean(chirs, axis=1)
+cov_rr = np.cov(chirs)/(n - 1)
+chirs_err = np.sqrt(np.diag(cov_kk))
 cor_rr = cov2corr(cov_rr)
 
 def band_matrix(A, d=1):
@@ -525,6 +528,7 @@ def band_matrix(A, d=1):
 def get_score(x, t, tmin=0, tmax=1):
     x_av = np.mean(x, axis=1)
     _nn = x.shape[1]
+    # cov = np.cov(x) / (_nn - 1)
     cov = np.cov(x) / (_nn - 1)
     x_err = np.sqrt(np.diag(cov))
     t_mask = (t > tmin) & (t < tmax)
@@ -547,25 +551,38 @@ def get_score(x, t, tmin=0, tmax=1):
     # score = np.sum((1/x_err[t_mask]) ** 2) / ((np.sum(t_mask) - 1))
     return score, x_av, x_err
 
-n_curves = np.arange(5, n)
-scores_1 = np.zeros(n_curves.shape)
-scores_2 = np.zeros(n_curves.shape)
-scores_3 = np.zeros(n_curves.shape)
-scores_4 = np.zeros(n_curves.shape)
+# n_curves = np.arange(3, n, 20)
+vv = 10**np.linspace(np.log10(2), np.log10(n), 55)
+n_curves = np.array(np.ceil(vv), dtype=int)
+
+# scores_1 = np.zeros(n_curves.shape)
+# scores_2 = np.zeros(n_curves.shape)
+# scores_3 = np.zeros(n_curves.shape)
+# scores_4 = np.zeros(n_curves.shape)
+
+
+n_tries = 50
+scores_1 = np.zeros((n_curves.size, n_tries))
+scores_2 = np.zeros((n_curves.size, n_tries))
+scores_3 = np.zeros((n_curves.size, n_tries))
+scores_4 = np.zeros((n_curves.size, n_tries))
+
 
 for i, _n in enumerate(n_curves):
-    scores_1[i], _, _ = get_score(chis[:, :_n], k, 3, 6)
-    scores_2[i], _, _ = get_score(chis[:, :_n], k, 6, 9)
-    scores_3[i], _, _ = get_score(chis[:, :_n], k, 9, 12)
-    scores_4[i], _, _ = get_score(chis[:, :_n], k, 12, 16)
+    for j in range(n_tries):
+        idx_choice = np.random.choice(n, _n)
+        scores_1[i, j], _, _ = get_score(chis[:, idx_choice], k, 3, 6)
+        scores_2[i, j], _, _ = get_score(chis[:, idx_choice], k, 6, 9)
+        scores_3[i, j], _, _ = get_score(chis[:, idx_choice], k, 9, 12)
+        scores_4[i, j], _, _ = get_score(chis[:, idx_choice], k, 12, 16)
 
     # scores_1[i], _, _ = get_score(mus[:, :_n], energy, 9600, 9700)
     # scores_2[i], _, _ = get_score(mus[:, :_n], energy, 9700, 9900)
     # scores_3[i], _, _ = get_score(mus[:, :_n], energy, 9900, 10200)
 
-_, x_av_040, x_err_040 = get_score(chis[:, :40], k, 9, 12)
-_, x_av_075, x_err_075 = get_score(chis[:, :75], k, 9, 12)
-_, x_av_120, x_err_120 = get_score(chis[:, :120], k, 9, 12)
+# _, x_av_040, x_err_040 = get_score(chis[:, :40], k, 9, 12)
+# _, x_av_075, x_err_075 = get_score(chis[:, :75], k, 9, 12)
+# _, x_av_120, x_err_120 = get_score(chis[:, :120], k, 9, 12)
 
 def fit_power(t, x):
     logt = np.log(t)
@@ -575,35 +592,42 @@ def fit_power(t, x):
     return p, x_fit
 
 
-
-plt.figure(5, clear=True)
-# plt.plot(n_curves, scores_1 / scores_1[-1], '.-')
-# plt.plot(n_curves, scores_2 / scores_2[-1], '.-')
-# plt.plot(n_curves, scores_3 / scores_3[-1], '.-')
-#
-# plt.plot(n_curves, scores_1, '.-')
-# plt.plot(n_curves, scores_2, '.-')
-# plt.plot(n_curves, scores_3, '.-')
-
-plt.semilogy(n_curves, scores_1, '.-')
-plt.semilogy(n_curves, scores_2, '.-')
-plt.semilogy(n_curves, scores_3, '.-')
-plt.semilogy(n_curves, scores_4, '.-')
-
-# plt.loglog(n_curves, scores_1, '.-')
-# plt.loglog(n_curves, scores_2, '.-')
-# plt.loglog(n_curves, scores_3, '.-')
+bias_cor = (1 -
+            1 / (4 * n_curves) -
+            7 / (32 * n_curves **2) -
+            19 / (128 * n_curves**3))
 
 n_curves_sel = n_curves > 20
-p1, scores_1_fit = fit_power(n_curves[n_curves_sel], scores_1[n_curves_sel])
-p2, scores_2_fit = fit_power(n_curves[n_curves_sel], scores_2[n_curves_sel])
-p3, scores_3_fit = fit_power(n_curves[n_curves_sel], scores_3[n_curves_sel])
-p4, scores_4_fit = fit_power(n_curves[n_curves_sel], scores_4[n_curves_sel])
 
-plt.plot(n_curves[n_curves_sel], scores_1_fit, 'k-')
-plt.plot(n_curves[n_curves_sel], scores_2_fit, 'k-')
-plt.plot(n_curves[n_curves_sel], scores_3_fit, 'k-')
-plt.plot(n_curves[n_curves_sel], scores_4_fit, 'k-')
+n_curves_fit = np.arange(1, n_curves.max())
+p1, _ = fit_power(np.tile(n_curves[n_curves_sel], n_tries), scores_1[n_curves_sel, :].T.ravel())
+scores_1_fit = np.exp(np.polyval(p1, np.log(n_curves_fit)))
+p2, _ = fit_power(np.tile(n_curves[n_curves_sel], n_tries), scores_2[n_curves_sel, :].T.ravel())
+scores_2_fit = np.exp(np.polyval(p2, np.log(n_curves_fit)))
+p3, _ = fit_power(np.tile(n_curves[n_curves_sel], n_tries), scores_3[n_curves_sel, :].T.ravel())
+scores_3_fit = np.exp(np.polyval(p3, np.log(n_curves_fit)))
+p4, _ = fit_power(np.tile(n_curves[n_curves_sel], n_tries), scores_4[n_curves_sel, :].T.ravel())
+scores_4_fit = np.exp(np.polyval(p4, np.log(n_curves_fit)))
+
+
+
+
+ALPHA = 0.5
+plt.figure(5, clear=True)
+# plt.loglog(n_curves, scores_1 / bias_cor[:, None], 'k.-', alpha=ALPHA)
+plt.loglog(n_curves, scores_1, 'b.-', alpha=ALPHA)
+plt.loglog(n_curves, scores_2, 'r.-', alpha=ALPHA)
+plt.loglog(n_curves, scores_3, 'm.-', alpha=ALPHA)
+plt.loglog(n_curves, scores_4, 'g.-', alpha=ALPHA)
+
+
+plt.plot(n_curves_fit, scores_1_fit, 'k-')
+plt.plot(n_curves_fit, scores_2_fit, 'k-')
+plt.plot(n_curves_fit, scores_3_fit, 'k-')
+plt.plot(n_curves_fit, scores_4_fit, 'k-')
+# plt.plot(n_curves[n_curves_sel], scores_2_fit, 'k-')
+# plt.plot(n_curves[n_curves_sel], scores_3_fit, 'k-')
+# plt.plot(n_curves[n_curves_sel], scores_4_fit, 'k-')
 # plt.plot(n_curves, F2 / F2[-1], 'r-')
 # plt.plot(n_curves, F3 / F3[-1], 'b-')
 
@@ -702,6 +726,26 @@ plt.matshow(cor_kk)
 
 plt.matshow(cov_rr)
 plt.matshow(cor_rr)
+
+
+
+mask_r = (r >= 1.25) & (r <= 2.85)
+# mask_r = (r >= 0.25) & (r <= 2.85)
+plt.matshow(cov_rr[np.ix_(mask_r, mask_r)])
+plt.matshow(cov2corr(cov_rr[np.ix_(mask_r, mask_r)]))
+
+
+k_dummy = np.linspace(3, 12, 101)
+i_dummy = np.eye(k_dummy.size)
+A_fft = np.fft.fft(i_dummy)
+
+r_dummy = np.fft.fftfreq(k_dummy.size, k_dummy[1] - k_dummy[0])
+r_dummy_mask = r_dummy>=0
+r_dummy_pos = r_dummy[r_dummy_mask]
+A_fft_imre = np.vstack((np.real(A_fft[r_dummy_mask, :]), np.imag(A_fft[r_dummy_mask, :])))
+c_dummy = (A_fft_imre @ A_fft_imre.T)
+
+
 
 
 
