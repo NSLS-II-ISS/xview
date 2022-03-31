@@ -905,12 +905,14 @@ plt.matshow(cor_kk_boot, fignum=0)
 
 
 
-''' Eli is trying to download Japaese database'''
+''' Eli is trying to download Japanese database'''
 
 
 import urllib.request
+import json
 plt.figure();
-for i in range(1,50):
+for i in range(1,300):
+    out_list = []
     print(i)
     s = f'https://www.cat.hokudai.ac.jp/catdb/index.php?action=xafs_dbinpbrowsedetail&opnid=2&resid={i}&r=76'
     fp = urllib.request.urlopen(s)
@@ -918,13 +920,25 @@ for i in range(1,50):
     mystr = mybytes.decode("utf8")
     fp.close()
 
+    try:
+        a = mystr.split('<textarea name')[1]
+        b = a.split('>')[1]
+        c = b.split('E(e')[0]
+        d = c.split('\n')
+         # print(c)
+        for line in d:
+            line = line.replace('    ', '').split('=')
+            try:
+                e[line[0]] = line[1]
+            except:
+                pass
+        print(e)
+        out_list.append(e)
 
-    a=mystr.split('<textarea name')[1]
-    b=a.split('>')[1]
-    c= b.split(',')[0]
-    d=c.split('\n')
-    e=dict([i.replace('    ','').split('=') for i in d][:-4])
-    print(e)
+    except:
+        print(f'{i} c is not working')
+        e = {}
+
 
 
     s=f'https://www.cat.hokudai.ac.jp/catdb/index.php?action=xafs_dbinpbrowsedetail&opnid=2&resid={i}&d=3'
@@ -938,9 +952,24 @@ for i in range(1,50):
         try:
             sss = np.array([[float(k) for k in i.split('  ')] for i in mystr.split('\r\n')])
         except:
-            sss = np.array([[float(k) for k in i.split('\t')] for i in mystr.split('\r\n')])
+            try:
+                sss = np.array([[float(k) for k in i.split('\t')] for i in mystr.split('\r\n')])
+            except:
+                pass
+    try:
+        data_dict = {}
+        data_dict['E'] = sss[:,0].tolist()
+        data_dict['mu'] = sss[:, 1].tolist()
 
-    plt.plot(sss[:,0],sss[:,1])
+        plt.plot(sss[:,0],sss[:,1])
+        out_list.append(data_dict)
+        filename = e['SAMPLE NAME']
+
+        with open(f'/nsls2/xf08id/Sandbox/Eli/Database/Japanese/{filename}.json', 'w') as f:
+            f.write(json.dumps(out_list))
+    except:
+        pass
+
 
 
 ############################

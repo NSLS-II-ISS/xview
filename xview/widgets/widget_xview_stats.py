@@ -26,12 +26,12 @@ from os.path import expanduser
 
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project-mac.ui')
+    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_stats-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project.ui')
+    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_stats.ui')
 
 
-class UIXviewProject(*uic.loadUiType(ui_path)):
+class UIXviewStats(*uic.loadUiType(ui_path)):
         def __init__(self, db_proc=None,
                      cloud_dispatcher = None,
                      parent=None,*args, **kwargs):
@@ -39,9 +39,24 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             super().__init__(*args, **kwargs)
             self.setupUi(self)
             self.parent = parent
+            self.parent.project.datasets_changed.connect(self.update_project_list)
+            self.list_project.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.list_project.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
+        def update_project_list(self, datasets):
+            self.list_project.clear()
+            for ds in datasets:
+                self.list_project.addItem(ds.name)
+            '''
+            
             self.cloud_dispatcher = cloud_dispatcher
             self.db_proc = db_proc
+            
+            
+            
             self.parent.project.datasets_changed.connect(self.update_project_list)
+            
+            
             self.addCanvas()
             self.label_E0.setText("E<sub>0</sub>")
             self.list_project.itemSelectionChanged.connect(self.show_ds_params)
@@ -358,13 +373,6 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     self.list_project.item(i).setFont(font)
                 font.setBold(True)
                 self.list_project.item(index.row()).setFont(font)
-
-            if self.list_project.selectedIndexes():
-
-                indices = self.list_project.selectedIndexes()
-                for index in indices:
-                    self.parent.widget_statistics.list_project.item(index.row()).setSelected(True)
-
 
         def remove_from_xas_project(self):
             for index in self.list_project.selectedIndexes()[
@@ -746,7 +754,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     self.parent.project._datasets[selection[indx].row()] = ds
 
         '''
-         Service routines
+         #Service routines
         '''
 
         def message_box_save_datasets_as(self):
@@ -829,7 +837,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.current_plot_in = 'e'
 
 ########
-
+'''
 
 
 

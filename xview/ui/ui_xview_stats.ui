@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Xview</class>
+ <widget class="QMainWindow" name="Xview">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1612</width>
+    <height>812</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Xview</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QPushButton" name="push_do">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>20</y>
+      <width>100</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Do it!</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="list_project">
+    <property name="geometry">
+     <rect>
+      <x>5</x>
+      <y>10</y>
+      <width>271</width>
+      <height>791</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>20</y>
+      <width>1021</width>
+      <height>361</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="layout_stats_xanes"/>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_4">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>400</y>
+      <width>1021</width>
+      <height>391</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="layout_stats_k_space"/>
+   </widget>
+  </widget>
+  <action name="action_open_project">
+   <property name="text">
+    <string>&amp;Open project</string>
+   </property>
+  </action>
+  <action name="action_save_project">
+   <property name="text">
+    <string>&amp;Save project</string>
+   </property>
+  </action>
+  <action name="action_save_datasets_as_text">
+   <property name="text">
+    <string>Save datasets as text</string>
+   </property>
+  </action>
+  <action name="action_exit">
+   <property name="text">
+    <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="action_merge">
+   <property name="text">
+    <string>Merge</string>
+   </property>
+  </action>
+  <action name="action_rename">
+   <property name="text">
+    <string>Rename</string>
+   </property>
+  </action>
+  <action name="action_remove">
+   <property name="text">
+    <string>Remove</string>
+   </property>
+  </action>
+  <action name="action_combine_and_save_as_text">
+   <property name="text">
+    <string>Combine and save as text</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

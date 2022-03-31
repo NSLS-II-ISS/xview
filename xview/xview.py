@@ -6,7 +6,9 @@ from xas.xasproject import XASProject
 from isscloudtools.cloud_dispatcher import CloudDispatcher
 from isscloudtools.initialize import get_dropbox_service
 from issfactortools.widgets import widget_main as widget_mcr
-from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker, widget_xview_rixs
+from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker, \
+    widget_xview_rixs , widget_xview_stats
+
 
 if sys.platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview-mac.ui')
@@ -38,6 +40,11 @@ class XviewGui(*uic.loadUiType(ui_path)):
                                                                   cloud_dispatcher = self.cloud_dispatcher,
                                                                   parent=self)
         self.layout_project.addWidget(self.widget_project)
+
+        self.widget_statistics = widget_xview_stats.UIXviewStats(db_proc=db_proc,
+                                                                  cloud_dispatcher = self.cloud_dispatcher,
+                                                                  parent=self)
+        self.layout_statistics.addWidget(self.widget_statistics)
 
         # self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
         self.widget_databroker = widget_xview_databroker.get_SearchAndOpen_widget(parent=self)

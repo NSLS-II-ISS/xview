@@ -42,7 +42,7 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab_visualize">
      <attribute name="title">
@@ -58,6 +58,38 @@
        </rect>
       </property>
       <layout class="QVBoxLayout" name="layout_data"/>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_preprocess">
+     <attribute name="title">
+      <string>XAS Project</string>
+     </attribute>
+     <widget class="QWidget" name="verticalLayoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>1571</width>
+        <height>921</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="layout_project"/>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_4">
+     <attribute name="title">
+      <string>Statistics</string>
+     </attribute>
+     <widget class="QWidget" name="verticalLayoutWidget_7">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1581</width>
+        <height>831</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="layout_statistics"/>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_databroker">
@@ -118,20 +150,20 @@
       </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_preprocess">
+    <widget class="QWidget" name="tab">
      <attribute name="title">
-      <string>XAS Project</string>
+      <string>MCR Project</string>
      </attribute>
-     <widget class="QWidget" name="verticalLayoutWidget_2">
+     <widget class="QWidget" name="verticalLayoutWidget_5">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>0</x>
         <y>10</y>
-        <width>1571</width>
-        <height>921</height>
+        <width>1581</width>
+        <height>821</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="layout_project"/>
+      <layout class="QVBoxLayout" name="layout_mcr"/>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_rixs">
@@ -148,22 +180,6 @@
        </rect>
       </property>
       <layout class="QVBoxLayout" name="layout_rixs"/>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="tab">
-     <attribute name="title">
-      <string>MCR Project</string>
-     </attribute>
-     <widget class="QWidget" name="verticalLayoutWidget_5">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>10</y>
-        <width>1581</width>
-        <height>821</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="layout_mcr"/>
      </widget>
     </widget>
    </widget>
