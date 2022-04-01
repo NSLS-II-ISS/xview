@@ -120,7 +120,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         if self.working_folder:
             self.list_data.clear()
 
-            self.file_list = [f for f in os.listdir(self.working_folder) if f.endswith('.dat')]
+            self.file_list = [f for f in os.listdir(self.working_folder) if f.endswith('.dat') or f.endswith('mu')]
 
             if self.comboBox_sort_files_by.currentText() == 'Name':
                 self.file_list.sort()
@@ -203,6 +203,68 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.figure_data.tight_layout()
         self.canvas.draw_idle()
 
+    # def merge_files_and_save(self):
+    #     selected_items = self.list_data.selectedItems()
+    #     if selected_items != []:
+    #         mu_t = []
+    #         mu_f = []
+    #         mu_r = []
+    #         file_str = ''
+    #
+    #         energy = None
+    #
+    #         for item in selected_items:
+    #             filepath = str(Path(self.working_folder) / Path(item.text()))
+    #             name = Path(filepath).resolve().stem
+    #             df, header = load_binned_df_from_file(filepath)
+    #
+    #
+    #
+    #
+    #
+    #             ds_list.append(self.parent.project._datasets[])
+    #
+    #         ds_list.sort(key=lambda x: x.name)
+    #         mu = ds_list[0].mu
+    #         mu_array = np.zeros([len(selection) + 1, len(mu)])
+    #         energy_master = ds_list[0].energy
+    #
+    #         mu_array[0, :] = energy_master
+    #         ret = self.message_box_save_datasets_as()
+    #         for indx, obj in enumerate(selection):
+    #             ds = ds_list[indx]
+    #             energy = ds.energy
+    #             if ret == 0:
+    #                 yy = np.array(ds.mu)
+    #                 keys = '# energy(eV), mu(E)\n'
+    #             elif ret == 1:
+    #                 yy = ds.norm
+    #                 keys = '# energy(eV), normalized mu(E)\n'
+    #             elif ret == 2:
+    #                 yy = ds.flat
+    #                 keys = '# energy(eV), flattened normalized mu(E)\n'
+    #
+    #             yy = np.interp(energy_master, energy, yy)
+    #             mu_array[indx + 1, :] = yy
+    #             md.append(ds.name)
+    #
+    #         self.mu_array = mu_array
+    #         options = QtWidgets.QFileDialog.DontUseNativeDialog
+    #         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save XAS project',
+    #                                                             self.parent.widget_data.working_folder,
+    #                                                             'XAS dataset (*.dat)', options=options)
+    #         if filename:
+    #             if Path(filename).suffix != '.xas':
+    #                 filename = filename + '.xas'
+    #             print(filename)
+    #             filelist = "{}".format("\n".join(md[0:]))
+    #             separator = '\n #______________________________________________________\n'
+    #
+    #             header = '{} {} {}'.format(filelist, separator, keys)
+    #             fid = open(filename, 'w')
+    #             np.savetxt(fid, np.transpose(mu_array), header=header)
+    #             fid.close()
+
 
     # def merge_xas_data(self):
     #     selected_items = (self.list_data.selectedItems())
@@ -229,9 +291,11 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             message_box('Warning', 'Please select numerator and denominator')
             return
 
+        files = [item.text() for item in self.list_data.selectedItems()]
+        # files.sort()
         ds_first = None
-        for item in self.list_data.selectedItems():
-            filepath = str(Path(self.working_folder) / Path(item.text()))
+        for file in files:
+            filepath = str(Path(self.working_folder) / Path(file))
             name = Path(filepath).resolve().stem
             df, header = load_binned_df_from_file(filepath)
 
@@ -242,8 +306,11 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 uid = header[uid_idx1: uid_idx2]
                 md = self.db[uid]['start']
             except KeyError:
-                uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
-                md = self.db[uid]['start']
+                try:
+                    uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
+                    md = self.db[uid]['start']
+                except:
+                    pass
 
             if md == {}:
                 print('Metadata not found')

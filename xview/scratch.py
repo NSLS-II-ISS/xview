@@ -1032,3 +1032,14 @@ plt.plot(time_obs, medfilt(e0_obs - 11564), 'k.-')
 plt.plot(time_xes, ecen - ecen[1], 'r*')
 
 
+'''denis is working on mcr'''
+
+plt.figure(10, clear=True);
+# plt.plot(proj.dataset.x, proj.dataset.data[:, 0])
+plt.plot(proj.dataset._x, proj.dataset._data[:, -1])
+plt.plot(refset.reference_dict['MnO2']['x'] , refset.reference_dict['MnO2']['data'], 'r')
+plt.plot(refset.reference_dict['Mn2O3']['x'] , refset.reference_dict['Mn2O3']['data'], 'm')
+plt.xlim(6520, 6580)
+
+refset.reference_dict['MnO2']['x'] = proj.dataset._x
+refset.reference_dict['MnO2']['data'] = proj.dataset._data[:, -1]
