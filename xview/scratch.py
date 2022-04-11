@@ -1043,3 +1043,30 @@ plt.xlim(6520, 6580)
 
 refset.reference_dict['MnO2']['x'] = proj.dataset._x
 refset.reference_dict['MnO2']['data'] = proj.dataset._data[:, -1]
+
+###################################
+# Fe3O4:
+# FROM:
+# Scan ID: 126450
+# UID: 1805de89-84ce-45f4-9d98-d81a84c8b244
+# TO:
+# Scan ID: 126464
+# UID: 06ff04c1-3fda-413f-a4ac-e25af0cec63e
+
+# FeO:
+# Scan ID: 126467
+# UID: 5463d444-1ecb-4923-acc4-b7bbb9a2b7f6
+# Scan ID: 126482
+# UID: 8c0782b0-055e-4ec0-9260-4fdc9b66255e
+
+# Fe2O3:
+# Scan ID: 126434
+# UID: d684ffed-de08-4efd-986b-459fe8de9f74
+# Scan ID: 126448
+# UID: 107969db-1f47-490a-8644-85070e1ca2f7
+
+# Fe phtaocyanine
+# Scan ID: 126413
+# UID: 243b40cb-2d05-4507-bd2e-2c42495479cf
+# Scan ID: 126427
+# UID: a50404d1-e8b6-45ee-a6ab-b4c354055db0
