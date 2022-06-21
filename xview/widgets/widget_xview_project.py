@@ -152,7 +152,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             combine_and_save_datasets_as_text_action = menu.addAction("&Combine and save datasets as text")
             save_dataset_to_dropbox = menu.addAction("&Save to Dropbox")
             save_dataset_to_database_action = menu.addAction("&Save to processed database")
-            export_to_mcr_project = menu.addAction("&Add dataset as MCR project")
+            export_dataset_to_mcr_project = menu.addAction("&Add as dataset as MCR project")
+            export_ref_to_mcr_project = menu.addAction("&Add as reference to MCR project")
             parentPosition = self.list_project.mapToGlobal(QtCore.QPoint(0, 0))
             menu.move(parentPosition + QPos)
             action = menu.exec_()
@@ -171,8 +172,10 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             elif action == save_dataset_to_dropbox:
                 self.save_datasets_as_text(send_to_dropbox = True)
 
-            elif action == export_to_mcr_project:
-                self.export_data_to_mcr_project()
+            elif action == export_dataset_to_mcr_project:
+                self.export_dataset_to_mcr_project()
+            elif action == export_ref_to_mcr_project:
+                self.export_ref_to_mcr_project()
 
         def xas_project_double_clicked(self):
             selection = self.list_project.selectedIndexes()
@@ -702,17 +705,40 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         save_spectrum_to_db(metadata, data)
 
 
-        def export_data_to_mcr_project(self):
+        def export_dataset_to_mcr_project(self):
             selection = self.list_project.selectedIndexes()
             if selection != []:
                 index = [i.row() for i in selection]
+
+                name, ok = QtWidgets.QInputDialog.getText(self, 'Dataset name', 'Enter name:',
+                                                              QtWidgets.QLineEdit.Normal, 'New Dataset')
                 # TODO: add metadata to the output
                 # TODO: turn t into time
-                energy, t_dict, data = self.parent.project.convert_into_2d_dataset(np.sort(index))
+                if ok:
+                    energy, t_dict, data = self.parent.project.convert_into_2d_dataset(np.sort(index))
 
-                self.parent.widget_mcr._create_dataset(energy, t_dict, data, name='New Dataset')
+                    self.parent.widget_mcr._create_dataset(energy, t_dict, data, name=name)
 
+        def export_ref_to_mcr_project(self):
+            selection = self.list_project.selectedIndexes()
+            if selection != []:
+                x_list, data_list, label_list = [], [], []
+                for i in selection:
+                    ds = self.parent.project[i.row()]
+                    x_list.append(ds.energy)
+                    data_list.append(ds.flat)
+                    label_list.append(ds.name)
 
+                self.parent.widget_mcr.add_references_to_specific_set(x_list, data_list, label_list)
+
+                # name, ok = QtWidgets.QInputDialog.getText(self, 'Dataset name', 'Enter name:',
+                #                                           QtWidgets.QLineEdit.Normal, 'New Dataset')
+                # # TODO: add metadata to the output
+                # # TODO: turn t into time
+                # if ok:
+                #     energy, t_dict, data = self.parent.project.convert_into_2d_dataset(np.sort(index))
+                #
+                #     self.parent.widget_mcr._create_dataset(energy, t_dict, data, name=name)
 
 
 

@@ -10,6 +10,8 @@ from PyQt5.Qt import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, \
     NavigationToolbar2QT as NavigationToolbar
 
+from xas.xasproject import XASDataSet
+
 from qtpy.QtWidgets import (
     QApplication,
     QPushButton,
@@ -209,7 +211,7 @@ class QtSearchListWithButton(QWidget):
     Combines the QtSearches widget with a button.
     """
 
-    def __init__(self, model: SearchAndOpen, parent, add_open_button=True, add_mcr_button=False, *args, **kwargs):
+    def __init__(self, model: SearchAndOpen, parent, add_open_button=True, add_to_proj_button=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = model
         self.db = self.model.current_catalog
@@ -221,8 +223,8 @@ class QtSearchListWithButton(QWidget):
         if add_open_button:
             self.add_open_button()
 
-        if add_mcr_button:
-            self.add_mcr_button()
+        if add_to_proj_button:
+            self.add_to_proj_button()
 
 
     def add_open_button(self):
@@ -261,27 +263,30 @@ class QtSearchListWithButton(QWidget):
         else:
             print('Multiple scan selection is not supported yet')
 
-    def add_mcr_button(self):
-        self._mcr_button = QPushButton("Add to MCR project as reference")
-        self.layout.addWidget(self._mcr_button)
+    def add_to_proj_button(self):
+        self._proj_button = QPushButton("Add to XAS project")
+        self.layout.addWidget(self._proj_button)
 
         # Register a callback (slot) for the button qt click signal.
-        self._mcr_button.clicked.connect(self._on_click_mcr_button)
+        self._proj_button.clicked.connect(self._on_click_proj_button)
 
 
-    def _on_click_mcr_button(self):
+    def _on_click_proj_button(self):
         # self.model.events.open(selected_runs=self.model.selected_runs)
         run_list = self.model.selected_runs
 
         x_list, data_list, label_list = [], [], []
         for run in run_list:
             uid = run.metadata['start']['uid']
-            x, data, label = self.db.read_spectrum(uid)
-            x_list.append(x)
-            data_list.append(data)
-            label_list.append(label)
+            energy, mu, name = self.db.read_spectrum(uid)
+            ds = XASDataSet(name=(f'{name} [db_proc]'), md={}, energy=energy, mu=mu, filename='',
+                            datatype='experiment')
+            self.parent.project.append(ds)
+            # x_list.append(x)
+            # data_list.append(data)
+            # label_list.append(label)
 
-        self.parent.widget_mcr.add_references_to_specific_set(x_list, data_list, label_list)
+        # self.parent.widget_mcr.add_references_to_specific_set(x_list, data_list, label_list)
 
 
 
@@ -383,7 +388,7 @@ def get_SearchAndOpen_widget(parent, catalog=catalog, columns='columns', add_ope
     # search_model.events.open.connect(
     #     lambda event: print(f"Opening {event.selected_runs}")
     # )
-    search_view = QtSearchListWithButton(search_model, parent, add_open_button=add_open_button, add_mcr_button=add_mcr_button)
+    search_view = QtSearchListWithButton(search_model, parent, add_open_button=add_open_button, add_to_proj_button=add_mcr_button)
     return search_view
 
 

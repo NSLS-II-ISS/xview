@@ -59,7 +59,7 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_rixs = widget_xview_rixs.UIXviewRIXS(db=db, parent=self)
         self.layout_rixs.addWidget(self.widget_rixs)
 
-        self.widget_mcr = widget_mcr.FactorAnalysisGUI()
+        self.widget_mcr = widget_mcr.FactorAnalysisGUI(parent=self)
         self.layout_mcr.addWidget(self.widget_mcr)
 
         try:
