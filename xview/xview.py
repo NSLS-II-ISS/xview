@@ -17,9 +17,15 @@ else:
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview.ui')
 
 class XviewGui(*uic.loadUiType(ui_path)):
-    def __init__(self, db=None, db_proc=None, *args, **kwargs):
+    def __init__(self,
+                 db=None,
+                 db_proc=None,
+                 db_archive_catalog=None,
+                 db_catalog=None,
+                 *args, **kwargs):
+
         self.db = db
-        self.db_proc = db_proc
+        # self.db_proc = db_proc
         super().__init__(*args, **kwargs)
         self.setupUi(self)
 
@@ -47,14 +53,20 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.layout_statistics.addWidget(self.widget_statistics)
 
         # self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
-        self.widget_databroker = widget_xview_databroker.get_SearchAndOpen_widget(parent=self)
-        self.layout_databroker.addWidget(self.widget_databroker)
+        if db_archive_catalog is not None:
+            self.widget_databroker_archive = widget_xview_databroker.get_SearchAndOpen_widget(parent=self, catalog=db_archive_catalog)
+            self.layout_databroker_archive.addWidget(self.widget_databroker_archive)
 
-        self.widget_databroker_proc = widget_xview_databroker.get_SearchAndOpen_widget(parent=self, catalog=db_proc,
-                                                                                       columns='columns_proc',
-                                                                                       add_open_button=False,
-                                                                                       add_mcr_button=True)
-        self.layout_databroker_proc.addWidget(self.widget_databroker_proc)
+        if db_catalog is not None:
+            self.widget_databroker = widget_xview_databroker.get_SearchAndOpen_widget(parent=self, catalog=db_catalog)
+            self.layout_databroker.addWidget(self.widget_databroker)
+
+        if db_proc is not None:
+            self.widget_databroker_proc = widget_xview_databroker.get_SearchAndOpen_widget(parent=self, catalog=db_proc,
+                                                                                           columns='columns_proc',
+                                                                                           add_open_button=False,
+                                                                                           add_mcr_button=True)
+            self.layout_databroker_proc.addWidget(self.widget_databroker_proc)
 
         self.widget_rixs = widget_xview_rixs.UIXviewRIXS(db=db, parent=self)
         self.layout_rixs.addWidget(self.widget_rixs)

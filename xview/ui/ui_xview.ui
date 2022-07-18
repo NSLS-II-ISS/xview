@@ -42,7 +42,7 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_visualize">
      <attribute name="title">
@@ -108,6 +108,26 @@
       <property name="currentIndex">
        <number>1</number>
       </property>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>Archive data</string>
+       </attribute>
+       <widget class="QWidget" name="verticalLayoutWidget_8">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>1541</width>
+          <height>771</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="layout_databroker_archive">
+         <property name="topMargin">
+          <number>4</number>
+         </property>
+        </layout>
+       </widget>
+      </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
         <string>Experimental data</string>

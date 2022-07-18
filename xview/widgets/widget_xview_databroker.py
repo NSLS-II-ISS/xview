@@ -376,14 +376,15 @@ columns_proc = (headings_proc, extract_results_row_from_run_proc)
 columns_dict = {'columns' : columns,
                 'columns_proc' : columns_proc}
 
-CATALOG_NAME = "iss"
-import databroker
-
-catalog = databroker.catalog[CATALOG_NAME]
+# CATALOG_NAME = "iss"
+# CATALOG_NAME = "iss-local"
+# import databroker
+#
+# catalog = databroker.catalog[CATALOG_NAME]
 
 # search_model = SearchAndOpen(catalog, columns=columns)
 
-def get_SearchAndOpen_widget(parent, catalog=catalog, columns='columns', add_open_button=True, add_mcr_button=False):
+def get_SearchAndOpen_widget(parent, catalog=None, columns='columns', add_open_button=True, add_mcr_button=False):
     search_model = SearchAndOpen(catalog, columns=columns_dict[columns])
     # search_model.events.open.connect(
     #     lambda event: print(f"Opening {event.selected_runs}")
