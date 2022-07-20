@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1536</width>
-    <height>811</height>
+    <height>837</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -237,6 +237,24 @@
     </property>
     <property name="text">
      <string>Invert</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_load_extended_data">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>800</y>
+      <width>151</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>load extended data</string>
     </property>
    </widget>
   </widget>

@@ -17,7 +17,7 @@ from matplotlib.figure import Figure
 from xas.xasproject import XASDataSet
 from isstools.elements.figure_update import update_figure
 from isstools.dialogs.BasicDialogs import message_box
-from xas.file_io import load_binned_df_from_file
+from xas.file_io import load_binned_df_from_file, load_binned_df_and_extended_data_from_file
 import copy
 from xview.dialogs.FileMetadataDialog import FileMetadataDialog
 
@@ -297,7 +297,12 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         for file in files:
             filepath = str(Path(self.working_folder) / Path(file))
             name = Path(filepath).resolve().stem
-            df, header = load_binned_df_from_file(filepath)
+
+            if self.checkBox_load_extended_data.isChecked():
+                df, ext_data, header = load_binned_df_and_extended_data_from_file(filepath)
+            else:
+                df, header = load_binned_df_from_file(filepath)
+                ext_data = None
 
             md = {}
             try:
@@ -315,7 +320,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             if md == {}:
                 print('Metadata not found')
 
-            df = df.sort_values('energy')
+            # df = df.sort_values('energy')
             denominator_name = self.listWidget_data_denominator.selectedItems()[0].text()
             numerators_names = [b.text() for b in self.listWidget_data_numerator.selectedItems()]
 
@@ -323,6 +328,13 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             for numerator_name in numerators_names:
                 numerators.append(np.array(df[numerator_name]))
             denominator = np.array(df[denominator_name])
+
+            if ext_data is not None:
+                for k in ext_data.keys():
+                    if k != 'data_kind':
+                        axes = tuple(i for i in range(1, len(ext_data[k].shape)))
+                        ext_data[k] /= np.expand_dims(denominator, axes)
+
 
             for numerator, numerator_name in zip(numerators, numerators_names):
                 if self.checkBox_ratio.checkState():
@@ -343,12 +355,12 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 #print(f'Channel {mu_channel}')
                 if ds_first is None:
                     ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
-                                datatype='experiment')
+                                datatype='experiment', ext_data=ext_data)
                     ds_first = ds
                 # print('make first dataset')
                 else:
                     ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
-                                datatype='experiment', process=False, xasdataset=ds_first)
+                                datatype='experiment', process=False, xasdataset=ds_first, ext_data=ext_data)
                 # print('copying parameters from the first dataset')
 
             # print('dataset energy id', ds.energy)
