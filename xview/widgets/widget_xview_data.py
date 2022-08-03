@@ -332,8 +332,14 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             if ext_data is not None:
                 for k in ext_data.keys():
                     if k != 'data_kind':
-                        axes = tuple(i for i in range(1, len(ext_data[k].shape)))
-                        ext_data[k] /= np.expand_dims(denominator, axes)
+                        if type(ext_data[k]) == dict:
+                            for sub_k in ext_data[k].keys():
+                                axes = tuple(i for i in range(1, len(ext_data[k][sub_k].shape)))
+                                if len(axes) > 0:
+                                    ext_data[k][sub_k] /= np.expand_dims(denominator, axes)
+                        else:
+                            axes = tuple(i for i in range(1, len(ext_data[k].shape)))
+                            ext_data[k] /= np.expand_dims(denominator, axes)
 
 
             for numerator, numerator_name in zip(numerators, numerators_names):

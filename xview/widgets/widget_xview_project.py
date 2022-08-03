@@ -1,3 +1,4 @@
+import copy
 import os
 import matplotlib.patches as mpatches
 import numpy as np
@@ -21,7 +22,7 @@ from xas.file_io import load_binned_df_from_file
 from xas.xasproject import XASDataSet
 from xview.dialogs.MetadataDialog import MetadataDialog
 from xview.spectra_db.db_io import save_spectrum_to_db
-
+from matplotlib import pyplot as plt
 from os.path import expanduser
 
 
@@ -147,6 +148,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             menu = QMenu()
             rename_action = menu.addAction("&Rename")
             merge_action = menu.addAction("&Merge")
+            show_ext_data_action = menu.addAction("&Show extended data")
             remove_action = menu.addAction("&Remove")
             save_datasets_as_text_action = menu.addAction("&Save datasets as text")
             combine_and_save_datasets_as_text_action = menu.addAction("&Combine and save datasets as text")
@@ -161,6 +163,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.rename_dataset()
             elif action == merge_action:
                 self.merge_datasets()
+            elif action == show_ext_data_action:
+                self.show_ext_data()
             elif action == remove_action:
                 self.remove_from_xas_project()
             elif action == combine_and_save_datasets_as_text_action:
@@ -572,6 +576,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             selection = self.list_project.selectedIndexes()
             if selection != []:
 
+                ext_data_list = []
                 mu = self.parent.project._datasets[selection[0].row()].mu
                 energy_master = self.parent.project._datasets[selection[0].row()].energy
                 mu_array = np.zeros([len(selection), len(mu)])
@@ -591,6 +596,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     merged_md_list.append(_ds.md)
                     merged_files_string.append('# ' + _ds.filename + '\n')
                     name_list.append(_ds.name)
+                    if hasattr(_ds, 'ext_data'):
+                        ext_data_list.append(_ds.ext_data)
                     # this_uid = _ds.md['uid']
                     #     # self.parent.project._datasets[selection[indx].row()].md['uid']
                     # # merged_uids_string.append('# ' + this_uid + '\n')
@@ -598,8 +605,29 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
 
                 merged_name = os.path.commonprefix(name_list) + ' merged'
                 mu_merged = np.average(mu_array, axis=0)
+                if len(ext_data_list) > 0:
+                    ext_data_merged = copy.deepcopy(ext_data_list[0])
+                    for i in range(1, len(ext_data_list)):
+                        for k in ext_data_merged.keys():
+                            if k != 'data_kind':
+                                if type(ext_data_merged[k]) == dict:
+                                    for sub_k in ext_data_merged[k].keys():
+                                        ext_data_merged[k][sub_k] += ext_data_list[i][k][sub_k]
+                                else:
+                                    ext_data_merged[k] += ext_data_list[i][k]
+
+                    for k in ext_data_merged.keys():
+                        if k != 'data_kind':
+                            if type(ext_data_merged[k]) == dict:
+                                for sub_k in ext_data_merged[k].keys():
+                                    ext_data_merged[k][sub_k] = ext_data_merged[k][sub_k]/len(ext_data_list)
+                            else:
+                                ext_data_merged[k] /= len(ext_data_list)
+                else:
+                    ext_data_merged = None
+
                 merged = XASDataSet(name=merged_name, md=merged_files_string, energy=energy_master, mu=mu_merged, filename='',
-                                               datatype='processed')
+                                               datatype='processed', ext_data=ext_data_merged)
                 merged.header = "".join(merged.md)
 
                 merged.md = self._intersect_metadata_dicts(merged_md_list)
@@ -853,6 +881,20 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 #         (float(self.lineEdit_e0.text()) + float(self.lineEdit_range_E_lo.text())),
                 #         (float(self.lineEdit_e0.text()) + float(self.lineEdit_range_E_hi.text())))
                 self.current_plot_in = 'e'
+
+        def show_ext_data(self):
+            selection = self.list_project.selectedIndexes()
+            if selection != []:
+                indices = [i.row() for i in selection]
+                for index in indices:
+                    ds = self.parent.project[index]
+                    ext_data = ds.ext_data
+                    if ext_data['data_kind'] == b'von_hamos':
+                        plt.figure(1, clear=True)
+                        plt.subplot(221)
+                        plt.contourf(ext_data['pil100k_roi1_vh']['pixel'], ds.energy, ext_data['pil100k_roi1_vh']['intensity'], 51)
+
+
 
 ########
 
