@@ -1,6 +1,7 @@
 import os
 import matplotlib.patches as mpatches
 import numpy as np
+import pandas as pd
 import pkg_resources
 
 from PyQt5 import  QtWidgets, QtCore, uic
@@ -329,6 +330,11 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 numerators.append(np.array(df[numerator_name]))
             denominator = np.array(df[denominator_name])
 
+            if denominator_name == 'i0':
+                denominator_sign = -1
+            else:
+                denominator_sign = 1
+
             if ext_data is not None:
                 for k in ext_data.keys():
                     if k != 'data_kind':
@@ -336,10 +342,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                             for sub_k in ext_data[k].keys():
                                 axes = tuple(i for i in range(1, len(ext_data[k][sub_k].shape)))
                                 if len(axes) > 0:
-                                    ext_data[k][sub_k] /= np.expand_dims(denominator, axes)
+                                    ext_data[k][sub_k] /= (np.expand_dims(denominator, axes) * denominator_sign)
                         else:
                             axes = tuple(i for i in range(1, len(ext_data[k].shape)))
-                            ext_data[k] /= np.expand_dims(denominator, axes)
+                            ext_data[k] /= (np.expand_dims(denominator, axes) * denominator_sign)
 
 
             for numerator, numerator_name in zip(numerators, numerators_names):
@@ -355,18 +361,23 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 if self.checkBox_inv_bin.checkState():
                     spectrum = -spectrum
 
-
+                df_norm = {}
+                df_norm['energy'] = df['energy'].values
+                df_norm['mut'] = -np.log(df['it'].values / df['i0'].values)
+                df_norm['muf'] = df['iff'].values / df['i0'].values
+                df_norm['mur'] = -np.log(df['ir'].values / df['it'].values)
+                df_norm = pd.DataFrame(df_norm)
                 # attempt to add dictionary
                 #md['mu_channel']= mu_channel
                 #print(f'Channel {mu_channel}')
                 if ds_first is None:
                     ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
-                                datatype='experiment', ext_data=ext_data)
+                                datatype='experiment', ext_data=ext_data, df=df_norm)
                     ds_first = ds
                 # print('make first dataset')
                 else:
                     ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
-                                datatype='experiment', process=False, xasdataset=ds_first, ext_data=ext_data)
+                                datatype='experiment', process=False, xasdataset=ds_first, ext_data=ext_data, df=df_norm)
                 # print('copying parameters from the first dataset')
 
             # print('dataset energy id', ds.energy)

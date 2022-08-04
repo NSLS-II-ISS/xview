@@ -2,6 +2,7 @@ import copy
 import os
 import matplotlib.patches as mpatches
 import numpy as np
+import pandas as pd
 import pkg_resources
 from PyQt5 import QtGui, QtWidgets, QtCore, uic
 from PyQt5.Qt import QSplashScreen, QObject
@@ -581,6 +582,9 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 energy_master = self.parent.project._datasets[selection[0].row()].energy
                 mu_array = np.zeros([len(selection), len(mu)])
                 energy = self.parent.project._datasets[selection[0].row()].energy
+                _df = {'mut' : np.zeros([len(selection), len(mu)]),
+                       'muf': np.zeros([len(selection), len(mu)]),
+                       'mur': np.zeros([len(selection), len(mu)])                       }
                 merged_files_string = ['# merged files\n']
                 # merged_uids_string = ['# merged uids\n']
                 merged_uids_string_for_md = []
@@ -593,6 +597,11 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     mu = _ds.mu
                     mu = np.interp(energy_master, energy, mu)
                     mu_array[indx, :] = mu
+
+                    _df['mut'][indx, :] = _ds.df['mut']
+                    _df['muf'][indx, :] = _ds.df['muf']
+                    _df['mur'][indx, :] = _ds.df['mur']
+
                     merged_md_list.append(_ds.md)
                     merged_files_string.append('# ' + _ds.filename + '\n')
                     name_list.append(_ds.name)
@@ -605,6 +614,11 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
 
                 merged_name = os.path.commonprefix(name_list) + ' merged'
                 mu_merged = np.average(mu_array, axis=0)
+                df = pd.DataFrame({'energy' : energy_master,
+                                   'mut' : np.average(_df['mut'], axis=0),
+                                   'muf' : np.average(_df['muf'], axis=0),
+                                   'mur' : np.average(_df['mur'], axis=0)})
+
                 if len(ext_data_list) > 0:
                     ext_data_merged = copy.deepcopy(ext_data_list[0])
                     for i in range(1, len(ext_data_list)):
@@ -627,7 +641,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     ext_data_merged = None
 
                 merged = XASDataSet(name=merged_name, md=merged_files_string, energy=energy_master, mu=mu_merged, filename='',
-                                               datatype='processed', ext_data=ext_data_merged)
+                                               datatype='processed', ext_data=ext_data_merged, df=df)
                 merged.header = "".join(merged.md)
 
                 merged.md = self._intersect_metadata_dicts(merged_md_list)
