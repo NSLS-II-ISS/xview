@@ -19,7 +19,7 @@ from matplotlib.figure import Figure
 from isstools.elements.figure_update import update_figure
 
 from xas.xray import k2e, e2k
-from xas.file_io import load_binned_df_from_file
+from xas.file_io import load_binned_df_from_file, dump_tiff_images
 from xas.xasproject import XASDataSet
 from xview.dialogs.MetadataDialog import MetadataDialog
 from xview.spectra_db.db_io import save_spectrum_to_db
@@ -514,12 +514,12 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             if selection != []:
                 ret = self.message_box_save_datasets_as()
                 options = QtWidgets.QFileDialog.DontUseNativeDialog
-                if not send_to_dropbox:
-                    pathname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose folder...',
-                                                                      self.parent.widget_data.working_folder,
-                                                                      options=options)
-                else:
-                    pathname = f'{expanduser("~")}/tmp'
+                # if not send_to_dropbox:
+                pathname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose folder...',
+                                                                  self.parent.widget_data.working_folder,
+                                                                  options=options)
+                # else:
+                #     pathname = f'{expanduser("~")}/tmp'
                 separator = '#______________________________________________________\n'
                 if pathname is not '':
                     for indx, obj in enumerate(selection):
@@ -550,6 +550,18 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         fid = open(filename_new, 'a')
                         np.savetxt(fid, table)
                         fid.close()
+
+                        if hasattr(ds, 'ext_data') and (ds.ext_data is not None):
+                            if 'pil100k_image' in ds.ext_data.keys():
+                                tiff_files = dump_tiff_images(filename_new, None, ds.ext_data, df_red=ds.df.fillna(0), zip=True)
+                                if send_to_dropbox:
+                                    if tiff_files is not None:
+                                        for tiff_file in tiff_files:
+                                            self.cloud_dispatcher.load_to_dropbox(tiff_file,
+                                                                                  year=ds.md['year'],
+                                                                                  cycle=ds.md['cycle'],
+                                                                                  proposal=ds.md['PROPOSAL'])
+
                         if send_to_dropbox:
                             self.cloud_dispatcher.load_to_dropbox(filename_new,
                                                                   year = ds.md['year'],
