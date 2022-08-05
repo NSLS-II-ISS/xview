@@ -1070,3 +1070,118 @@ refset.reference_dict['MnO2']['data'] = proj.dataset._data[:, -1]
 # UID: 243b40cb-2d05-4507-bd2e-2c42495479cf
 # Scan ID: 126427
 # UID: a50404d1-e8b6-45ee-a6ab-b4c354055db0
+
+################
+
+x = xview_gui.project
+ds = x[-1]
+
+emin = 9020
+
+mut = ds.df['mut']
+muroi = ds.mu
+mut -= mut[0]
+muroi -= muroi[0]
+
+mut /= np.mean(mut[ds.energy >= 9020])
+muroi /= np.mean(muroi[ds.energy >= 9020])
+c = mut / muroi
+c[0] = 1
+
+rixs = ds.ext_data['pil100k_roi1_vh']['intensity']
+rixs -= rixs[0, :]
+rixs *= np.mean(muroi[ds.energy >= 9020]) / np.mean(rixs[ds.energy >= 9020, 95])
+rixs_herfd = rixs[:, 95]
+
+
+def conv_mat_lorenz(x, gamma=1):
+    ksi = (x[:, None] - x[None, :]) / gamma
+    dx = np.zeros(x.size)
+    dx[:-1] = np.diff(x)
+    dx[-1] = dx[-2]
+    g = dx / (1 + (ksi**2))
+    g = g / np.sum(g, axis=1)[:, None]
+    return g
+
+def conv_mat_gauss(x, sigma=1):
+    ksi = (x[:, None] - x[None, :]) / sigma
+    dx = np.zeros(x.size)
+    dx[:-1] = np.diff(x)
+    dx[-1] = dx[-2]
+    g = dx * np.exp(-0.5 * ksi**2)
+    g = g / np.sum(g, axis=1)[:, None]
+    return g
+
+plt.figure(1)
+plt.clf()
+
+plt.plot(ds.energy, mut)
+# plt.plot(ds.energy, muroi)
+# plt.plot(ds.energy, rixs_herfd)
+plt.plot(ds.energy, rixs_herfd * c, 'r:')
+
+
+# plt.plot(ds.energy, conv_mat(ds.energy, gamma=1), 'g')
+plt.plot(ds.energy, conv_mat_gauss(ds.energy, sigma=0.43) @ conv_mat_lorenz(ds.energy, gamma=0.4) @ (rixs_herfd * c), 'g')
+# plt.plot(ds.energy, muroi * c, 'm:')
+
+
+rixs_norm = rixs.copy()
+rixs_norm -= np.mean(rixs_norm[:, :10], axis=1)[:, None]
+# rixs_norm /= np.sum(rixs_norm, axis=1)[:, None]
+
+plt.figure(2)
+plt.clf()
+
+# plt.contourf(rixs * c[:, None], 52, vmin=0, vmax=0.4)
+plt.contourf(rixs_norm[:, :].T, 60)
+
+u, s, vT = np.linalg.svd(rixs_norm[130:, :])
+v = vT.T
+plt.figure(3)
+plt.clf()
+
+plt.subplot(221)
+plt.semilogy(s, 'ks-')
+
+n_cmp = 2
+plt.subplot(222)
+plt.plot(u[:, :n_cmp])
+
+plt.subplot(223)
+plt.plot(v[:, :n_cmp])
+
+# for ds in x:
+#     print(ds.name, ds.energy.size == 304)
+
+######################
+
+basename = '/nsls2/data/iss/legacy/processed/2022/2/309855/tiff_storage/CuBTC_MV (pos 0 merged meaningful name/image'
+images_list = []
+
+data = np.genfromtxt('/nsls2/data/iss/legacy/processed/2022/2/309855/tiff_storage/CuBTC_MV (pos 0 merged meaningful name.dat')
+
+for i in range(1, 305):
+    impath = f'{basename}{i :04d}.tif'
+    images_list.append(np.array(Image.open(impath)))
+
+images = np.array(images_list)
+rixs =np.sum(images[:, 50:90, 50:280], axis=1)
+rixs /= rixs.max()
+
+plt.figure(2)
+plt.clf()
+plt.subplot(221)
+plt.contourf(np.arange(230), data[1:, 0], rixs, 50, vmin=0, vmax=1)
+
+plt.subplot(222)
+plt.contourf(np.arange(230), data[1:, 0], rixs, 50, vmin=0, vmax=0.2)
+
+plt.subplot(223)
+plt.plot(data[1:, 0], rixs[:, 111])
+# plt.figure(3)
+# plt.clf()
+# plt.contourf(np.arange(230), data[1:, 0], rixs, 50, vmin=0, vmax=1)
+
+# plt.imshow(rixs, vmin=0, vmax=10e6)
+
