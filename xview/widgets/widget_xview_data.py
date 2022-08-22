@@ -360,13 +360,15 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     spectrum = np.log(spectrum)
                 if self.checkBox_inv_bin.checkState():
                     spectrum = -spectrum
-
-                df_norm = {}
-                df_norm['energy'] = df['energy'].values
-                df_norm['mut'] = -np.log(df['it'].values / df['i0'].values)
-                df_norm['muf'] = df['iff'].values / df['i0'].values
-                df_norm['mur'] = -np.log(df['ir'].values / df['it'].values)
-                df_norm = pd.DataFrame(df_norm)
+                try:
+                    df_norm = {}
+                    df_norm['energy'] = df['energy'].values
+                    df_norm['mut'] = -np.log(df['it'].values / df['i0'].values)
+                    df_norm['muf'] = df['iff'].values / df['i0'].values
+                    df_norm['mur'] = -np.log(df['ir'].values / df['it'].values)
+                    df_norm = pd.DataFrame(df_norm)
+                except:
+                    df_norm = None
                 # attempt to add dictionary
                 #md['mu_channel']= mu_channel
                 #print(f'Channel {mu_channel}')
