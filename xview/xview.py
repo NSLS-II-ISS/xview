@@ -37,7 +37,11 @@ class XviewGui(*uic.loadUiType(ui_path)):
             print("Cloud services cannot be connected")
             self.dropbox_service = None
 
-        self.cloud_dispatcher = CloudDispatcher(dropbox_service=self.dropbox_service)
+        try:
+            self.cloud_dispatcher = CloudDispatcher(dropbox_service=self.dropbox_service)
+        except Exception as e:
+            print(f'Could not initialize cloud dispatcher:\n{e}')
+            self.cloud_dispatcher = None
 
         self.widget_data = widget_xview_data.UIXviewData(db=db, parent=self)
         self.layout_data.addWidget(self.widget_data)
