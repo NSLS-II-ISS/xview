@@ -78,13 +78,6 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_mcr = widget_mcr.FactorAnalysisGUI(parent=self)
         self.layout_mcr.addWidget(self.widget_mcr)
 
-        try:
-            self.dropbox_service = get_dropbox_service()
-        except:
-            print("Cloud services cannot be connected")
-            self.dropbox_service = None
-
-        self.cloud_dispatcher = CloudDispatcher(dropbox_service=self.dropbox_service)
 
 
     def  set_figure(self, axis, canvas, label_x='', label_y=''):
