@@ -22,7 +22,7 @@ from xas.xray import k2e, e2k
 from xas.file_io import load_binned_df_from_file, dump_tiff_images
 from xas.xasproject import XASDataSet
 from xview.dialogs.MetadataDialog import MetadataDialog
-from xview.spectra_db.db_io import save_spectrum_to_db
+# from xview.spectra_db.db_io import save_spectrum_to_db
 from matplotlib import pyplot as plt
 from os.path import expanduser
 
@@ -154,7 +154,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             save_datasets_as_text_action = menu.addAction("&Save datasets as text")
             combine_and_save_datasets_as_text_action = menu.addAction("&Combine and save datasets as text")
             save_dataset_to_dropbox = menu.addAction("&Save to Dropbox")
-            save_dataset_to_database_action = menu.addAction("&Save to processed database")
+            # save_dataset_to_database_action = menu.addAction("&Save to processed database")
             export_dataset_to_mcr_project = menu.addAction("&Add as dataset as MCR project")
             export_ref_to_mcr_project = menu.addAction("&Add as reference to MCR project")
             parentPosition = self.list_project.mapToGlobal(QtCore.QPoint(0, 0))
@@ -172,8 +172,8 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.combine_and_save_datasets_as_text()
             elif action == save_datasets_as_text_action:
                 self.save_datasets_as_text( )
-            elif action == save_dataset_to_database_action:
-                self.save_datasets_to_database()
+            # elif action == save_dataset_to_database_action:
+            #     self.save_datasets_to_database()
             elif action == save_dataset_to_dropbox:
                 self.save_datasets_as_text(send_to_dropbox = True)
 
@@ -721,42 +721,42 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     self.parent.project._datasets[selection[0].row()].name = new_name
                     self.parent.project.project_changed()
 
-        def save_datasets_to_database(self):
-            selection = self.list_project.selectedIndexes()
-            if selection != []:
-
-                for indx, _ in enumerate(selection):
-                    ds = self.parent.project._datasets[selection[indx].row()]
-                    sample_name = ds.name
-                    compound = ds.name
-                    try:
-                        element = ds.md['element']
-                        edge = ds.md['edge']
-                        uid = ds.md['uid']
-                    except:
-                        element = ''
-                        edge = ''
-                        uid = ''
-
-                    e0 = ds.e0
-                    reference = 0
-                    self._dlg = MetadataDialog(sample_name, compound, element, edge, e0, reference, uid, parent=self)
-                    if self._dlg.exec_():
-                        sample_name, compound, element, edge, e0, reference, uid = self._dlg.getValues()
-                        metadata = {'Sample_name': sample_name,
-                                    'compound': compound,
-                                    'Element' : element,
-                                    'Edge' : edge,
-                                    'E0': e0,
-                                    'Reference' : reference,
-                                    'ISS_DB_uid' : uid}
-                        try:
-                            mu_norm = ds.flat.values
-                        except AttributeError:
-                            mu_norm = ds.flat
-                        energy = ds.energy
-                        data = {'Energy': energy, 'mu_norm': mu_norm}
-                        save_spectrum_to_db(metadata, data)
+        # def save_datasets_to_database(self):
+        #     selection = self.list_project.selectedIndexes()
+        #     if selection != []:
+        #
+        #         for indx, _ in enumerate(selection):
+        #             ds = self.parent.project._datasets[selection[indx].row()]
+        #             sample_name = ds.name
+        #             compound = ds.name
+        #             try:
+        #                 element = ds.md['element']
+        #                 edge = ds.md['edge']
+        #                 uid = ds.md['uid']
+        #             except:
+        #                 element = ''
+        #                 edge = ''
+        #                 uid = ''
+        #
+        #             e0 = ds.e0
+        #             reference = 0
+        #             self._dlg = MetadataDialog(sample_name, compound, element, edge, e0, reference, uid, parent=self)
+        #             if self._dlg.exec_():
+        #                 sample_name, compound, element, edge, e0, reference, uid = self._dlg.getValues()
+        #                 metadata = {'Sample_name': sample_name,
+        #                             'compound': compound,
+        #                             'Element' : element,
+        #                             'Edge' : edge,
+        #                             'E0': e0,
+        #                             'Reference' : reference,
+        #                             'ISS_DB_uid' : uid}
+        #                 try:
+        #                     mu_norm = ds.flat.values
+        #                 except AttributeError:
+        #                     mu_norm = ds.flat
+        #                 energy = ds.energy
+        #                 data = {'Energy': energy, 'mu_norm': mu_norm}
+        #                 save_spectrum_to_db(metadata, data)
 
 
         def export_dataset_to_mcr_project(self):
