@@ -20,7 +20,7 @@ from xas.xray import k2e, e2k
 from xas.file_io import load_binned_df_from_file
 from xas.xasproject import XASDataSet
 from xview.dialogs.MetadataDialog import MetadataDialog
-from xview.spectra_db.db_io import save_spectrum_to_db
+# from xview.spectra_db.db_io import save_spectrum_to_db
 
 from os.path import expanduser
 
