@@ -185,8 +185,8 @@ def df_column_switch(_df, column1, column2):
     Input('refresh-btn', 'n_clicks'),
 )
 def refresh_df(btn):
-    YEAR, CYCLE, PROPOSAL = 0, 0, 0
-    db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
+    # YEAR, CYCLE, PROPOSAL = 0, 0, 0
+    # db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
     df = db_viewer.df
     # global df
     # df.drop(df.tail(1).index, inplace=True)
