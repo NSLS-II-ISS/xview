@@ -3,6 +3,7 @@ from dash import html, dcc, dash_table
 from dash.dependencies import Input, Output, State
 
 import plotly.graph_objs as go
+import plotly.express as px
 
 import pandas as pd
 
@@ -137,6 +138,8 @@ fig = go.Figure(data=[go.Table(
     cells=dict(values=[df[col] for col in df.columns])
 )])
 
+test_fig = px.scatter(x=[1,2,3], y=[1,2,3])
+
 app.layout = html.Div([
     html.H1('Example Table'),
 
@@ -148,21 +151,31 @@ app.layout = html.Div([
     html.Button("Refresh", id='refresh-btn'),
 
     html.Button("Swap Cols", id='swap-cols'),
-    # create table using dash DataTable
-    dash_table.DataTable(
-        id='main-table',
-        data=df.to_dict('records'),
-        columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns],
-        hidden_columns=['scan_uid'],
-        sort_action='native',
-        column_selectable='multi',
 
-        # css styles
-        style_cell={
-            'textAlign': 'left',
-            'font-family': 'arial',
-        },
-        )
+    html.Div(
+        # create table using dash DataTable
+        dash_table.DataTable(
+            id='main-table',
+            data=df.to_dict('records'),
+            columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns],
+            hidden_columns=['scan_uid'],
+            sort_action='native',
+            column_selectable='multi',
+
+            # css styles
+            style_cell={
+                'textAlign': 'left',
+                'font-family': 'arial',
+            },
+            style_table={
+                'width': '30%'
+            },
+        ),
+        style={'display': 'inline-block'}
+    ),    
+    
+    dcc.Graph(id='main-graph', figure=test_fig, style={'display': 'inline-block'})
+    
 ])
 
 
