@@ -7,6 +7,11 @@ import plotly.express as px
 
 import pandas as pd
 
+from xas.db_io import get_dbviewer
+db_viewer = get_dbviewer()
+
+
+
 app = dash.Dash(__name__)
 app.title = "ISS testing"
 
@@ -130,12 +135,12 @@ table_dict = {'time': {15: 1661874873.3656662,
   2: 'fly_scan',
   3: 'fly_scan',
   4: 'fly_scan'}}
-df = pd.DataFrame(table_dict)
+db_viewer.df = pd.DataFrame(table_dict)
 
 # create table in plotly and display with dcc.Graph
 fig = go.Figure(data=[go.Table(
-    header=dict(values=list(df.columns)),
-    cells=dict(values=[df[col] for col in df.columns])
+    header=dict(values=list(db_viewer.df.columns)),
+    cells=dict(values=[db_viewer.df[col] for col in db_viewer.df.columns])
 )])
 
 test_fig = px.scatter(x=[1,2,3], y=[1,2,3])
@@ -193,10 +198,13 @@ def df_column_switch(_df, column1, column2):
     Input('refresh-btn', 'n_clicks'),
 )
 def refresh_df(btn):
-    global df
-    df.drop(df.tail(1).index, inplace=True)
+    # YEAR, CYCLE, PROPOSAL = 0, 0, 0
+    # db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
+    df = db_viewer.df
+    # global df
+    # df.drop(df.tail(1).index, inplace=True)
     # df = df.iloc[:-1]
-    print(dash.ctx.triggered_id)
+    # print(dash.ctx.triggered_id)
     return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
 
 
