@@ -1,5 +1,4 @@
-import dash
-from dash import html, dcc, dash_table
+from dash import Dash, html, dcc, dash_table
 from dash.dependencies import Input, Output, State
 
 import plotly.graph_objs as go
@@ -12,7 +11,7 @@ db_viewer = get_dbviewer()
 
 test_fig = px.scatter(x=[1,2,3], y=[1,2,3])
 
-app = dash.Dash(__name__)
+app = Dash(__name__)
 app.title = "ISS testing"
 
 table_dict = {'time': {15: 1661874873.3656662,
@@ -143,7 +142,7 @@ fig = go.Figure(data=[go.Table(
     cells=dict(values=[db_viewer.df[col] for col in db_viewer.df.columns])
 )])
 
-test_fig = px.scatter(x=[1,2,3], y=[1,2,3])
+test_fig = px.line(x=[1,2,3], y=[1,2,3])
 
 app.layout = html.Div([
     html.H1('Example Table'),
@@ -157,29 +156,35 @@ app.layout = html.Div([
 
     html.Button("Swap Cols", id='swap-cols'),
 
+    # wrapper for grid layout
     html.Div(
-    # create table using dash DataTable
-    dash_table.DataTable(
-        id='main-table',
-            data=db_viewer.df.to_dict('records'),
-            columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in db_viewer.df.columns],
-        hidden_columns=['scan_uid'],
-        sort_action='native',
-        column_selectable='multi',
+        [html.Div(
+        # create table using dash DataTable
+            dash_table.DataTable(
+                id='main-table',
+                data=db_viewer.df.to_dict('records'),
+                columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in db_viewer.df.columns],
+                hidden_columns=['scan_uid'],
+                sort_action='native',
+                column_selectable='multi',
 
-        # css styles
-        style_cell={
-            'textAlign': 'left',
-            'font-family': 'arial',
-        },
-            style_table={
-                'width': '30%'
-            },
+                # css styles
+                style_cell={
+                    'textAlign': 'left',
+                    'font-family': 'arial',
+                },
+                style_table={
+                    'width': '30%'
+                },
+            ),
         ),
-        style={'display': 'inline-block'}
+
+        html.Div(
+            dcc.Graph(id='main-graph', figure=test_fig, style={'height': '100%'})
+        )],
+    className='table-graph'
     ),
     
-    dcc.Graph(id='main-graph', figure=test_fig, style={'display': 'inline-block'})
 ])
 
 
@@ -204,6 +209,7 @@ def refresh_df(btn):
     # df.drop(df.tail(1).index, inplace=True)
     # df = df.iloc[:-1]
     # print(dash.ctx.triggered_id)
+
     return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
 
 

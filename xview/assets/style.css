@@ -1,0 +1,51 @@
+/*
+CSS Syntax:
+
+selector {
+    property1: value;
+    property2: value;
+}
+
+Classes:
+.class-name {
+    property: value;
+}
+
+*/
+
+/*
+Selector Combinations:
+.selector1-.selector-2 {
+    property: value;
+}
+
+.ancestor .child {
+    property: value;
+}
+e.g. select all "p" tags with a "div" ancestor
+div p {
+    color: red;
+}
+
+*/
+
+body {
+    font-family: Arial;
+    color: darkblue;
+}
+
+/* Box Model */
+
+.box {
+    height: 100px;
+    width: 100px;
+    padding: 20px;
+    margin: 50px;
+    border: 10px solid black;
+    background-color: red;
+}
+
+.table-graph {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+}
