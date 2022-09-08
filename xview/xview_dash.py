@@ -143,6 +143,8 @@ fig = go.Figure(data=[go.Table(
     cells=dict(values=[db_viewer.df[col] for col in db_viewer.df.columns])
 )])
 
+test_fig = px.scatter(x=[1,2,3], y=[1,2,3])
+
 app.layout = html.Div([
     html.H1('Example Table'),
 
@@ -154,15 +156,8 @@ app.layout = html.Div([
     html.Button("Refresh", id='refresh-btn'),
 
     html.Button("Swap Cols", id='swap-cols'),
-    # create table using dash DataTable
-    dash_table.DataTable(
-        id='main-table',
-        data=db_viewer.df.to_dict('records'),
-        columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in db_viewer.df.columns],
-        hidden_columns=['scan_uid'],
-        sort_action='native',
-        column_selectable='multi',
 
+<<<<<<< HEAD:xview/xview_dash.py
         # css styles
         style_cell={
             'textAlign': 'left',
@@ -173,6 +168,32 @@ app.layout = html.Div([
             dcc.Graph(figure=test_fig),
             style={"display": "inline-block"},
     ),
+=======
+    html.Div(
+        # create table using dash DataTable
+        dash_table.DataTable(
+            id='main-table',
+            data=df.to_dict('records'),
+            columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns],
+            hidden_columns=['scan_uid'],
+            sort_action='native',
+            column_selectable='multi',
+
+            # css styles
+            style_cell={
+                'textAlign': 'left',
+                'font-family': 'arial',
+            },
+            style_table={
+                'width': '30%'
+            },
+        ),
+        style={'display': 'inline-block'}
+    ),    
+    
+    dcc.Graph(id='main-graph', figure=test_fig, style={'display': 'inline-block'})
+    
+>>>>>>> aaa54c68ad6be94105bd128790aa31b8088197a9:xview/xview-dash.py
 ])
 
 
