@@ -1,15 +1,14 @@
-from dash import Dash, html, dcc, dash_table
+from dash import Dash, html, dcc, dash_table, ctx
 from dash.dependencies import Input, Output, State
 
 import plotly.graph_objs as go
 import plotly.express as px
 
 import pandas as pd
+import numpy as np
 
 from xas.db_io import get_dbviewer
 db_viewer = get_dbviewer()
-
-test_fig = px.scatter(x=[1,2,3], y=[1,2,3])
 
 app = Dash(__name__)
 app.title = "ISS testing"
@@ -134,7 +133,9 @@ table_dict = {'time': {15: 1661874873.3656662,
   2: 'fly_scan',
   3: 'fly_scan',
   4: 'fly_scan'}}
-db_viewer.df = pd.DataFrame(table_dict)
+
+test_data = {'x': np.random.rand(20), 'y': np.random.rand(20)}
+db_viewer.df = pd.DataFrame(test_data)
 
 # create table in plotly and display with dcc.Graph
 fig = go.Figure(data=[go.Table(
@@ -142,7 +143,7 @@ fig = go.Figure(data=[go.Table(
     cells=dict(values=[db_viewer.df[col] for col in db_viewer.df.columns])
 )])
 
-test_fig = px.line(x=[1,2,3], y=[1,2,3])
+test_fig = px.line(x=[1,2,3], y=[1,2,3], markers=True)
 
 app.layout = html.Div([
     html.H1('Example Table'),
@@ -153,8 +154,8 @@ app.layout = html.Div([
     html.P(id='selected-cols'),
 
     html.Button("Refresh", id='refresh-btn'),
-
     html.Button("Swap Cols", id='swap-cols'),
+    html.Button("Plot Columns", id='plot-cols'),
 
     # wrapper for grid layout
     html.Div(
@@ -177,10 +178,12 @@ app.layout = html.Div([
                     'width': '30%'
                 },
             ),
+            className='fig'
         ),
 
         html.Div(
-            dcc.Graph(id='main-graph', figure=test_fig, style={'height': '100%'})
+            dcc.Graph(id='main-graph', figure=test_fig, style={'height': '100%'}),
+            className='fig'
         )],
     className='table-graph'
     ),
@@ -188,13 +191,19 @@ app.layout = html.Div([
 ])
 
 
-def df_column_switch(_df, column1, column2):
-    """ swap positions of two cols in dataframe """
-    i = list(_df.columns)
-    a, b = i.index(column1), i.index(column2)
-    i[b], i[a] = i[a], i[b]
-    _df = _df[i]
-    return _df
+@app.callback(
+    Output('main-graph', 'figure'),
+    Input('main-table', 'selected_columns'),
+    Input('plot-cols', 'n_clicks'),
+)
+def plot_selected_cols(selected_columns, plot_btn):
+    global test_fig
+    print(ctx.triggered_id)
+    if ctx.triggered_id == 'plot-cols':
+        if selected_columns and len(selected_columns) == 2:
+            test_fig = px.line(x=selected_columns[0], y=selected_columns[1], markers=True)
+    return test_fig
+
 
 @app.callback(
     Output('main-table', 'data'),
@@ -211,6 +220,14 @@ def refresh_df(btn):
     # print(dash.ctx.triggered_id)
 
     return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
+
+def df_column_switch(_df, column1, column2):
+    """ swap positions of two cols in dataframe """
+    i = list(_df.columns)
+    a, b = i.index(column1), i.index(column2)
+    i[b], i[a] = i[a], i[b]
+    _df = _df[i]
+    return _df
 
 
 # @app.callback(
