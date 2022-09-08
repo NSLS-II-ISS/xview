@@ -46,6 +46,11 @@ body {
 }
 
 .table-graph {
-    display:grid;
+    display: grid;
     grid-template-columns: 1fr 1fr;
+}
+
+.fig {
+    height: 700;
+    overflow-y: scroll;
 }
