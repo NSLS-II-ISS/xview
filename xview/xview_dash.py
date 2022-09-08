@@ -161,8 +161,8 @@ app.layout = html.Div([
     # create table using dash DataTable
     dash_table.DataTable(
         id='main-table',
-            data=df.to_dict('records'),
-            columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns],
+            data=db_viewer.df.to_dict('records'),
+            columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in db_viewer.df.columns],
         hidden_columns=['scan_uid'],
         sort_action='native',
         column_selectable='multi',
@@ -231,7 +231,7 @@ def refresh_df(btn):
 )
 def display_selected_cell(active_cell):
     if active_cell:
-        cell_data = df.iloc[active_cell['row']][active_cell['column_id']]
+        cell_data = db_viewer.df.iloc[active_cell['row']][active_cell['column_id']]
         return f"Data: \"{cell_data}\" from table cell: {active_cell}"
     else:
         return "Data:"
