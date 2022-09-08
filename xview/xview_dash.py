@@ -3,13 +3,14 @@ from dash import html, dcc, dash_table
 from dash.dependencies import Input, Output, State
 
 import plotly.graph_objs as go
+import plotly.express as px
 
 import pandas as pd
 
 from xas.db_io import get_dbviewer
 db_viewer = get_dbviewer()
 
-
+test_fig = px.scatter(x=[1,2,3], y=[1,2,3])
 
 app = dash.Dash(__name__)
 app.title = "ISS testing"
@@ -167,7 +168,11 @@ app.layout = html.Div([
             'textAlign': 'left',
             'font-family': 'arial',
         },
-        )
+        ),
+        html.Div(
+            dcc.Graph(figure=test_fig),
+            style={"display": "inline-block"},
+    ),
 ])
 
 
