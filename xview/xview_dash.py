@@ -1,5 +1,6 @@
 from dash import Dash, html, dcc, dash_table, ctx
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 
 import plotly.graph_objs as go
 import plotly.express as px
@@ -10,7 +11,7 @@ import numpy as np
 from xas.db_io import get_dbviewer
 db_viewer = get_dbviewer()
 
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "ISS testing"
 
 table_dict = {'time': {15: 1661874873.3656662,
@@ -145,7 +146,7 @@ fig = go.Figure(data=[go.Table(
 
 test_fig = px.line(x=[1,2,3], y=[1,2,3], markers=True)
 
-app.layout = html.Div([
+app.layout = dbc.Container([
     html.H1('Example Table'),
 
     # dcc.Graph(figure=fig),
@@ -187,7 +188,6 @@ app.layout = html.Div([
         )],
     className='table-graph'
     ),
-    
 ])
 
 
@@ -197,12 +197,14 @@ app.layout = html.Div([
     Input('plot-cols', 'n_clicks'),
 )
 def plot_selected_cols(selected_columns, plot_btn):
-    global test_fig
     print(ctx.triggered_id)
     if ctx.triggered_id == 'plot-cols':
         if selected_columns and len(selected_columns) == 2:
-            test_fig = px.line(x=selected_columns[0], y=selected_columns[1], markers=True)
-    return test_fig
+            print(selected_columns)
+            plot = px.line(x=db_viewer.df[selected_columns[0]], y=db_viewer.df[selected_columns[1]], markers=True)
+    else:
+        plot = test_fig
+    return plot
 
 
 @app.callback(
