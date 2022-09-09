@@ -135,33 +135,23 @@ table_dict = {'time': {15: 1661874873.3656662,
   3: 'fly_scan',
   4: 'fly_scan'}}
 
-test_data = {'x': np.random.rand(20), 'y': np.random.rand(20)}
+test_data = {'x': np.random.rand(50), 'y': np.random.rand(50)}
 db_viewer.df = pd.DataFrame(test_data)
-
-# create table in plotly and display with dcc.Graph
-fig = go.Figure(data=[go.Table(
-    header=dict(values=list(db_viewer.df.columns)),
-    cells=dict(values=[db_viewer.df[col] for col in db_viewer.df.columns])
-)])
 
 test_fig = px.line(x=[1,2,3], y=[1,2,3], markers=True)
 
 app.layout = dbc.Container([
     html.H1('Example Table'),
 
-    # dcc.Graph(figure=fig),
-
     html.P(id='selected-cell'),
     html.P(id='selected-cols'),
 
-    html.Button("Refresh", id='refresh-btn'),
-    html.Button("Swap Cols", id='swap-cols'),
-    html.Button("Plot Columns", id='plot-cols'),
+    dbc.Row(
+        [dbc.Col(
+            [dbc.Button("Refresh", id='refresh-btn'),
+            dbc.Button("Swap Cols", id='swap-cols'),
 
-    # wrapper for grid layout
-    html.Div(
-        [html.Div(
-        # create table using dash DataTable
+            # create table using dash DataTable
             dash_table.DataTable(
                 id='main-table',
                 data=db_viewer.df.to_dict('records'),
@@ -176,34 +166,39 @@ app.layout = dbc.Container([
                     'font-family': 'arial',
                 },
                 style_table={
-                    'width': '30%'
+                    'width': '100%',
+                    'height': '700px',
+                    'overflow-y': 'scroll',
                 },
-            ),
-            className='fig'
+            ),]
         ),
 
-        html.Div(
-            dcc.Graph(id='main-graph', figure=test_fig, style={'height': '100%'}),
-            className='fig'
+        dbc.Col(
+            [dbc.Button("Plot Columns", id='plot-cols'),
+            dcc.Graph(id='main-graph', figure=test_fig, className='fig'),]
         )],
-    className='table-graph'
     ),
-])
+    ],
+    fluid=True,
+)
 
 
 @app.callback(
     Output('main-graph', 'figure'),
     Input('main-table', 'selected_columns'),
     Input('plot-cols', 'n_clicks'),
+    State('main-graph', 'figure'),
 )
-def plot_selected_cols(selected_columns, plot_btn):
+def plot_selected_cols(selected_columns, plot_btn, current_plot):
     print(ctx.triggered_id)
+
+    plot = current_plot
+
     if ctx.triggered_id == 'plot-cols':
         if selected_columns and len(selected_columns) == 2:
-            print(selected_columns)
+            # print(selected_columns)
             plot = px.line(x=db_viewer.df[selected_columns[0]], y=db_viewer.df[selected_columns[1]], markers=True)
-    else:
-        plot = test_fig
+            
     return plot
 
 
