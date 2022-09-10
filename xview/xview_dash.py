@@ -195,9 +195,10 @@ def plot_selected_cols(selected_columns, plot_btn, current_plot):
     plot = current_plot
 
     if ctx.triggered_id == 'plot-cols':
-        if selected_columns and len(selected_columns) == 2:
+        if selected_columns:
             # print(selected_columns)
-            plot = px.line(x=db_viewer.df[selected_columns[0]], y=db_viewer.df[selected_columns[1]], markers=True)
+            # plot = px.line(x=db_viewer.df[selected_columns[0]], y=db_viewer.df[selected_columns[1]], markers=True)
+            plot = px.line(db_viewer.df[selected_columns])
             
     return plot
 
