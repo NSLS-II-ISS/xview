@@ -140,7 +140,7 @@ db_viewer.df = pd.DataFrame(test_data)
 
 test_fig = px.line(x=[1,2,3], y=[1,2,3], markers=True)
 
-app.layout = dbc.Container([
+tab1_content = dbc.Container([
     html.H1('Example Table'),
 
     html.P(id='selected-cell'),
@@ -170,6 +170,12 @@ app.layout = dbc.Container([
                     'height': '700px',
                     'overflow-y': 'scroll',
                 },
+                css=[
+                    {
+                        'selector': '.show-hide',
+                        'rule': 'class-name: btn btn-primary',
+                    }
+                ],
             ),]
         ),
 
@@ -180,6 +186,14 @@ app.layout = dbc.Container([
     ),
     ],
     fluid=True,
+)
+
+app.layout = dbc.Tabs(
+    [
+        dbc.Tab(tab1_content, label="Table&Plot"),
+        dbc.Tab(html.H2('testing'), label='Stuff'),
+
+    ]
 )
 
 
@@ -197,7 +211,6 @@ def plot_selected_cols(selected_columns, plot_btn, current_plot):
     if ctx.triggered_id == 'plot-cols':
         if selected_columns:
             # print(selected_columns)
-            # plot = px.line(x=db_viewer.df[selected_columns[0]], y=db_viewer.df[selected_columns[1]], markers=True)
             plot = px.line(db_viewer.df[selected_columns])
             
     return plot
