@@ -173,7 +173,7 @@ tab1_content = dbc.Container([
                 css=[
                     {
                         'selector': '.show-hide',
-                        'rule': 'class-name: btn btn-primary',
+                        'rule': 'background-color: blue',
                     }
                 ],
             ),]
@@ -191,7 +191,7 @@ tab1_content = dbc.Container([
 app.layout = dbc.Tabs(
     [
         dbc.Tab(tab1_content, label="Table&Plot"),
-        dbc.Tab(html.H2('testing'), label='Stuff'),
+        dbc.Tab(html.H1('testing'), label='Stuff'),
 
     ]
 )
