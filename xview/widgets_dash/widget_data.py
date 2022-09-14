@@ -1,3 +1,4 @@
+import dash
 from dash import Dash, html, dcc, dash_table, ctx
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
@@ -59,29 +60,15 @@ tab1_content = dbc.Container([
 )
 
 
-refresh_df_args = [
-    Output('main-table', 'data'),
-    Output('main-table', 'columns'),
-    Input('refresh-btn', 'n_clicks'),
-]
-def refresh_df(btn):
-    # YEAR, CYCLE, PROPOSAL = 0, 0, 0
-    # db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
-    df = db_viewer.df
-    # global df
-    # df.drop(df.tail(1).index, inplace=True)
-    # df = df.iloc[:-1]
-    # print(dash.ctx.triggered_id)
-
-    return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
-
-plot_selected_cols_args = [
+@dash.callback(
+    # *plot_selected_cols_args
     Output('main-graph', 'figure'),
     Input('main-table', 'selected_columns'),
     Input('plot-cols', 'n_clicks'),
     State('main-graph', 'figure'),
-]
+)
 def plot_selected_cols(selected_columns, plot_btn, current_plot):
+    # return plot_selected_cols(selected_columns, plot_btn, current_plot)
     print(ctx.triggered_id)
 
     plot = current_plot
@@ -93,7 +80,86 @@ def plot_selected_cols(selected_columns, plot_btn, current_plot):
             
     return plot
 
-widget_data_funcs = [
-    (refresh_df, refresh_df_args),
-    (plot_selected_cols, plot_selected_cols_args),
-]
+@dash.callback(
+    Output('main-table', 'data'),
+    Output('main-table', 'columns'),
+    Input('refresh-btn', 'n_clicks'),
+)
+def refresh_df(btn):
+    print("refreshing table...")
+    # YEAR, CYCLE, PROPOSAL = 0, 0, 0
+    # db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
+    df = db_viewer.df
+    # global df
+    # df.drop(df.tail(1).index, inplace=True)
+    # df = df.iloc[:-1]
+    # print(dash.ctx.triggered_id)
+
+    return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
+
+
+
+# callback decorator automatically runs function whenever input is changed
+@dash.callback(
+    # keywords are optional (only two arguments for Input/Output)
+    Output(component_id='selected-cell', component_property='children'),
+    Input('main-table', 'active_cell')
+)
+def display_selected_cell(active_cell):
+    if active_cell:
+        cell_data = db_viewer.df.iloc[active_cell['row']][active_cell['column_id']]
+        return f"Data: \"{cell_data}\" from table cell: {active_cell}"
+    else:
+        return "Data:"
+
+
+@dash.callback(
+    Output('selected-cols', 'children'),
+    Input('main-table', 'selected_columns')
+)
+def display_selected_cols(selected_columns):
+    if selected_columns:
+        return f"Selected Columns: {selected_columns}"
+    else:
+        return "Selected Columns:"
+
+
+# TUPLE METHOD OF PACKING FUNCTIONS
+# refresh_df_args = [
+#     Output('main-table', 'data'),
+#     Output('main-table', 'columns'),
+#     Input('refresh-btn', 'n_clicks'),
+# ]
+# def refresh_df(btn):
+#     # YEAR, CYCLE, PROPOSAL = 0, 0, 0
+#     # db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
+#     df = db_viewer.df
+#     # global df
+#     # df.drop(df.tail(1).index, inplace=True)
+#     # df = df.iloc[:-1]
+#     # print(dash.ctx.triggered_id)
+
+#     return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
+
+# plot_selected_cols_args = [
+#     Output('main-graph', 'figure'),
+#     Input('main-table', 'selected_columns'),
+#     Input('plot-cols', 'n_clicks'),
+#     State('main-graph', 'figure'),
+# ]
+# def plot_selected_cols(selected_columns, plot_btn, current_plot):
+#     print(ctx.triggered_id)
+
+#     plot = current_plot
+
+#     if ctx.triggered_id == 'plot-cols':
+#         if selected_columns:
+#             # print(selected_columns)
+#             plot = px.line(db_viewer.df[selected_columns])
+            
+#     return plot
+
+# widget_data_funcs = [
+#     (refresh_df, refresh_df_args),
+#     (plot_selected_cols, plot_selected_cols_args),
+# ]

@@ -11,8 +11,8 @@ import numpy as np
 from xas.db_io import get_dbviewer
 db_viewer = get_dbviewer()
 
-from widgets_dash.widget_data import tab1_content, refresh_df
-from widgets_dash.widget_data import widget_data_funcs
+from widgets_dash.widget_data import tab1_content
+# from widgets_dash.widget_data import widget_data_funcs
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "ISS testing"
@@ -138,47 +138,6 @@ table_dict = {'time': {15: 1661874873.3656662,
   3: 'fly_scan',
   4: 'fly_scan'}}
 
-# tab1_content = dbc.Container([
-#     html.H1('Example Table'),
-
-#     html.P(id='selected-cell'),
-#     html.P(id='selected-cols'),
-
-#     dbc.Row(
-#         [dbc.Col(
-#             [dbc.Button("Refresh", id='refresh-btn', class_name='me-1'),
-#             dbc.Button("Swap Cols", id='swap-cols', class_name='me-1'),
-
-#             # create table using dash DataTable
-#             dash_table.DataTable(
-#                 id='main-table',
-#                 data=db_viewer.df.to_dict('records'),
-#                 columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in db_viewer.df.columns],
-#                 hidden_columns=['scan_uid'],
-#                 sort_action='native',
-#                 column_selectable='multi',
-
-#                 # css styles
-#                 style_cell={
-#                     'textAlign': 'left',
-#                     'font-family': 'arial',
-#                 },
-#                 style_table={
-#                     'width': '100%',
-#                     'height': '700px',
-#                     'overflow-y': 'scroll',
-#                 },
-#             ),]
-#         ),
-
-#         dbc.Col(
-#             [dbc.Button("Plot Columns", id='plot-cols'),
-#             dcc.Graph(id='main-graph', figure=test_fig, className='fig'),]
-#         )],
-#     ),
-#     ],
-#     fluid=True,
-# )
 
 app.layout = dbc.Tabs(
     [
@@ -188,13 +147,13 @@ app.layout = dbc.Tabs(
     ]
 )
 
-for _func, _func_args in widget_data_funcs:
-    @app.callback(
-        *_func_args
-    )
-    # gives error related to positional args (problem with func namespace?)
-    def func(*args):
-        return _func(*args)
+# for _func, _func_args in widget_data_funcs:
+#     @app.callback(
+#         *_func_args
+#     )
+#     # gives error related to positional args (problem with func namespace?)
+#     def func(*args):
+#         return _func(*args)
 
 
 
@@ -259,32 +218,6 @@ def df_column_switch(_df, column1, column2):
 #         if selected_columns and len(selected_columns) == 2:
 #             df = df_column_switch(df, selected_columns[0], selected_columns[1])
 #     return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
-
-
-# callback decorator automatically runs function whenever input is changed
-@app.callback(
-    # keywords are optional (only two arguments for Input/Output)
-    Output(component_id='selected-cell', component_property='children'),
-    Input('main-table', 'active_cell')
-)
-def display_selected_cell(active_cell):
-    if active_cell:
-        cell_data = db_viewer.df.iloc[active_cell['row']][active_cell['column_id']]
-        return f"Data: \"{cell_data}\" from table cell: {active_cell}"
-    else:
-        return "Data:"
-
-
-@app.callback(
-    Output('selected-cols', 'children'),
-    Input('main-table', 'selected_columns')
-)
-def display_selected_cols(selected_columns):
-    if selected_columns:
-        return f"Selected Columns: {selected_columns}"
-    else:
-        return "Selected Columns:"
-
 
 if __name__ == "__main__":
     app.run_server(debug=True)
