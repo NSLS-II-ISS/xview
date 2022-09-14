@@ -11,6 +11,9 @@ import numpy as np
 from xas.db_io import get_dbviewer
 db_viewer = get_dbviewer()
 
+from widgets_dash.widget_data import tab1_content, refresh_df
+from widgets_dash.widget_data import widget_data_funcs
+
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "ISS testing"
 
@@ -135,58 +138,47 @@ table_dict = {'time': {15: 1661874873.3656662,
   3: 'fly_scan',
   4: 'fly_scan'}}
 
-test_data = {'x': np.random.rand(50), 'y': np.random.rand(50)}
-db_viewer.df = pd.DataFrame(test_data)
+# tab1_content = dbc.Container([
+#     html.H1('Example Table'),
 
-test_fig = px.line(x=[1,2,3], y=[1,2,3], markers=True)
+#     html.P(id='selected-cell'),
+#     html.P(id='selected-cols'),
 
-tab1_content = dbc.Container([
-    html.H1('Example Table'),
+#     dbc.Row(
+#         [dbc.Col(
+#             [dbc.Button("Refresh", id='refresh-btn', class_name='me-1'),
+#             dbc.Button("Swap Cols", id='swap-cols', class_name='me-1'),
 
-    html.P(id='selected-cell'),
-    html.P(id='selected-cols'),
+#             # create table using dash DataTable
+#             dash_table.DataTable(
+#                 id='main-table',
+#                 data=db_viewer.df.to_dict('records'),
+#                 columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in db_viewer.df.columns],
+#                 hidden_columns=['scan_uid'],
+#                 sort_action='native',
+#                 column_selectable='multi',
 
-    dbc.Row(
-        [dbc.Col(
-            [dbc.Button("Refresh", id='refresh-btn'),
-            dbc.Button("Swap Cols", id='swap-cols'),
+#                 # css styles
+#                 style_cell={
+#                     'textAlign': 'left',
+#                     'font-family': 'arial',
+#                 },
+#                 style_table={
+#                     'width': '100%',
+#                     'height': '700px',
+#                     'overflow-y': 'scroll',
+#                 },
+#             ),]
+#         ),
 
-            # create table using dash DataTable
-            dash_table.DataTable(
-                id='main-table',
-                data=db_viewer.df.to_dict('records'),
-                columns=[{"name": i, "id": i, "hideable": True, 'selectable': True} for i in db_viewer.df.columns],
-                hidden_columns=['scan_uid'],
-                sort_action='native',
-                column_selectable='multi',
-
-                # css styles
-                style_cell={
-                    'textAlign': 'left',
-                    'font-family': 'arial',
-                },
-                style_table={
-                    'width': '100%',
-                    'height': '700px',
-                    'overflow-y': 'scroll',
-                },
-                css=[
-                    {
-                        'selector': '.show-hide',
-                        'rule': 'background-color: blue',
-                    }
-                ],
-            ),]
-        ),
-
-        dbc.Col(
-            [dbc.Button("Plot Columns", id='plot-cols'),
-            dcc.Graph(id='main-graph', figure=test_fig, className='fig'),]
-        )],
-    ),
-    ],
-    fluid=True,
-)
+#         dbc.Col(
+#             [dbc.Button("Plot Columns", id='plot-cols'),
+#             dcc.Graph(id='main-graph', figure=test_fig, className='fig'),]
+#         )],
+#     ),
+#     ],
+#     fluid=True,
+# )
 
 app.layout = dbc.Tabs(
     [
@@ -196,41 +188,53 @@ app.layout = dbc.Tabs(
     ]
 )
 
+for _func, _func_args in widget_data_funcs:
+    @app.callback(
+        *_func_args
+    )
+    # gives error related to positional args (problem with func namespace?)
+    def func(*args):
+        return _func(*args)
 
-@app.callback(
-    Output('main-graph', 'figure'),
-    Input('main-table', 'selected_columns'),
-    Input('plot-cols', 'n_clicks'),
-    State('main-graph', 'figure'),
-)
-def plot_selected_cols(selected_columns, plot_btn, current_plot):
-    print(ctx.triggered_id)
 
-    plot = current_plot
 
-    if ctx.triggered_id == 'plot-cols':
-        if selected_columns:
-            # print(selected_columns)
-            plot = px.line(db_viewer.df[selected_columns])
+# @app.callback(
+#     *plot_selected_cols_args
+#     # Output('main-graph', 'figure'),
+#     # Input('main-table', 'selected_columns'),
+#     # Input('plot-cols', 'n_clicks'),
+#     # State('main-graph', 'figure'),
+# )
+# def _plot_selected_cols(selected_columns, plot_btn, current_plot):
+#     return plot_selected_cols(selected_columns, plot_btn, current_plot)
+    # print(ctx.triggered_id)
+
+    # plot = current_plot
+
+    # if ctx.triggered_id == 'plot-cols':
+    #     if selected_columns:
+    #         # print(selected_columns)
+    #         plot = px.line(db_viewer.df[selected_columns])
             
-    return plot
+    # return plot
 
 
-@app.callback(
-    Output('main-table', 'data'),
-    Output('main-table', 'columns'),
-    Input('refresh-btn', 'n_clicks'),
-)
-def refresh_df(btn):
-    # YEAR, CYCLE, PROPOSAL = 0, 0, 0
-    # db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
-    df = db_viewer.df
-    # global df
-    # df.drop(df.tail(1).index, inplace=True)
-    # df = df.iloc[:-1]
-    # print(dash.ctx.triggered_id)
+# @app.callback(
+#     Output('main-table', 'data'),
+#     Output('main-table', 'columns'),
+#     Input('refresh-btn', 'n_clicks'),
+# )
+# def _refresh_df(btn):
+#     return refresh_df(btn)
+#     # YEAR, CYCLE, PROPOSAL = 0, 0, 0
+#     # db_viewer.get_experiment_table_for_proposal( YEAR, CYCLE, PROPOSAL)
+#     # df = db_viewer.df
+#     # global df
+#     # df.drop(df.tail(1).index, inplace=True)
+#     # df = df.iloc[:-1]
+#     # print(dash.ctx.triggered_id)
 
-    return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
+#     # return df.to_dict('records'), [{"name": i, "id": i, "hideable": True, 'selectable': True} for i in df.columns]
 
 def df_column_switch(_df, column1, column2):
     """ swap positions of two cols in dataframe """
