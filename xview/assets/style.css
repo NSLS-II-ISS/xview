@@ -54,3 +54,8 @@ body {
     height: 700px;
     overflow-y: scroll;
 }
+
+/* style Toggle Columns button on DataTable*/
+.show-hide {
+    background-color: blue;
+} 
