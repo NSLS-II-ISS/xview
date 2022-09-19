@@ -115,8 +115,10 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
     def get_file_list(self):
         if self.working_folder:
             self.list_data.clear()
-
-            self.file_list = [f for f in os.listdir(self.working_folder) if f.endswith('.uids')]
+            try:
+                self.file_list = [f for f in os.listdir(self.working_folder) if f.endswith('.uids')]
+            except:
+                self.file_list = []
 
             if self.comboBox_sort_files_by.currentText() == 'Name':
                 self.file_list.sort()

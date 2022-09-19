@@ -65,7 +65,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         if self.working_folder != '/GPFS/xf08id/User Data':
             self.label_working_folder.setText(self.working_folder)
             self.label_working_folder.setToolTip(self.working_folder)
-            self.get_file_list()
+            try:
+                self.get_file_list()
+            except:
+                pass
 
     def xas_data_context_menu(self,QPos):
         menu = QMenu()
