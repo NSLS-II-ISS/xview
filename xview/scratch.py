@@ -1185,3 +1185,48 @@ plt.plot(data[1:, 0], rixs[:, 111])
 
 # plt.imshow(rixs, vmin=0, vmax=10e6)
 
+
+
+from xas.file_io import load_binned_df_from_file, load_binned_df_and_extended_data_from_file
+w = xview_gui.widget_data
+
+def go():
+    plt.figure(1, clear=True)
+
+    selected_items = (w.list_data.selectedItems())
+    spectra = []
+    headers = []
+    names = []
+    for i in selected_items:
+        path = f'{w.working_folder}/{i.text()}'
+        names.append(i.text())
+        df, header = load_binned_df_from_file(path)
+        spectrum = pd.DataFrame()
+        headers.append(header)
+        spectrum['energy'] = df['energy']
+        spectrum['mu_trans'] = np.log(df['i0']/df['it'])
+        spectrum['mu_flour'] = df['i0']/df['it']
+        spectrum['mu_ref'] = np.log(df['it'] / df['ir'])
+        spectra.append(spectrum)
+        plt.plot(spectrum['energy'],spectrum['mu_trans'])
+
+    spectra_a = np.array(spectra)
+    spectrum_av = np.mean(spectra, axis=0)
+    plt.plot(spectrum_av[:, 0], spectrum_av[:, 1]+1)
+    common_name = os.path.commonprefix(names)
+    spectrum_av_df = pd.DataFrame(spectrum_av, columns=['energy', 'mu_trans', 'mu_fluor', 'mu_ref'
+                                                                                          ':'])
+    spectrum_av_df.to_csv(common_name+'.dat')
+    header = ''.join(headers)
+    text_file = open(common_name+'.txt', "wt")
+    text_file.write(header)
+    text_file.close()
+    #return spectrum_av_df, common_name, headers
+
+
+
+
+a, b, c =go()
+
+
+
