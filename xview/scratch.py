@@ -1193,14 +1193,86 @@ w = xview_gui.widget_data
 def go():
     plt.figure(1, clear=True)
 
-    selected_items = (w.list_data.selectedItems())
+from xas.file_io import load_binned_df_from_file
+def average_files(file_list, output_file_name):
+   spectra = []
+   headers = []
+   plt.figure()
+   for file in file_list:
+       df, header = load_binned_df_from_file(file)
+       spectrum = pd.DataFrame()
+       headers.append(header)
+       spectrum['energy'] = df['energy']
+       spectrum['mu_trans'] = np.log(df['i0']/df['it'])
+       spectrum['mu_flour'] = df['iff']/df['i0']
+       spectrum['mu_ref'] = np.log(df['it'] / df['ir'])
+       spectra.append(spectrum)
+       plt.plot(spectrum['energy'],spectrum['mu_ref'])
+
+   spectra_a = np.array(spectra)
+   spectrum_av = np.mean(spectra, axis=0)
+   target_dir = os.path.dirname(file_list[0])
+   plt.plot(spectrum_av[:, 0], spectrum_av[:, 3]+1)
+   spectrum_av_df = pd.DataFrame(spectrum_av, columns=['energy', 'mu_trans', 'mu_fluor', 'mu_ref'])
+   spectrum_av_df.to_csv(f'{target_dir}/{output_file_name}.dat')
+   header = ''.join(headers)
+   text_file = open(f'{target_dir}/{output_file_name}.txt', "wt")
+   text_file.write(header)
+   text_file.close()
+
+
+
+i = 0
+top = '/nsls2/xf08id/Sandbox/Eli/AIIM NMC data/mcr - final/AM'
+folder_list = list(os.walk(top))
+plt.close('all')
+print(f'INDEX {i}')
+average_folders(folder_list[i+1])
+i+=1
+
+
+
+def average_folders(folder):
+    print(f'Working on folder {folder[0]}')
+    folder_name = folder[0]
+    file_list = folder[2]
+    Co_list = []
+    Ni_list = []
+    Mn_list = []
+    for file in file_list:
+       if ' Co' in file:
+           Co_list.append(f'{folder_name}/{file}')
+       elif ' Ni' in file:
+           Ni_list.append(f'{folder_name}/{file}')
+       elif ' Mn' in file:
+           Mn_list.append(f'{folder_name}/{file}')
+    average_files(Co_list, 'Co')
+    average_files(Ni_list, 'Ni')
+    average_files(Mn_list, 'Mn')
+
+
+
+average_folders()
+i+=1
+
+
+
+i = 0
+
+plt.close('all')
+print(f'INDEX {i}')
+average_folders(folder_list[i+1])
+i+=1
+
+
+
+from xas.file_io import load_binned_df_from_file
+def average_files(file_list, output_file_name):
     spectra = []
     headers = []
-    names = []
-    for i in selected_items:
-        path = f'{w.working_folder}/{i.text()}'
-        names.append(i.text())
-        df, header = load_binned_df_from_file(path)
+    plt.figure()
+    for file in file_list:
+        df, header = load_binned_df_from_file(file)
         spectrum = pd.DataFrame()
         headers.append(header)
         spectrum['energy'] = df['energy']
@@ -1212,21 +1284,135 @@ def go():
 
     spectra_a = np.array(spectra)
     spectrum_av = np.mean(spectra, axis=0)
+    target_dir = os.path.dirname(file_list[0])
     plt.plot(spectrum_av[:, 0], spectrum_av[:, 1]+1)
-    common_name = os.path.commonprefix(names)
     spectrum_av_df = pd.DataFrame(spectrum_av, columns=['energy', 'mu_trans', 'mu_fluor', 'mu_ref'
                                                                                           ':'])
-    spectrum_av_df.to_csv(common_name+'.dat')
+    spectrum_av_df.to_csv(f'{target_dir}/{output_file_name}.dat')
     header = ''.join(headers)
-    text_file = open(common_name+'.txt', "wt")
+    text_file = open(f'{target_dir}/{output_file_name}.txt', "wt")
     text_file.write(header)
     text_file.close()
-    #return spectrum_av_df, common_name, headers
+
+
+
+#####
+
+mcr_proj_1 = xview_gui.widget_mcr.model_mcrprojects.item(2).mcrproject
+mcr_proj_2 = xview_gui.widget_mcr.model_mcrprojects.item(3).mcrproject
+
+# mcr_proj = xview_gui.widget_mcr.model_mcrprojects.item(2).mcrproject
+
+def parse_mcr_project_into_ascii(mcr_proj, fname):
+    mcr_dict = mcr_proj.to_dict()
+    energy = mcr_proj.dataset.x
+    time = np.array(mcr_proj.dataset.t_dict['time'])
+    time -= time.min()
+    idx = np.argsort(time)
+    time = time[idx]
+    data = mcr_proj.dataset.data[:, idx]
+    data_fit = mcr_proj.data_fit[:, idx]
+    data_ref = mcr_proj.data_ref
+    data_ref_fit = mcr_proj.data_ref_fit
+    c_fit = mcr_proj.c_fit[:, idx].T
+    data_df = {'# energy' : energy}
+    data_df = {**data_df, **{k: v for k, v in zip(time, data.T)}}
+    data_df = pd.DataFrame(data_df)
+
+    data_fit_df = {'# energy': energy}
+    data_fit_df = {**data_fit_df, **{k: v for k, v in zip(time, data_fit.T)}}
+    data_fit_df = pd.DataFrame(data_fit_df)
+
+    data_ref_df = pd.DataFrame({'# energy' : energy, 'Pd foil' : data_ref[:, 0], '1st curve' : data_ref[:, 1]})
+    data_ref_fit_df = pd.DataFrame({'# energy': energy, 'Pd foil': data_ref_fit[:, 0], '1st curve': data_ref_fit[:, 1]})
+
+    c_fit_df = pd.DataFrame({'# time' : time, 'Pd foil': c_fit[:, 0], '1st curve': c_fit[:, 1]})
+
+    # data_df.to_csv(f'{fname}_data.dat', sep='\t', index=False)
+    # data_fit_df.to_csv(f'{fname}_data_fit.dat', sep='\t', index=False)
+    # data_ref_df.to_csv(f'{fname}_references.dat', sep='\t', index=False)
+    # data_ref_fit_df.to_csv(f'{fname}_references_fit.dat', sep='\t', index=False)
+    # c_fit_df.to_csv(f'{fname}_concentrations.dat', sep='\t', index=False)
+
+    plt.figure(1, clear=True)
+    plt.plot(energy, data, 'k-')
+    plt.plot(energy, data_fit, 'r-')
+
+
+    plt.figure(2, clear=True)
+    plt.plot(energy, data_ref, 'k-')
+    plt.plot(energy, data_ref_fit, '-')
+
+    plt.figure(3, clear=True)
+    plt.plot(time, c_fit, '-')
+    # plt.plot(energy, data_ref_fit, 'r-')
 
 
 
 
-a, b, c =go()
+
+parse_mcr_project_into_ascii(mcr_proj_1, '/nsls2/data/iss/legacy/processed/2022/3/310728/mcr/Pd0_15 25g_L H2_N2 2_18 with PPG')
+parse_mcr_project_into_ascii(mcr_proj_2, '/nsls2/data/iss/legacy/processed/2022/3/310728/mcr/Pd0_15 H2_N2 3_17 25g_L 9-15-22')
+
+import matplotlib
+def plot_mcr_proj_svd(ds, path):
+    font = {'family': 'normal',
+            'weight': 'normal',
+            'size': 7}
+
+    matplotlib.rc('font', **font)
+
+    energy = ds.x
+    time = np.array(ds.t_dict['time'])
+    time -= time.min()
+    idx = np.argsort(time)
+    time = time[idx]
+    data = ds.data[:, idx]
+
+    plt.figure(4, clear=True, figsize=(16.5 / 2.5, 16.5 / 2.5))
+    plt.subplot(321)
+    plt.plot(energy, data)
+    plt.xlabel('energy, eV')
+    plt.ylabel('mu')
+
+    n = 3
+    plt.subplot(323)
+
+    plt.plot(energy, ds.u[:, :n])
+    plt.xlabel('energy, eV')
+    plt.ylabel('LSV_i')
+    plt.legend([str(i+1) for i in range(n)])
+
+    plt.subplot(324)
+    plt.plot(time/60, ds.v[idx, :n])
+    plt.xlabel('time, min')
+    plt.ylabel('RSV_i')
+    plt.legend([str(i + 1) for i in range(n)])
+
+    plt.subplot(325)
+    plt.semilogy(ds.s, 'ks-', ms=3)
+    plt.xlabel('index')
+    plt.ylabel('SV_i')
+
+    plt.subplot(326)
+    plt.plot(ds.ac_v, 'ks-', ms=3)
+    plt.xlabel('index')
+    plt.ylabel('AC_i')
+    plt.ylim(-1, 1)
+
+    plt.tight_layout()
+    plt.savefig(f'{path}{ds.name}_svd.png', dpi=600)
+
+plot_mcr_proj_svd(xview_gui.widget_mcr.model_datasets.item(0).dataset, '/nsls2/data/iss/legacy/processed/2022/3/310728/mcr/')
+plot_mcr_proj_svd(xview_gui.widget_mcr.model_datasets.item(2).dataset, '/nsls2/data/iss/legacy/processed/2022/3/310728/mcr/')
+plot_mcr_proj_svd(xview_gui.widget_mcr.model_datasets.item(3).dataset, '/nsls2/data/iss/legacy/processed/2022/3/310728/mcr/')
+plot_mcr_proj_svd(xview_gui.widget_mcr.model_datasets.item(4).dataset, '/nsls2/data/iss/legacy/processed/2022/3/310728/mcr/')
+
+
+
+
+
+
 
 
 

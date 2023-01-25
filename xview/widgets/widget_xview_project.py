@@ -874,7 +874,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     # ds.extract_ft_force()
                     energy = ds.energy
                     # if self.radioButton_mu_xasproject.isChecked():
-                    data = ds.mu
+                    data = ds.mu.copy()
                     data -= data[0]
                     data /= data.max()
                     # elif self.radioButton_norm_xasproject.isChecked():
