@@ -311,29 +311,34 @@ def update_plot(
         if selected_channels is not None:
             for id_dict in compress(selected_scan_id_dicts, selected_scans):
                 uid = id_dict["uid"]
-                scan_id = ISS_SANDBOX[uid].metadata["scan_id"]
-                df = ISS_SANDBOX[uid].read()
+                # scan_id = ISS_SANDBOX[uid].metadata["scan_id"]
+                # df = ISS_SANDBOX[uid].read()
                 # scan_id = SANDBOX_READER[uid].metadata["scan_id"]
                 # df = SANDBOX_READER[uid].read()
-                calc_mus(df)
+                # calc_mus(df)
 
-                for ch in selected_channels:
+                x, y, name = GET_MY_DATA(uid, kind=xas_normalization_selection) # DataStore.get_data(uid, kind)
 
-                    mu_label = f"{scan_id} {ch}"
-                    if xas_normalization_selection == "mu":
-                        mu_plot = df[ch]
-                    elif xas_normalization_selection == "normalized":
-                        mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=False,
-                                                            **larch_normalization_kwargs)
-                        mu_label += " norm"
-                    elif xas_normalization_selection == "flattened":
-                        mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=True,
-                                                            **larch_normalization_kwargs)
-                        mu_label += " flat"
+
+
+                # for ch in selected_channels:
+                #
+                #     mu_label = f"{scan_id} {ch}"
+                #     if xas_normalization_selection == "mu":
+                #         mu_plot = df[ch]
+                #     elif xas_normalization_selection == "normalized":
+                #         mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=False,
+                #                                             **larch_normalization_kwargs)
+                #         mu_label += " norm"
+                #     elif xas_normalization_selection == "flattened":
+                #         mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=True,
+                #                                             **larch_normalization_kwargs)
+                #         mu_label += " flat"
 
                     # check spectrum isn't already plotted
                     if mu_label not in [trace.name for trace in fig.data]:
-                        fig.add_scatter(x=df["energy"], y=mu_plot, name=mu_label)
+                        # fig.add_scatter(x=df["energy"], y=mu_plot, name=mu_label)
+                        fig.add_scatter(x=x, y=y, name=name)
     t2 = time.time()
     print(t2 - t1)
     return fig, updated_previous_data
