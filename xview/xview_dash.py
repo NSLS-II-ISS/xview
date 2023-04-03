@@ -9,8 +9,8 @@ from xas import tiled_io
 from xas.tiled_io import filter_node_by_metadata_key, filter_node_for_proposal, sort_nodes_by_metadata_key
 from xas.analysis import check_scan
 
-from .dash_elements.app_components import build_proposal_accordion, build_filter_input, visualization_tab, normalization_scheme_panel
-from .dash_elements.app_math import calc_mus, LarchCalculator
+from dash_elements.app_components import build_proposal_accordion, build_filter_input, visualization_tab, normalization_scheme_panel
+from dash_elements.app_math import calc_mus, LarchCalculator
 
 import time
 
@@ -245,31 +245,31 @@ def update_stored_normalization_scheme(
     return larch_pre_edge_kwargs
 
 
-@app.callback(
-    Output("xas_e0_input", "value"),
-    Output("xas_pre_edge_start_input", "value"),
-    Output("xas_pre_edge_stop_input", "value"),
-    Output("xas_post_edge_start_input", "value"),
-    Output("xas_post_edge_stop_input", "value"),
-    Output("xas_polynom_order_input", "value"),
-    Input("plot_btn", "n_clicks"),
-    State("xas_e0_input", "value"),
-    State("xas_pre_edge_start_input", "value"),
-    State("xas_pre_edge_stop_input", "value"),
-    State("xas_post_edge_start_input", "value"),
-    State("xas_post_edge_stop_input", "value"),
-    State("xas_polynom_order_input", "value"),
-)
-def update_normalization_scheme_panel(
-        plot_click,
-        e0_value,
-        pre_edge_start_value,
-        pre_edge_stop_value,
-        post_edge_start_value,
-        post_edge_stop_value,
-        polynom_order_value,
-):
-    return
+# @app.callback(
+#     Output("xas_e0_input", "value"),
+#     Output("xas_pre_edge_start_input", "value"),
+#     Output("xas_pre_edge_stop_input", "value"),
+#     Output("xas_post_edge_start_input", "value"),
+#     Output("xas_post_edge_stop_input", "value"),
+#     Output("xas_polynom_order_input", "value"),
+#     Input("plot_btn", "n_clicks"),
+#     State("xas_e0_input", "value"),
+#     State("xas_pre_edge_start_input", "value"),
+#     State("xas_pre_edge_stop_input", "value"),
+#     State("xas_post_edge_start_input", "value"),
+#     State("xas_post_edge_stop_input", "value"),
+#     State("xas_polynom_order_input", "value"),
+# )
+# def update_normalization_scheme_panel(
+#         plot_click,
+#         e0_value,
+#         pre_edge_start_value,
+#         pre_edge_stop_value,
+#         post_edge_start_value,
+#         post_edge_stop_value,
+#         polynom_order_value,
+# ):
+#     return
 
 
 # TODO implement plot undo button using stored previous data
@@ -311,29 +311,38 @@ def update_plot(
         if selected_channels is not None:
             for id_dict in compress(selected_scan_id_dicts, selected_scans):
                 uid = id_dict["uid"]
-                scan_id = ISS_SANDBOX[uid].metadata["scan_id"]
-                df = ISS_SANDBOX[uid].read()
-                # scan_id = SANDBOX_READER[uid].metadata["scan_id"]
-                # df = SANDBOX_READER[uid].read()
-                calc_mus(df)
 
-                for ch in selected_channels:
+                scan_id = APP_DATA.get_metadata(uid)["scan_id"]
+                energy = APP_DATA.get_raw_data(uid)["energy"]
 
-                    mu_label = f"{scan_id} {ch}"
+                for channel in selected_channels:
+
+                    mu_label = f"{scan_id} {channel}"
                     if xas_normalization_selection == "mu":
-                        mu_plot = df[ch]
+                        mu_plot = APP_DATA.get_raw_data(uid)[channel]
                     elif xas_normalization_selection == "normalized":
-                        mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=False,
-                                                            **larch_normalization_kwargs)
+                        mu_plot = APP_DATA.get_processed_data(uid, channel)["norm"]
                         mu_label += " norm"
                     elif xas_normalization_selection == "flattened":
-                        mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=True,
-                                                            **larch_normalization_kwargs)
+                        mu_plot = APP_DATA.get_processed_data(uid, channel)["flat"]
                         mu_label += " flat"
 
                     # check spectrum isn't already plotted
                     if mu_label not in [trace.name for trace in fig.data]:
-                        fig.add_scatter(x=df["energy"], y=mu_plot, name=mu_label)
+                        fig.add_scatter(x=energy, y=mu_plot, name=mu_label)
+
+                # if xas_normalization_selection == "mu":
+                #     mu_label = f"{scan_id} {channel}"
+                #     get_plot_data = lambda ch: APP_DATA.get_raw_data(uid)[ch]
+                # elif xas_normalization_selection == "normalized":
+                #     mu_label = f"{scan_id} {channel} norm"
+                #     get_plot_data = lambda ch: APP_DATA.get_processed_data(uid, ch).data["norm"]
+                # elif xas_normalization_selection == "flattened":
+                #     mu_label = f"{scan_id} {channel} flat"
+                #     get_plot_data = lambda ch: APP_DATA.get_processed_data(uid, ch).data["flat"]
+
+
+
     t2 = time.time()
     print(t2 - t1)
     return fig, updated_previous_data
@@ -392,5 +401,5 @@ def select_all_scans_in_group(select_all_chk):
 
 if __name__ == "__main__":
     ISS_SANDBOX = tiled_io.get_iss_sandbox()
-    # SANDBOX_READER = tiled_io.TiledReader(ISS_SANDBOX)
+    APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
     app.run_server(debug=True)
