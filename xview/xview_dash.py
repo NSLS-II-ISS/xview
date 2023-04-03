@@ -245,33 +245,6 @@ def update_stored_normalization_scheme(
     return larch_pre_edge_kwargs
 
 
-# @app.callback(
-#     Output("xas_e0_input", "value"),
-#     Output("xas_pre_edge_start_input", "value"),
-#     Output("xas_pre_edge_stop_input", "value"),
-#     Output("xas_post_edge_start_input", "value"),
-#     Output("xas_post_edge_stop_input", "value"),
-#     Output("xas_polynom_order_input", "value"),
-#     Input("plot_btn", "n_clicks"),
-#     State("xas_e0_input", "value"),
-#     State("xas_pre_edge_start_input", "value"),
-#     State("xas_pre_edge_stop_input", "value"),
-#     State("xas_post_edge_start_input", "value"),
-#     State("xas_post_edge_stop_input", "value"),
-#     State("xas_polynom_order_input", "value"),
-# )
-# def update_normalization_scheme_panel(
-#         plot_click,
-#         e0_value,
-#         pre_edge_start_value,
-#         pre_edge_stop_value,
-#         post_edge_start_value,
-#         post_edge_stop_value,
-#         polynom_order_value,
-# ):
-#     return
-
-
 # TODO implement plot undo button using stored previous data
 @app.callback(
     Output("spectrum_plot", "figure"),
@@ -290,15 +263,15 @@ def update_stored_normalization_scheme(
     prevent_initial_call=True,
 )
 def update_plot(
-        plot_click,
-        clear_click,
-        selected_scans,
-        selected_scan_id_dicts,
-        current_fig,
-        previous_data,
-        selected_channels,
-        larch_normalization_kwargs,
-        xas_normalization_selection,
+    plot_click,
+    clear_click,
+    selected_scans,
+    selected_scan_id_dicts,
+    current_fig,
+    previous_data,
+    selected_channels,
+    larch_normalization_kwargs,
+    xas_normalization_selection,
 ):
     t1 = time.time()
     fig = go.Figure(current_fig)
@@ -321,31 +294,63 @@ def update_plot(
                     if xas_normalization_selection == "mu":
                         mu_plot = APP_DATA.get_raw_data(uid)[channel]
                     elif xas_normalization_selection == "normalized":
-                        mu_plot = APP_DATA.get_processed_data(uid, channel)["norm"]
+                        mu_plot = APP_DATA.get_processed_data(uid, channel, processing_parameters=larch_normalization_kwargs)["norm"]
                         mu_label += " norm"
                     elif xas_normalization_selection == "flattened":
-                        mu_plot = APP_DATA.get_processed_data(uid, channel)["flat"]
+                        mu_plot = APP_DATA.get_processed_data(uid, channel, processing_parameters=larch_normalization_kwargs)["flat"]
                         mu_label += " flat"
 
                     # check spectrum isn't already plotted
                     if mu_label not in [trace.name for trace in fig.data]:
                         fig.add_scatter(x=energy, y=mu_plot, name=mu_label)
 
-                # if xas_normalization_selection == "mu":
-                #     mu_label = f"{scan_id} {channel}"
-                #     get_plot_data = lambda ch: APP_DATA.get_raw_data(uid)[ch]
-                # elif xas_normalization_selection == "normalized":
-                #     mu_label = f"{scan_id} {channel} norm"
-                #     get_plot_data = lambda ch: APP_DATA.get_processed_data(uid, ch).data["norm"]
-                # elif xas_normalization_selection == "flattened":
-                #     mu_label = f"{scan_id} {channel} flat"
-                #     get_plot_data = lambda ch: APP_DATA.get_processed_data(uid, ch).data["flat"]
-
-
-
     t2 = time.time()
     print(t2 - t1)
     return fig, updated_previous_data
+
+
+@app.callback(
+    Output("xas_e0_input", "value"),
+    Output("xas_pre_edge_start_input", "value"),
+    Output("xas_pre_edge_stop_input", "value"),
+    Output("xas_post_edge_start_input", "value"),
+    Output("xas_post_edge_stop_input", "value"),
+    Output("xas_polynom_order_input", "value"),
+    
+    Input("plot_btn", "n_clicks"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State("channel_checklist", "value"),
+    
+    State("xas_e0_input", "value"),
+    State("xas_pre_edge_start_input", "value"),
+    State("xas_pre_edge_stop_input", "value"),
+    State("xas_post_edge_start_input", "value"),
+    State("xas_post_edge_stop_input", "value"),
+    State("xas_polynom_order_input", "value"),
+)
+def update_normalization_scheme_panel(
+    plot_click,
+    selected_scans,
+    selected_scan_id_dicts,
+    selected_channels,
+
+    e0_value,
+    pre1_value,
+    pre2_value,
+    norm1_value,
+    norm2_value,
+    nnorm_value,
+):
+    if selected_channels is None:
+        raise dash.exceptions.PreventUpdate
+    first_selected_id_dict = list(compress(selected_scan_id_dicts, selected_scans))[0]
+    first_selected_uid = first_selected_id_dict["uid"]
+    first_selected_channel = selected_channels[0]
+    new_params = APP_DATA.get_processing_parameters(first_selected_uid, first_selected_channel).copy()
+    new_params.pop("step")
+    new_params.pop("nvict")
+    return tuple(new_params.values())
 
 
 @app.callback(
