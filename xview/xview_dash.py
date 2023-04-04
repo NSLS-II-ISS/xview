@@ -44,7 +44,15 @@ app.layout = dbc.Container([
                                    id="add_filter_btn",
                                    color="link",
                                    size="sm"),
-                        width=2,
+                        width=3,
+                    ),
+                    dbc.Col(
+                        dbc.Button("remove filter",
+                                   id="remove_filter_btn",
+                                   color="link",
+                                   size="sm"),
+                        width=3,
+                        style={"visibility": "hidden"},
                     ),
                 ], align="start",
                 ),
@@ -143,24 +151,27 @@ app.layout = dbc.Container([
     State("proposal_input", "value"),
     State({"type": "filter_key_input", "index": ALL}, "value"),
     State({"type": "filter_value_input", "index": ALL}, "value"),
+    State({"type": "filter_toggle", "index": ALL}, "value"),
 )
 def show_proposal_accordion(
-        n_search_clicks,
-        n_apply_clicks,
-        groupby_dropdown_choice,
-        sort_dropdown_choice,
-        reverse_sort_checked,
-        year,
-        cycle,
-        proposal,
-        other_filter_keys,
-        other_filter_values,
+    n_search_clicks,
+    n_apply_clicks,
+    groupby_dropdown_choice,
+    sort_dropdown_choice,
+    reverse_sort_checked,
+    year,
+    cycle,
+    proposal,
+    other_filter_keys,
+    other_filter_values,
+    other_filter_toggles
 ):
     proposal_node = filter_node_for_proposal(ISS_SANDBOX, year, cycle, proposal)
 
     if other_filter_keys and other_filter_values:
-        for key, value in zip(other_filter_keys, other_filter_values):
-            if key and value:
+        for key, value, toggle in zip(other_filter_keys, other_filter_values, other_filter_toggles):
+            # print(key, value, toggle)
+            if all([key, value, toggle]):
                 proposal_node = filter_node_by_metadata_key(proposal_node, key, value)
 
     if n_search_clicks == 0:
@@ -176,15 +187,15 @@ def show_proposal_accordion(
 
 @app.callback(
     Output("filters_loc", "children"),
-    Output({"type": "filter_delete_btn", "index": ALL}, "id"),
+    Output("remove_filter_btn", "style"),
     Input("add_filter_btn", "n_clicks"),
-    Input({"type": "filter_delete_btn", "index": ALL}, "n_clicks"),
-    State({"type": "filter_delete_btn", "index": ALL}, "id"),
+    Input("remove_filter_btn", "n_clicks"),
+    # Input({"type": "filter_delete_btn", "index": ALL}, "n_clicks"),
+    # State({"type": "filter_delete_btn", "index": ALL}, "id"),
     State("filters_loc", "children"),
     prevent_initial_callback=True,
 )
-def update_filters(add_filter_click, delete_filter_click, current_filter_id_dicts, current_filters):
-    updated_id_dicts = current_filter_id_dicts
+def update_filter_selection(add_filter_click, remove_filter_click, current_filters):
     updated_filters = current_filters
 
     if dash.ctx.triggered_id == "add_filter_btn":
@@ -195,20 +206,16 @@ def update_filters(add_filter_click, delete_filter_click, current_filter_id_dict
             new_filter = build_filter_input(filter_index=len(current_filters))
             updated_filters.append(new_filter)
 
-    # TODO fix index updating
-    if isinstance(dash.ctx.triggered_id, dict):
-        if dash.ctx.triggered_id["type"] == "filter_delete_btn":
-            delete_filter_index = dash.ctx.triggered_id["index"]
+    if dash.ctx.triggered_id == "remove_filter_btn":
+        if current_filters is not None:
+            updated_filters.pop()
 
-            updated_filters.pop(delete_filter_index)
-            updated_id_dicts.pop(delete_filter_index)
-
-            for new_index, id_dict in enumerate(updated_id_dicts):
-                print(new_index)
-                id_dict.update({"index": new_index})
-
-    print(updated_id_dicts)
-    return updated_filters, updated_id_dicts
+    if (updated_filters is None) or len(updated_filters) == 0:
+        remove_btn_visibility = {"visibility": "hidden"}
+    else:
+        remove_btn_visibility = {"visibility": "visible"}
+    
+    return updated_filters, remove_btn_visibility
 
 
 @app.callback(
@@ -222,12 +229,12 @@ def update_filters(add_filter_click, delete_filter_click, current_filter_id_dict
     prevent_initial_callback=True,
 )
 def update_stored_normalization_scheme(
-        e0_input,
-        pre_edge_start_input,
-        pre_edge_stop_input,
-        post_edge_start_input,
-        post_edge_stop_input,
-        post_edge_polynom_order_input,
+    e0_input,
+    pre_edge_start_input,
+    pre_edge_stop_input,
+    post_edge_start_input,
+    post_edge_stop_input,
+    post_edge_polynom_order_input,
 ):
     """Returns dict of `larch.xafs.pre_edge` keyword-argument pairs
     to be stored as json in a `dcc.Store` object"""
@@ -335,22 +342,23 @@ def update_normalization_scheme_panel(
     selected_scan_id_dicts,
     selected_channels,
 
-    e0_value,
-    pre1_value,
-    pre2_value,
-    norm1_value,
-    norm2_value,
-    nnorm_value,
+    *current_values,
 ):
     if selected_channels is None:
         raise dash.exceptions.PreventUpdate
     first_selected_id_dict = list(compress(selected_scan_id_dicts, selected_scans))[0]
     first_selected_uid = first_selected_id_dict["uid"]
     first_selected_channel = selected_channels[0]
+
     new_params = APP_DATA.get_processing_parameters(first_selected_uid, first_selected_channel).copy()
+
+    # remove params without gui inputs
     new_params.pop("step")
     new_params.pop("nvict")
-    return tuple(new_params.values())
+
+    updated_values = [val if val is not None else new_val for val, new_val in zip(current_values, new_params.values())]
+
+    return tuple(updated_values)
 
 
 @app.callback(
