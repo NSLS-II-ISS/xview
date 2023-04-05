@@ -9,8 +9,8 @@ from xas import tiled_io
 from xas.tiled_io import filter_node_by_metadata_key, filter_node_for_proposal, sort_nodes_by_metadata_key
 from xas.analysis import check_scan
 
-from .dash_elements.app_components import build_proposal_accordion, build_filter_input, visualization_tab, normalization_scheme_panel
-from .dash_elements.app_math import calc_mus, LarchCalculator
+from dash_elements.app_components import build_proposal_accordion, build_filter_input, visualization_tab, normalization_scheme_panel
+from dash_elements.app_math import calc_mus, LarchCalculator
 
 import time
 
@@ -44,7 +44,15 @@ app.layout = dbc.Container([
                                    id="add_filter_btn",
                                    color="link",
                                    size="sm"),
-                        width=2,
+                        width=3,
+                    ),
+                    dbc.Col(
+                        dbc.Button("remove filter",
+                                   id="remove_filter_btn",
+                                   color="link",
+                                   size="sm"),
+                        width=3,
+                        style={"visibility": "hidden"},
                     ),
                 ], align="start",
                 ),
@@ -143,24 +151,27 @@ app.layout = dbc.Container([
     State("proposal_input", "value"),
     State({"type": "filter_key_input", "index": ALL}, "value"),
     State({"type": "filter_value_input", "index": ALL}, "value"),
+    State({"type": "filter_toggle", "index": ALL}, "value"),
 )
 def show_proposal_accordion(
-        n_search_clicks,
-        n_apply_clicks,
-        groupby_dropdown_choice,
-        sort_dropdown_choice,
-        reverse_sort_checked,
-        year,
-        cycle,
-        proposal,
-        other_filter_keys,
-        other_filter_values,
+    n_search_clicks,
+    n_apply_clicks,
+    groupby_dropdown_choice,
+    sort_dropdown_choice,
+    reverse_sort_checked,
+    year,
+    cycle,
+    proposal,
+    other_filter_keys,
+    other_filter_values,
+    other_filter_toggles
 ):
     proposal_node = filter_node_for_proposal(ISS_SANDBOX, year, cycle, proposal)
 
     if other_filter_keys and other_filter_values:
-        for key, value in zip(other_filter_keys, other_filter_values):
-            if key and value:
+        for key, value, toggle in zip(other_filter_keys, other_filter_values, other_filter_toggles):
+            # print(key, value, toggle)
+            if all([key, value, toggle]):
                 proposal_node = filter_node_by_metadata_key(proposal_node, key, value)
 
     if n_search_clicks == 0:
@@ -176,15 +187,15 @@ def show_proposal_accordion(
 
 @app.callback(
     Output("filters_loc", "children"),
-    Output({"type": "filter_delete_btn", "index": ALL}, "id"),
+    Output("remove_filter_btn", "style"),
     Input("add_filter_btn", "n_clicks"),
-    Input({"type": "filter_delete_btn", "index": ALL}, "n_clicks"),
-    State({"type": "filter_delete_btn", "index": ALL}, "id"),
+    Input("remove_filter_btn", "n_clicks"),
+    # Input({"type": "filter_delete_btn", "index": ALL}, "n_clicks"),
+    # State({"type": "filter_delete_btn", "index": ALL}, "id"),
     State("filters_loc", "children"),
     prevent_initial_callback=True,
 )
-def update_filters(add_filter_click, delete_filter_click, current_filter_id_dicts, current_filters):
-    updated_id_dicts = current_filter_id_dicts
+def update_filter_selection(add_filter_click, remove_filter_click, current_filters):
     updated_filters = current_filters
 
     if dash.ctx.triggered_id == "add_filter_btn":
@@ -195,20 +206,16 @@ def update_filters(add_filter_click, delete_filter_click, current_filter_id_dict
             new_filter = build_filter_input(filter_index=len(current_filters))
             updated_filters.append(new_filter)
 
-    # TODO fix index updating
-    if isinstance(dash.ctx.triggered_id, dict):
-        if dash.ctx.triggered_id["type"] == "filter_delete_btn":
-            delete_filter_index = dash.ctx.triggered_id["index"]
+    if dash.ctx.triggered_id == "remove_filter_btn":
+        if current_filters is not None:
+            updated_filters.pop()
 
-            updated_filters.pop(delete_filter_index)
-            updated_id_dicts.pop(delete_filter_index)
-
-            for new_index, id_dict in enumerate(updated_id_dicts):
-                print(new_index)
-                id_dict.update({"index": new_index})
-
-    print(updated_id_dicts)
-    return updated_filters, updated_id_dicts
+    if (updated_filters is None) or len(updated_filters) == 0:
+        remove_btn_visibility = {"visibility": "hidden"}
+    else:
+        remove_btn_visibility = {"visibility": "visible"}
+    
+    return updated_filters, remove_btn_visibility
 
 
 @app.callback(
@@ -222,12 +229,12 @@ def update_filters(add_filter_click, delete_filter_click, current_filter_id_dict
     prevent_initial_callback=True,
 )
 def update_stored_normalization_scheme(
-        e0_input,
-        pre_edge_start_input,
-        pre_edge_stop_input,
-        post_edge_start_input,
-        post_edge_stop_input,
-        post_edge_polynom_order_input,
+    e0_input,
+    pre_edge_start_input,
+    pre_edge_stop_input,
+    post_edge_start_input,
+    post_edge_stop_input,
+    post_edge_polynom_order_input,
 ):
     """Returns dict of `larch.xafs.pre_edge` keyword-argument pairs
     to be stored as json in a `dcc.Store` object"""
@@ -243,33 +250,6 @@ def update_stored_normalization_scheme(
         nvict=0,  # for some reason this is the only pre_edge keyword that doesn't default to None
     )
     return larch_pre_edge_kwargs
-
-
-@app.callback(
-    Output("xas_e0_input", "value"),
-    Output("xas_pre_edge_start_input", "value"),
-    Output("xas_pre_edge_stop_input", "value"),
-    Output("xas_post_edge_start_input", "value"),
-    Output("xas_post_edge_stop_input", "value"),
-    Output("xas_polynom_order_input", "value"),
-    Input("plot_btn", "n_clicks"),
-    State("xas_e0_input", "value"),
-    State("xas_pre_edge_start_input", "value"),
-    State("xas_pre_edge_stop_input", "value"),
-    State("xas_post_edge_start_input", "value"),
-    State("xas_post_edge_stop_input", "value"),
-    State("xas_polynom_order_input", "value"),
-)
-def update_normalization_scheme_panel(
-        plot_click,
-        e0_value,
-        pre_edge_start_value,
-        pre_edge_stop_value,
-        post_edge_start_value,
-        post_edge_stop_value,
-        polynom_order_value,
-):
-    return
 
 
 # TODO implement plot undo button using stored previous data
@@ -290,15 +270,15 @@ def update_normalization_scheme_panel(
     prevent_initial_call=True,
 )
 def update_plot(
-        plot_click,
-        clear_click,
-        selected_scans,
-        selected_scan_id_dicts,
-        current_fig,
-        previous_data,
-        selected_channels,
-        larch_normalization_kwargs,
-        xas_normalization_selection,
+    plot_click,
+    clear_click,
+    selected_scans,
+    selected_scan_id_dicts,
+    current_fig,
+    previous_data,
+    selected_channels,
+    larch_normalization_kwargs,
+    xas_normalization_selection,
 ):
     t1 = time.time()
     fig = go.Figure(current_fig)
@@ -311,37 +291,74 @@ def update_plot(
         if selected_channels is not None:
             for id_dict in compress(selected_scan_id_dicts, selected_scans):
                 uid = id_dict["uid"]
-                # scan_id = ISS_SANDBOX[uid].metadata["scan_id"]
-                # df = ISS_SANDBOX[uid].read()
-                # scan_id = SANDBOX_READER[uid].metadata["scan_id"]
-                # df = SANDBOX_READER[uid].read()
-                # calc_mus(df)
 
-                x, y, name = GET_MY_DATA(uid, kind=xas_normalization_selection) # DataStore.get_data(uid, kind)
+                scan_id = APP_DATA.get_metadata(uid)["scan_id"]
+                energy = APP_DATA.get_raw_data(uid)["energy"]
 
+                for channel in selected_channels:
 
-
-                # for ch in selected_channels:
-                #
-                #     mu_label = f"{scan_id} {ch}"
-                #     if xas_normalization_selection == "mu":
-                #         mu_plot = df[ch]
-                #     elif xas_normalization_selection == "normalized":
-                #         mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=False,
-                #                                             **larch_normalization_kwargs)
-                #         mu_label += " norm"
-                #     elif xas_normalization_selection == "flattened":
-                #         mu_plot = LarchCalculator.normalize(df["energy"], df[ch], flatten_output=True,
-                #                                             **larch_normalization_kwargs)
-                #         mu_label += " flat"
+                    mu_label = f"{scan_id} {channel}"
+                    if xas_normalization_selection == "mu":
+                        mu_plot = APP_DATA.get_raw_data(uid)[channel]
+                    elif xas_normalization_selection == "normalized":
+                        mu_plot = APP_DATA.get_processed_data(uid, channel, processing_parameters=larch_normalization_kwargs)["norm"]
+                        mu_label += " norm"
+                    elif xas_normalization_selection == "flattened":
+                        mu_plot = APP_DATA.get_processed_data(uid, channel, processing_parameters=larch_normalization_kwargs)["flat"]
+                        mu_label += " flat"
 
                     # check spectrum isn't already plotted
                     if mu_label not in [trace.name for trace in fig.data]:
-                        # fig.add_scatter(x=df["energy"], y=mu_plot, name=mu_label)
-                        fig.add_scatter(x=x, y=y, name=name)
+                        fig.add_scatter(x=energy, y=mu_plot, name=mu_label)
+
     t2 = time.time()
     print(t2 - t1)
     return fig, updated_previous_data
+
+
+@app.callback(
+    Output("xas_e0_input", "value"),
+    Output("xas_pre_edge_start_input", "value"),
+    Output("xas_pre_edge_stop_input", "value"),
+    Output("xas_post_edge_start_input", "value"),
+    Output("xas_post_edge_stop_input", "value"),
+    Output("xas_polynom_order_input", "value"),
+    
+    Input("plot_btn", "n_clicks"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State("channel_checklist", "value"),
+    
+    State("xas_e0_input", "value"),
+    State("xas_pre_edge_start_input", "value"),
+    State("xas_pre_edge_stop_input", "value"),
+    State("xas_post_edge_start_input", "value"),
+    State("xas_post_edge_stop_input", "value"),
+    State("xas_polynom_order_input", "value"),
+)
+def update_normalization_scheme_panel(
+    plot_click,
+    selected_scans,
+    selected_scan_id_dicts,
+    selected_channels,
+
+    *current_values,
+):
+    if selected_channels is None:
+        raise dash.exceptions.PreventUpdate
+    first_selected_id_dict = list(compress(selected_scan_id_dicts, selected_scans))[0]
+    first_selected_uid = first_selected_id_dict["uid"]
+    first_selected_channel = selected_channels[0]
+
+    new_params = APP_DATA.get_processing_parameters(first_selected_uid, first_selected_channel).copy()
+
+    # remove params without gui inputs
+    new_params.pop("step")
+    new_params.pop("nvict")
+
+    updated_values = [val if val is not None else new_val for val, new_val in zip(current_values, new_params.values())]
+
+    return tuple(updated_values)
 
 
 @app.callback(
@@ -397,5 +414,5 @@ def select_all_scans_in_group(select_all_chk):
 
 if __name__ == "__main__":
     ISS_SANDBOX = tiled_io.get_iss_sandbox()
-    # SANDBOX_READER = tiled_io.TiledReader(ISS_SANDBOX)
+    APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
     app.run_server(debug=True)

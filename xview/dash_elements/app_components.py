@@ -18,14 +18,14 @@ def build_scangroup_interactable(scangroup_node, group_label):
         html.Div(v.metadata["scan_id"],
                  style={"display": "inline-block", "padding": "3px"}, ),
         html.Br(),
-    ])
+        ])
         for k, v in scangroup_node.items_indexer
     ]
     return [select_all] + scan_labels
     # return scan_labels
 
 
-def build_nested_accordion(base_node, groupby_keys: list[str], sort_key: str = None, reverse_order=False,
+def build_nested_accordion(base_node, groupby_keys: list[str], sort_key:str=None, reverse_order=False,
                            _node_label=""):
     current_key = groupby_keys[0]
     next_level_keys = groupby_keys[1:]
@@ -68,22 +68,15 @@ def build_proposal_accordion(proposal_node, groupby_keys, sort_key=None, reverse
     return html.Div(proposal_accordion, style={"max-height": "700px", "overflow-y": "scroll"})
 
 
-# class FilterInput:
-#     def __init__(self, filters=None) -> None:
-#         if filters is not None:
-#             self.filters = filters
-
-#     def build_new_input
-
-
 def build_filter_input(filter_index):
     key_input = dbc.Input(id={"type": "filter_key_input", "index": filter_index},
                           placeholder="metadata key")
     value_input = dbc.Input(id={"type": "filter_value_input", "index": filter_index},
                             placeholder="value")
-    delete_button = dbc.Button("X",
-                               id={"type": "filter_delete_btn", "index": filter_index},
-                               color="light", )
+    # delete_button = dbc.Button("X",
+    #                            id={"type": "filter_delete_btn", "index": filter_index},
+    #                            color="light", )
+    filter_toggle = dbc.Checkbox(value=True, id={"type": "filter_toggle", "index": filter_index})
 
     key_value_inputgroup = dbc.InputGroup([
         key_input,
@@ -93,9 +86,9 @@ def build_filter_input(filter_index):
 
     return dbc.Row([
         dbc.Col(key_value_inputgroup),
-        dbc.Col(delete_button, width=1),
+        dbc.Col(filter_toggle, width=1, align="center"),
+        # dbc.Col(delete_button, width=1),
     ], )
-    # ], id={"type": "filter_input_row", "index": filter_index})
 
 
 visualization_tab = dbc.Tab([
