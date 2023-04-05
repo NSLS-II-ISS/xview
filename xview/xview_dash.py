@@ -290,26 +290,12 @@ def update_plot(
     if dash.ctx.triggered_id == "plot_btn":
         if selected_channels is not None:
             for id_dict in compress(selected_scan_id_dicts, selected_scans):
-                uid = id_dict["uid"]
-
-                scan_id = APP_DATA.get_metadata(uid)["scan_id"]
-                energy = APP_DATA.get_raw_data(uid)["energy"]
-
                 for channel in selected_channels:
-
-                    mu_label = f"{scan_id} {channel}"
-                    if xas_normalization_selection == "mu":
-                        mu_plot = APP_DATA.get_raw_data(uid)[channel]
-                    elif xas_normalization_selection == "normalized":
-                        mu_plot = APP_DATA.get_processed_data(uid, channel, processing_parameters=larch_normalization_kwargs)["norm"]
-                        mu_label += " norm"
-                    elif xas_normalization_selection == "flattened":
-                        mu_plot = APP_DATA.get_processed_data(uid, channel, processing_parameters=larch_normalization_kwargs)["flat"]
-                        mu_label += " flat"
-
-                    # check spectrum isn't already plotted
-                    if mu_label not in [trace.name for trace in fig.data]:
-                        fig.add_scatter(x=energy, y=mu_plot, name=mu_label)
+                    uid = id_dict["uid"]
+                    x, y, label = APP_DATA.get_data(uid, channel, kind=xas_normalization_selection,
+                                                          processing_parameters=larch_normalization_kwargs)
+                    if label not in [trace.name for trace in fig.data]:
+                        fig.add_scatter(x=x, y=y, name=label)
 
     t2 = time.time()
     print(t2 - t1)
