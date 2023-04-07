@@ -73,10 +73,9 @@ def build_filter_input(filter_index):
                           placeholder="metadata key")
     value_input = dbc.Input(id={"type": "filter_value_input", "index": filter_index},
                             placeholder="value")
-    # delete_button = dbc.Button("X",
-    #                            id={"type": "filter_delete_btn", "index": filter_index},
-    #                            color="light", )
+
     filter_toggle = dbc.Checkbox(value=True, id={"type": "filter_toggle", "index": filter_index})
+    toggle_tooltip = dbc.Tooltip("toggle filter on/off", target={"type": "filter_toggle", "index": filter_index})
 
     key_value_inputgroup = dbc.InputGroup([
         key_input,
@@ -86,10 +85,35 @@ def build_filter_input(filter_index):
 
     return dbc.Row([
         dbc.Col(key_value_inputgroup),
-        dbc.Col(filter_toggle, width=1, align="center"),
+        dbc.Col([filter_toggle, toggle_tooltip], width=1, align="center"),
         # dbc.Col(delete_button, width=1),
     ], )
 
+
+def build_user_scan_group(group_label, uids):
+    return dbc.AccordionItem(
+        [html.P(uid) for uid in uids],
+        title=group_label
+    )
+
+
+grouping_tab = dbc.Tab([
+    dbc.Row([
+        dbc.Col([
+            dbc.Row([
+                dbc.Col(dbc.Button("Group selected scans", id="group_selected_btn", class_name="my-2"), width=6),
+            ], justify="center"),
+            dbc.Row([
+                dbc.Accordion([
+                    # dbc.ListGroupItem("test"),
+                ], id="scan_group_accordion"),
+            ]),
+        ]),
+        dbc.Col([
+            html.H1("Placeholder"),
+        ])
+    ],)
+], label="Grouping")
 
 visualization_tab = dbc.Tab([
     dcc.Store(id="previous_plot_data"),

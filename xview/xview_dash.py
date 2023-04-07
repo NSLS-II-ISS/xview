@@ -9,7 +9,8 @@ from xas import tiled_io
 from xas.tiled_io import filter_node_by_metadata_key, filter_node_for_proposal, sort_nodes_by_metadata_key
 from xas.analysis import check_scan
 
-from dash_elements.app_components import build_proposal_accordion, build_filter_input, visualization_tab, normalization_scheme_panel
+from dash_elements import app_components
+from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_scan_group
 from dash_elements.app_math import calc_mus, LarchCalculator
 
 import time
@@ -90,15 +91,13 @@ app.layout = dbc.Container([
                             ),
                         ])
                     ]),
-                    dbc.Col(
+                    dbc.Col([
                         dbc.Button("apply", id="apply_btn"),
-                        # align="end",
-                        width=2,
-                    ),
+                    ], width=2),
                 ], align="start", class_name="mb-3"),
             ], id="search_input_panel", body=True, class_name="mb-2"),
             dbc.Row([
-                dbc.Col(dbc.Spinner(html.Div(id="accordion_loc"), color="primary")),
+                dbc.Col(dbc.Spinner(html.Div(id="proposal_accordion_loc"), color="primary")),
                 dbc.Col([
                     dbc.Row(
                         dbc.Card([
@@ -119,28 +118,27 @@ app.layout = dbc.Container([
                             body=True
                         ),
                         class_name="mb-2"),
-                    # dbc.Row(dbc.Button("plot", id="plot_btn"), style={"padding-bottom": "10px"}),
-                    # dbc.Row(dbc.Button("clear figure", id="clear_btn"), style={"padding-bottom": "10px"}),
                     dbc.Row([
                         dcc.Store(id="xas_normalization_scheme"),
-                        normalization_scheme_panel,
+                        app_components.normalization_scheme_panel,
                     ])
                 ], style={"max-height": "700px", "overflow-y": "auto"}),
             ]),
         ], width=4),
         dbc.Col([
             dbc.Tabs([
-                visualization_tab,
+                app_components.visualization_tab,
+                app_components.grouping_tab,
             ]),
         ], width=8),
     ],
         style={"max-height": "800px", "overflow-y": "visible"}),
-    dbc.Row(html.Div("test text"))
+    # dbc.Row(html.Div("test text"))
 ], fluid=True)
 
 
 @app.callback(
-    Output("accordion_loc", "children"),
+    Output("proposal_accordion_loc", "children"),
     Input("search_btn", "n_clicks"),
     Input("apply_btn", "n_clicks"),
     State("groupby_dropdown", "value"),
@@ -280,7 +278,7 @@ def update_plot(
     larch_normalization_kwargs,
     xas_normalization_selection,
 ):
-    t1 = time.time()
+    # t1 = time.time()
     fig = go.Figure(current_fig)
     updated_previous_data = fig.data
 
@@ -292,13 +290,13 @@ def update_plot(
             for id_dict in compress(selected_scan_id_dicts, selected_scans):
                 for channel in selected_channels:
                     uid = id_dict["uid"]
-                    x, y, label = APP_DATA.get_data(uid, channel, kind=xas_normalization_selection,
+                    x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection,
                                                           processing_parameters=larch_normalization_kwargs)
                     if label not in [trace.name for trace in fig.data]:
                         fig.add_scatter(x=x, y=y, name=label)
 
-    t2 = time.time()
-    print(t2 - t1)
+    # t2 = time.time()
+    # print(t2 - t1)
     return fig, updated_previous_data
 
 
@@ -396,6 +394,22 @@ def select_all_scans_in_group(select_all_chk):
         return tuple(True for _ in dash.ctx.outputs_list)
     else:
         return tuple(False for _ in dash.ctx.outputs_list)
+
+
+@app.callback(
+    Output("scan_group_accordion", "children"),
+    Input("group_selected_btn", "n_clicks"),
+    State("scan_group_accordion", "children"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+)
+def update_user_groups(group_selected_click, current_groups, selected_scans, scan_id_dicts):
+    if any(selected for selected in selected_scans):
+        selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
+        new_group_label = f"Group {len(current_groups)+1}"
+        new_group = build_user_scan_group(new_group_label, selected_uids)
+        current_groups.append(new_group)
+    return current_groups
 
 
 if __name__ == "__main__":
