@@ -128,6 +128,7 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Tabs([
                 app_components.visualization_tab,
+                app_components.metadata_tab,
                 app_components.grouping_tab,
             ]),
         ], width=8),
@@ -191,7 +192,7 @@ def show_proposal_accordion(
     # Input({"type": "filter_delete_btn", "index": ALL}, "n_clicks"),
     # State({"type": "filter_delete_btn", "index": ALL}, "id"),
     State("filters_loc", "children"),
-    prevent_initial_callback=True,
+    prevent_initial_call=True,
 )
 def update_filter_selection(add_filter_click, remove_filter_click, current_filters):
     updated_filters = current_filters
@@ -224,7 +225,7 @@ def update_filter_selection(add_filter_click, remove_filter_click, current_filte
     Input("xas_post_edge_start_input", "value"),
     Input("xas_post_edge_stop_input", "value"),
     Input("xas_polynom_order_input", "value"),
-    prevent_initial_callback=True,
+    prevent_initial_call=True,
 )
 def update_stored_normalization_scheme(
     e0_input,
@@ -394,6 +395,30 @@ def select_all_scans_in_group(select_all_chk):
         return tuple(True for _ in dash.ctx.outputs_list)
     else:
         return tuple(False for _ in dash.ctx.outputs_list)
+
+
+@app.callback(
+    Output("metadata_table", "data"),
+    Output("metadata_table", "columns"),
+    Input("metadata_show_btn", "n_clicks"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    prevent_initial_call=True,
+)
+def update_metadata_table(show_click, selected_scans, scan_id_dicts):
+    selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
+    
+    # seems to be problems with specific md keys (e.g. 'detectors')
+    display_keys = ["uid", "scan_id", "element", "edge"]
+    selected_metadata = [APP_DATA.get_metadata(uid) for uid in selected_uids]
+    new_metadata = [{disp_key: md[disp_key] for disp_key in display_keys} for md in selected_metadata]
+    new_columns = [{"name": disp_key, "id": disp_key} for disp_key in display_keys]
+    return new_metadata, new_columns
+
+    # new_metadata_keys = [set(md.keys()) for md in new_metadata]
+    # new_columns = set.union(*new_metadata_keys)
+    # new_columns = new_metadata[0].keys()
+
 
 
 @app.callback(

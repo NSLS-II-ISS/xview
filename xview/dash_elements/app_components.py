@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc
+from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 
 import plotly.graph_objects as go
@@ -97,24 +97,6 @@ def build_user_scan_group(group_label, uids):
     )
 
 
-grouping_tab = dbc.Tab([
-    dbc.Row([
-        dbc.Col([
-            dbc.Row([
-                dbc.Col(dbc.Button("Group selected scans", id="group_selected_btn", class_name="my-2"), width=6),
-            ], justify="center"),
-            dbc.Row([
-                dbc.Accordion([
-                    # dbc.ListGroupItem("test"),
-                ], id="scan_group_accordion"),
-            ]),
-        ]),
-        dbc.Col([
-            html.H1("Placeholder"),
-        ])
-    ],)
-], label="Grouping")
-
 visualization_tab = dbc.Tab([
     dcc.Store(id="previous_plot_data"),
     dbc.Row(dcc.Graph(figure=go.Figure(layout={"height": 800}), id="spectrum_plot")),
@@ -131,6 +113,48 @@ visualization_tab = dbc.Tab([
 ],
     label="Visualization",
 )
+
+
+metadata_tab = dbc.Tab([
+    dbc.Row([
+        dbc.Col(
+            dbc.Button("Show selected metadata", id="metadata_show_btn", class_name="my-2"),
+            width=6,
+            class_name="text-center",
+        )
+    ], justify="center"),
+    dbc.Row(
+        dash_table.DataTable(
+            data=[],
+            columns=[],
+            id="metadata_table",
+        )
+    )
+], label="Metadata")
+
+
+grouping_tab = dbc.Tab([
+    dbc.Row([
+        dbc.Col([
+            dbc.Row([
+                dbc.Col(
+                    dbc.Button("Group selected scans", id="group_selected_btn", class_name="my-2"),
+                    width=6,
+                    class_name="text-center",
+                ),
+            ], justify="center"),
+            dbc.Row([
+                dbc.Accordion([
+                    # dbc.ListGroupItem("test"),
+                ], id="scan_group_accordion"),
+            ]),
+        ]),
+        dbc.Col([
+            html.H1("Placeholder"),
+        ])
+    ],)
+], label="Grouping")
+
 
 normalization_scheme_panel = dbc.Card([
     html.Div("XAS Normalization Parameters", className="mb-3"),
