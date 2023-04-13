@@ -118,16 +118,24 @@ visualization_tab = dbc.Tab([
 metadata_tab = dbc.Tab([
     dbc.Row([
         dbc.Col(
-            dbc.Button("Show selected metadata", id="metadata_show_btn", class_name="my-2"),
+            # dbc.Button("Show selected metadata", id="metadata_show_btn", class_name="my-2"),
+            html.H4("select scans to show metadata", id="metadata_text_tip", hidden=False),
             width=6,
             class_name="text-center",
         )
     ], justify="center"),
     dbc.Row(
-        dash_table.DataTable(
-            data=[],
-            columns=[],
-            id="metadata_table",
+        dbc.Col(
+            dash_table.DataTable(
+                data=[],
+                columns=[],
+                id="metadata_table",
+                style_table={"overflow-x": "auto"},
+
+                sort_action="native",
+                sort_mode="single",
+                sort_by=[],
+            )
         )
     )
 ], label="Metadata")

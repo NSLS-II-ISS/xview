@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 
 import plotly.graph_objects as go
 from itertools import compress  # basically numpy bool array casting using python iterables
+from numbers import Number 
 
 from xas import tiled_io
 from xas.tiled_io import filter_node_by_metadata_key, filter_node_for_proposal, sort_nodes_by_metadata_key
@@ -400,25 +401,35 @@ def select_all_scans_in_group(select_all_chk):
 @app.callback(
     Output("metadata_table", "data"),
     Output("metadata_table", "columns"),
-    Input("metadata_show_btn", "n_clicks"),
+    Output("metadata_table", "hidden_columns"),
+    Output("metadata_text_tip", "hidden"),
+    # Input("metadata_show_btn", "n_clicks"),
+    Input({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
     prevent_initial_call=True,
 )
-def update_metadata_table(show_click, selected_scans, scan_id_dicts):
+def update_metadata_table(select_click, selected_scans, scan_id_dicts):
+    if not any(selected_scans):
+        return [], [], [], False
+
     selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
     
-    # seems to be problems with specific md keys (e.g. 'detectors')
-    display_keys = ["uid", "scan_id", "element", "edge"]
     selected_metadata = [APP_DATA.get_metadata(uid) for uid in selected_uids]
-    new_metadata = [{disp_key: md[disp_key] for disp_key in display_keys} for md in selected_metadata]
-    new_columns = [{"name": disp_key, "id": disp_key} for disp_key in display_keys]
-    return new_metadata, new_columns
+    
+    # only bool, number, and string values can be displayed in the table
+    filtered_metadata = [{k:v for (k,v) in md.items() if isinstance(v, (bool, Number, str))} for md in selected_metadata]
 
-    # new_metadata_keys = [set(md.keys()) for md in new_metadata]
-    # new_columns = set.union(*new_metadata_keys)
-    # new_columns = new_metadata[0].keys()
+    default_display_keys = ["uid", "scan_id", "element", "edge", "time", "year", "cycle", "PROPOSAL"]
+    # display_keys = filtered_metadata[0].keys()
 
+    all_displayable_keys = set().union(*(md.keys() for md in filtered_metadata))
+
+    # new_metadata = [{disp_key: md[disp_key] for disp_key in display_keys} for md in selected_metadata]
+    new_columns = [{"name": key, "id": key, "hideable": True} for key in sorted(all_displayable_keys)]
+    new_hidden_columns = [k for k in all_displayable_keys if k not in default_display_keys]
+
+    return filtered_metadata, new_columns, new_hidden_columns, True
 
 
 @app.callback(
