@@ -363,21 +363,16 @@ def change_visible_channels(n_channel_clicks, selected_scans, scan_id_dicts, cur
         {"label": "mur", "value": "mur"},
     ]
 
-    if current_btn_text == "see more":
-        if any(selected for selected in selected_scans):
-            selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
-            selected_scan_df_cols = [set(ISS_SANDBOX[uid].columns) for uid in selected_uids]
+    if current_btn_text == "see more" and any(selected_scans):
+        selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
+        selected_scan_df_cols = [set(ISS_SANDBOX[uid].columns) for uid in selected_uids]
 
-            # flatten into set of all unique column names
-            other_channels = set.union(*selected_scan_df_cols)
+        # flatten into set of all unique column names
+        other_channels = set.union(*selected_scan_df_cols)
 
-            channel_btn_text = "see less"
-            new_options = [{"label": ch, "value": ch} for ch in sorted(other_channels)]
-
-        else:
-            new_options = []
-
+        new_options = [{"label": ch, "value": ch} for ch in sorted(other_channels)]
         channel_options = default_options + new_options
+        channel_btn_text = "see less"
 
     else:
         channel_options = default_options
@@ -403,7 +398,6 @@ def select_all_scans_in_group(select_all_chk):
     Output("metadata_table", "columns"),
     Output("metadata_table", "hidden_columns"),
     Output("metadata_text_tip", "hidden"),
-    # Input("metadata_show_btn", "n_clicks"),
     Input({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
@@ -421,11 +415,9 @@ def update_metadata_table(select_click, selected_scans, scan_id_dicts):
     filtered_metadata = [{k:v for (k,v) in md.items() if isinstance(v, (bool, Number, str))} for md in selected_metadata]
 
     default_display_keys = ["uid", "scan_id", "element", "edge", "time", "year", "cycle", "PROPOSAL"]
-    # display_keys = filtered_metadata[0].keys()
 
     all_displayable_keys = set().union(*(md.keys() for md in filtered_metadata))
 
-    # new_metadata = [{disp_key: md[disp_key] for disp_key in display_keys} for md in selected_metadata]
     new_columns = [{"name": key, "id": key, "hideable": True} for key in sorted(all_displayable_keys)]
     new_hidden_columns = [k for k in all_displayable_keys if k not in default_display_keys]
 
