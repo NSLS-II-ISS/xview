@@ -64,11 +64,11 @@ app.layout = dbc.Container([
                         dcc.Dropdown(
                             options=[
                                 {"label": "sample", "value": "sample_name"},
-                                {"label": "scan", "value": "monochromator_scan_uid"},
+                                {"label": "scan", "value": "scan_name"},
                             ],
                             value=[
                                 "sample_name",
-                                "monochromator_scan_uid",
+                                "scan_name",
                             ],
                             id="groupby_dropdown",
                             multi=True
@@ -177,7 +177,7 @@ def show_proposal_accordion(
     if n_search_clicks == 0:
         return
     if not groupby_dropdown_choice:  # check if empty or None
-        groupby_dropdown_choice = ("sample_name", "monochromator_scan_uid",)
+        groupby_dropdown_choice = ("sample_name", "scan_name",)
 
     return build_proposal_accordion(proposal_node,
                                     groupby_keys=groupby_dropdown_choice,
