@@ -131,7 +131,7 @@ app.layout = dbc.Container([
                 app_components.visualization_tab,
                 app_components.metadata_tab,
                 app_components.grouping_tab,
-            ]),
+            ], id="first_page_tabs"),
         ], width=8),
     ],
         style={"max-height": "800px", "overflow-y": "visible"}),
@@ -260,7 +260,6 @@ def update_stored_normalization_scheme(
 
     Input("plot_btn", "n_clicks"),
     Input("clear_btn", "n_clicks"),
-    Input("propagate_btn", "n_clicks"),
 
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
@@ -268,7 +267,7 @@ def update_stored_normalization_scheme(
     State("previous_plot_data", "data"),
     State("channel_checklist", "value"),
 
-    State("xas_normalization_scheme", "data"),
+    # State("xas_normalization_scheme", "data"),
     State("xas_normalization_radioitems", "value"),
 
     prevent_initial_call=True,
@@ -276,13 +275,12 @@ def update_stored_normalization_scheme(
 def update_plot(
     plot_click,
     clear_click,
-    propagate_click,
     selected_scans,
     selected_scan_id_dicts,
     current_fig,
     previous_data,
     selected_channels,
-    larch_normalization_kwargs,
+    # larch_normalization_kwargs,
     xas_normalization_selection,
 ):
     # t1 = time.time()
@@ -298,23 +296,35 @@ def update_plot(
                 for channel in selected_channels:
                     uid = id_dict["uid"]
                     x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
-                    if label not in [trace.name for trace in fig.data]:
-                        fig.add_scatter(x=x, y=y, name=label)
-
-    if dash.ctx.triggered_id == "propagate_btn":
-        if selected_channels is not None:
-            for id_dict in compress(selected_scan_id_dicts, selected_scans):
-                for channel in selected_channels:
-                    uid = id_dict["uid"]
-                    print(uid)
-                    x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection,
-                                                             processing_parameters=larch_normalization_kwargs)
+                    print(APP_DATA.get_processing_parameters(uid, channel))
                     if label not in [trace.name for trace in fig.data]:
                         fig.add_scatter(x=x, y=y, name=label)
 
     # t2 = time.time()
     # print(t2 - t1)
     return fig, updated_previous_data
+
+
+@app.callback(
+    Output("propagate_params_dummy_component", "children"),
+    Input("propagate_btn", "n_clicks"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State("channel_checklist", "value"),
+    State("xas_normalization_scheme", "data"),
+)
+def propagate_processing_parameters(
+        propagate_click,
+        selected_scans,
+        scan_id_dicts,
+        selected_channels,
+        larch_normalization_kwargs,
+):
+    for id_dict in compress(scan_id_dicts, selected_scans):
+        uid = id_dict["uid"]
+        for channel in selected_channels:
+            APP_DATA.set_processing_parameters(uid, channel, larch_normalization_kwargs)
+    return []
 
 
 @app.callback(
@@ -358,6 +368,7 @@ def update_normalization_scheme_panel(
     new_params.pop("nvict")
 
     updated_values = [val if val is not None else new_val for val, new_val in zip(current_values, new_params.values())]
+    updated_values = [round(val, ndigits=2) for val in updated_values]
 
     return tuple(updated_values)
 
@@ -413,19 +424,27 @@ def select_all_scans_in_group(select_all_chk):
     Output("metadata_table", "columns"),
     Output("metadata_table", "hidden_columns"),
     Output("metadata_text_tip", "hidden"),
+
     Input({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
+    # Input("first_page_tabs", "active_tab"),
+
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    # State("first_page_tabs", "active_tab"),
     prevent_initial_call=True,
 )
+# def update_metadata_table(select_click, change_active_tab, selected_scans, scan_id_dicts, currently_active_tab):
 def update_metadata_table(select_click, selected_scans, scan_id_dicts):
+    # if currently_active_tab != "metadata":
+    #     dash.exceptions.PreventUpdate
+
     if not any(selected_scans):
         return [], [], [], False
 
     selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
-    
+
     selected_metadata = [APP_DATA.get_metadata(uid) for uid in selected_uids]
-    
+
     # only bool, number, and string values can be displayed in the table
     filtered_metadata = [{k:v for (k,v) in md.items() if isinstance(v, (bool, Number, str))} for md in selected_metadata]
 
@@ -460,3 +479,21 @@ if __name__ == "__main__":
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
     # print('THIS IS STARTING')
     app.run_server(debug=True)
+
+#
+# def make_scan_quality_indicators(quality_dict, uid):
+#     indicators = []
+#     for ch in ["mut", "muf", "mur"]:
+#         if quality_dict[ch] == "good":
+#             ch_indicator = html.Span(f"{ch} ",
+#                                      style={"color": "green"},
+#                                      id={"type": "quality_indicator", "channel": ch, "uid": uid})
+#         else:
+#             ch_indicator = html.Span(f"{ch} ",
+#                                      style={"color": "red"},
+#                                      id={"type": "quality_indicator", "channel": ch, "uid": uid})
+#         ch_tooltip = dbc.Tooltip({quality_dict[ch]},
+#                                  target={"type": "quality_indicator", "channel": ch, "uid": uid},
+#                                  placement="top")
+#         indicators.extend([ch_indicator, ch_tooltip])
+#     return indicators

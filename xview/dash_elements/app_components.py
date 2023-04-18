@@ -14,15 +14,41 @@ def build_scangroup_interactable(scangroup_node, group_label):
     ])
 
     scan_labels = [html.Div([
-        dbc.Checkbox(id={"type": "scan_check", "uid": uid, "group": group_label}, style={"display": "inline-block"}),
+        dbc.Checkbox(id={"type": "scan_check", "uid": k, "group": group_label}, style={"display": "inline-block"}),
         html.Div(i,
-                 style={"display": "inline-block", "padding": "3px"}, ),
+                 style={"display": "inline-block", "padding": "3px", "padding-right": "20px"}, ),
+        *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
         html.Br(),
         ])
-        for i, uid in enumerate(scangroup_node)
+        for i, (k, v) in enumerate(scangroup_node.items())
     ]
     return [select_all] + scan_labels
     # return scan_labels
+
+
+def make_scan_quality_indicators(quality_dict, uid):
+    indicators = []
+    for label, ch in zip(["T", "F", "R"], ["mut", "muf", "mur"]):
+        if quality_dict[ch] == "good":
+            ch_indicator = html.Span(f" {label} ",
+                                     style={"color": "white",
+                                            "background-color": "seagreen",
+                                            "font-weight": "bold",
+                                            "white-space": "pre",},
+                                     id={"type": "quality_indicator", "channel": ch, "uid": uid})
+        else:
+            ch_indicator = html.Span(f" {label} ",
+                                     style={"color": "white",
+                                            "background-color": "grey",
+                                            "font-weight": "bold",
+                                            "white-space": "pre",},
+                                     id={"type": "quality_indicator", "channel": ch, "uid": uid})
+        ch_tooltip = dbc.Tooltip(quality_dict[ch],
+                                 target={"type": "quality_indicator", "channel": ch, "uid": uid},
+                                 placement="top")
+        indicators.extend([ch_indicator, ch_tooltip])
+        # indicators.extend([ch_indicator])
+    return indicators
 
 
 def build_nested_accordion(base_node, groupby_keys: list[str], sort_key:str=None, reverse_order=False,
@@ -111,9 +137,7 @@ visualization_tab = dbc.Tab([
             width=4
         )
     ], justify="center")
-],
-    label="Visualization",
-)
+], label="Visualization", tab_id="visualization")
 
 
 metadata_tab = dbc.Tab([
@@ -139,7 +163,7 @@ metadata_tab = dbc.Tab([
             )
         )
     )
-], label="Metadata")
+], label="Metadata", tab_id="metadata")
 
 
 grouping_tab = dbc.Tab([
@@ -162,7 +186,7 @@ grouping_tab = dbc.Tab([
             html.H1("Placeholder"),
         ])
     ],)
-], label="Grouping")
+], label="Grouping", tab_id="grouping")
 
 
 normalization_scheme_panel = dbc.Card([
@@ -202,6 +226,7 @@ normalization_scheme_panel = dbc.Card([
             value="mu",
             id="xas_normalization_radioitems",
         ),
+        html.Div(id="propagate_params_dummy_component"),
         html.Div(dbc.Button("propagate", id="propagate_btn"), style={"text-align": "right"})
     ]),
 ],
