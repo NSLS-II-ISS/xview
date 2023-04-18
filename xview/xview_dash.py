@@ -152,6 +152,7 @@ app.layout = dbc.Container([
     State({"type": "filter_key_input", "index": ALL}, "value"),
     State({"type": "filter_value_input", "index": ALL}, "value"),
     State({"type": "filter_toggle", "index": ALL}, "value"),
+    prevent_initial_call=True,
 )
 def show_proposal_accordion(
     n_search_clicks,
@@ -443,4 +444,5 @@ def update_user_groups(group_selected_click, current_groups, selected_scans, sca
 if __name__ == "__main__":
     ISS_SANDBOX = tiled_io.get_iss_sandbox()
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
+    print('THIS IS STARTING')
     app.run_server(debug=True)

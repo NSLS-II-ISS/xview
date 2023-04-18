@@ -14,12 +14,12 @@ def build_scangroup_interactable(scangroup_node, group_label):
     ])
 
     scan_labels = [html.Div([
-        dbc.Checkbox(id={"type": "scan_check", "uid": k, "group": group_label}, style={"display": "inline-block"}),
-        html.Div(v.metadata["scan_id"],
+        dbc.Checkbox(id={"type": "scan_check", "uid": uid, "group": group_label}, style={"display": "inline-block"}),
+        html.Div(i,
                  style={"display": "inline-block", "padding": "3px"}, ),
         html.Br(),
         ])
-        for k, v in scangroup_node.items_indexer
+        for i, uid in enumerate(scangroup_node)
     ]
     return [select_all] + scan_labels
     # return scan_labels
@@ -65,6 +65,7 @@ def build_nested_accordion(base_node, groupby_keys: list[str], sort_key:str=None
 def build_proposal_accordion(proposal_node, groupby_keys, sort_key=None, reverse_order=False):
     proposal_accordion = build_nested_accordion(proposal_node, groupby_keys, sort_key=sort_key,
                                                 reverse_order=reverse_order)
+    print('successfully build proposal accordeon')
     return html.Div(proposal_accordion, style={"max-height": "700px", "overflow-y": "scroll"})
 
 
