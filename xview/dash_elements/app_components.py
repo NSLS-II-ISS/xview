@@ -202,6 +202,7 @@ normalization_scheme_panel = dbc.Card([
             value="mu",
             id="xas_normalization_radioitems",
         ),
+        html.Div(dbc.Button("propagate", id="propagate_btn"), style={"text-align": "right"})
     ]),
 ],
     body=True,

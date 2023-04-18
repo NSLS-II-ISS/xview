@@ -257,8 +257,11 @@ def update_stored_normalization_scheme(
 @app.callback(
     Output("spectrum_plot", "figure"),
     Output("previous_plot_data", "data"),
+
     Input("plot_btn", "n_clicks"),
     Input("clear_btn", "n_clicks"),
+    Input("propagate_btn", "n_clicks"),
+
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
     State("spectrum_plot", "figure"),
@@ -273,6 +276,7 @@ def update_stored_normalization_scheme(
 def update_plot(
     plot_click,
     clear_click,
+    propagate_click,
     selected_scans,
     selected_scan_id_dicts,
     current_fig,
@@ -293,8 +297,18 @@ def update_plot(
             for id_dict in compress(selected_scan_id_dicts, selected_scans):
                 for channel in selected_channels:
                     uid = id_dict["uid"]
+                    x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
+                    if label not in [trace.name for trace in fig.data]:
+                        fig.add_scatter(x=x, y=y, name=label)
+
+    if dash.ctx.triggered_id == "propagate_btn":
+        if selected_channels is not None:
+            for id_dict in compress(selected_scan_id_dicts, selected_scans):
+                for channel in selected_channels:
+                    uid = id_dict["uid"]
+                    print(uid)
                     x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection,
-                                                          processing_parameters=larch_normalization_kwargs)
+                                                             processing_parameters=larch_normalization_kwargs)
                     if label not in [trace.name for trace in fig.data]:
                         fig.add_scatter(x=x, y=y, name=label)
 
@@ -444,5 +458,5 @@ def update_user_groups(group_selected_click, current_groups, selected_scans, sca
 if __name__ == "__main__":
     ISS_SANDBOX = tiled_io.get_iss_sandbox()
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
-    print('THIS IS STARTING')
+    # print('THIS IS STARTING')
     app.run_server(debug=True)
