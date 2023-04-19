@@ -4,9 +4,20 @@ import dash_bootstrap_components as dbc
 
 import plotly.graph_objects as go
 
-from xas.tiled_io import group_node_by_metadata_key, sort_nodes_by_metadata_key
+from xas.tiled_io import group_node_by_metadata_key, sort_nodes_by_metadata_key, build_scan_tree
+import time
+
+def time_profile(func):
+    def wrapper(*args, **kwargs):
+        t1 = time.time()
+        res = func(*args, **kwargs)
+        t2 = time.time()
+        print(f"{func.__name__!r} duration: {t2 - t1}")
+        return res
+    return wrapper
 
 
+@time_profile
 def build_scangroup_interactable(scangroup_node, group_label):
     select_all = html.Div([
         dbc.Checkbox(id={"type": "select_all", "group": group_label}, style={"display": "inline-block"}),
@@ -14,18 +25,19 @@ def build_scangroup_interactable(scangroup_node, group_label):
     ])
 
     scan_labels = [html.Div([
-        dbc.Checkbox(id={"type": "scan_check", "uid": k, "group": group_label}, style={"display": "inline-block"}),
+        dbc.Checkbox(id={"type": "scan_check", "uid": "bleh", "group": group_label}, style={"display": "inline-block"}),
         html.Div(i,
                  style={"display": "inline-block", "padding": "3px", "padding-right": "20px"}, ),
-        *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
+        # *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
         html.Br(),
         ])
-        for i, (k, v) in enumerate(scangroup_node.items())
+        for i in range(len(scangroup_node))
+        # for i, (k, v) in enumerate(scangroup_node.items())
     ]
     return [select_all] + scan_labels
-    # return scan_labels
 
 
+# @time_profile
 def make_scan_quality_indicators(quality_dict, uid):
     indicators = []
     for label, ch in zip(["T", "F", "R"], ["mut", "muf", "mur"]):
@@ -51,6 +63,7 @@ def make_scan_quality_indicators(quality_dict, uid):
     return indicators
 
 
+@time_profile
 def build_nested_accordion(base_node, groupby_keys: list[str], sort_key:str=None, reverse_order=False,
                            _node_label=""):
     current_key = groupby_keys[0]
@@ -88,13 +101,51 @@ def build_nested_accordion(base_node, groupby_keys: list[str], sort_key:str=None
     return dbc.Accordion(accordion_items, start_collapsed=True, always_open=True, )
 
 
+def _build_nested_accordion(scan_tree, _label=""):
+    current_key = scan_tree.columns[0]
+
+    if current_key == "node":
+        sg_node = scan_tree.iloc[0, 0]
+        # accordion_items = [
+        #     dbc.AccordionItem(
+        #         build_scangroup_interactable(sg_node, group_label=_label)
+        #     )
+        # ]
+        return build_scangroup_interactable(sg_node, group_label=_label)
+    else:
+
+        accordion_items = [
+            dbc.AccordionItem(
+                _build_nested_accordion(scan_tree[scan_tree[current_key] == unique_val].drop(current_key, axis=1),
+                                        _label=(_label + unique_val)),
+                title=unique_val,
+            )
+            for unique_val in scan_tree[current_key].unique()
+        ]
+        # c_values = scan_tree[current_key]
+        # for c_unique_value in c_values.unique():
+        #     sub_tree = scan_tree[scan_tree[current_key] == c_unique_value]
+        #     next_list = _build_nested_accordion(sub_tree.drop(current_key, axis=1))
+            # return [c_unique_value] + next_list
+
+    return dbc.Accordion(accordion_items, start_collapsed=True, always_open=True, )
+
+# _build_nested_accordion(df_node)
+
+# @time_profile
+# def build_proposal_accordion(proposal_node, groupby_keys, sort_key=None, reverse_order=False):
+#     proposal_accordion = build_nested_accordion(proposal_node, groupby_keys, sort_key=sort_key,
+#                                                 reverse_order=reverse_order)
+#     return html.Div(proposal_accordion, style={"max-height": "700px", "overflow-y": "scroll"})
+
+@time_profile
 def build_proposal_accordion(proposal_node, groupby_keys, sort_key=None, reverse_order=False):
-    proposal_accordion = build_nested_accordion(proposal_node, groupby_keys, sort_key=sort_key,
-                                                reverse_order=reverse_order)
-    print('successfully build proposal accordeon')
+    scan_tree = build_scan_tree(proposal_node, groupby_keys)
+    proposal_accordion = _build_nested_accordion(scan_tree)
     return html.Div(proposal_accordion, style={"max-height": "700px", "overflow-y": "scroll"})
 
 
+@time_profile
 def build_filter_input(filter_index):
     key_input = dbc.Input(id={"type": "filter_key_input", "index": filter_index},
                           placeholder="metadata key")
@@ -117,6 +168,7 @@ def build_filter_input(filter_index):
     ], )
 
 
+@time_profile
 def build_user_scan_group(group_label, uids):
     return dbc.AccordionItem(
         [html.P(uid) for uid in uids],
@@ -143,23 +195,25 @@ visualization_tab = dbc.Tab([
 metadata_tab = dbc.Tab([
     dbc.Row([
         dbc.Col(
-            # dbc.Button("Show selected metadata", id="metadata_show_btn", class_name="my-2"),
-            html.H4("select scans to show metadata", id="metadata_text_tip", hidden=False),
+            dbc.Button("Show selected metadata", id="metadata_show_btn", class_name="my-2"),
+            # html.H4("select scans to show metadata", id="metadata_text_tip", hidden=False),
             width=6,
             class_name="text-center",
         )
     ], justify="center"),
     dbc.Row(
         dbc.Col(
-            dash_table.DataTable(
-                data=[],
-                columns=[],
-                id="metadata_table",
-                style_table={"overflow-x": "auto"},
+            dbc.Spinner(
+                dash_table.DataTable(
+                    data=[],
+                    columns=[],
+                    id="metadata_table",
+                    style_table={"overflow-x": "auto"},
 
-                sort_action="native",
-                sort_mode="single",
-                sort_by=[],
+                    sort_action="native",
+                    sort_mode="single",
+                    sort_by=[],
+                ),
             )
         )
     )

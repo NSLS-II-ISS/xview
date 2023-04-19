@@ -16,6 +16,9 @@ from dash_elements.app_math import calc_mus, LarchCalculator
 
 import time
 
+def time_now_str():
+    return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "new ISS app"
 
@@ -139,6 +142,16 @@ app.layout = dbc.Container([
 ], fluid=True)
 
 
+def time_profile(func):
+    def wrapper(*args, **kwargs):
+        t1 = time.time()
+        res = func(*args, **kwargs)
+        t2 = time.time()
+        print(f"{func.__name__!r} duration: {t2 - t1}")
+        return res
+    return wrapper
+
+
 @app.callback(
     Output("proposal_accordion_loc", "children"),
     Input("search_btn", "n_clicks"),
@@ -154,6 +167,7 @@ app.layout = dbc.Container([
     State({"type": "filter_toggle", "index": ALL}, "value"),
     prevent_initial_call=True,
 )
+@time_profile
 def show_proposal_accordion(
     n_search_clicks,
     n_apply_clicks,
@@ -179,7 +193,6 @@ def show_proposal_accordion(
         return
     if not groupby_dropdown_choice:  # check if empty or None
         groupby_dropdown_choice = ("sample_name", "scan_name",)
-
     return build_proposal_accordion(proposal_node,
                                     groupby_keys=groupby_dropdown_choice,
                                     sort_key=sort_dropdown_choice,
@@ -191,11 +204,10 @@ def show_proposal_accordion(
     Output("remove_filter_btn", "style"),
     Input("add_filter_btn", "n_clicks"),
     Input("remove_filter_btn", "n_clicks"),
-    # Input({"type": "filter_delete_btn", "index": ALL}, "n_clicks"),
-    # State({"type": "filter_delete_btn", "index": ALL}, "id"),
     State("filters_loc", "children"),
     prevent_initial_call=True,
 )
+@time_profile
 def update_filter_selection(add_filter_click, remove_filter_click, current_filters):
     updated_filters = current_filters
 
@@ -215,7 +227,7 @@ def update_filter_selection(add_filter_click, remove_filter_click, current_filte
         remove_btn_visibility = {"visibility": "hidden"}
     else:
         remove_btn_visibility = {"visibility": "visible"}
-    
+
     return updated_filters, remove_btn_visibility
 
 
@@ -229,6 +241,7 @@ def update_filter_selection(add_filter_click, remove_filter_click, current_filte
     Input("xas_polynom_order_input", "value"),
     prevent_initial_call=True,
 )
+@time_profile
 def update_stored_normalization_scheme(
     e0_input,
     pre_edge_start_input,
@@ -272,6 +285,7 @@ def update_stored_normalization_scheme(
 
     prevent_initial_call=True,
 )
+@time_profile
 def update_plot(
     plot_click,
     clear_click,
@@ -283,7 +297,6 @@ def update_plot(
     # larch_normalization_kwargs,
     xas_normalization_selection,
 ):
-    # t1 = time.time()
     fig = go.Figure(current_fig)
     updated_previous_data = fig.data
 
@@ -300,8 +313,6 @@ def update_plot(
                     if label not in [trace.name for trace in fig.data]:
                         fig.add_scatter(x=x, y=y, name=label)
 
-    # t2 = time.time()
-    # print(t2 - t1)
     return fig, updated_previous_data
 
 
@@ -313,6 +324,7 @@ def update_plot(
     State("channel_checklist", "value"),
     State("xas_normalization_scheme", "data"),
 )
+@time_profile
 def propagate_processing_parameters(
         propagate_click,
         selected_scans,
@@ -347,6 +359,7 @@ def propagate_processing_parameters(
     State("xas_post_edge_stop_input", "value"),
     State("xas_polynom_order_input", "value"),
 )
+@time_profile
 def update_normalization_scheme_panel(
     plot_click,
     selected_scans,
@@ -382,6 +395,7 @@ def update_normalization_scheme_panel(
     State("change_visible_channels_btn", "children"),
     prevent_initial_call=True,
 )
+@time_profile
 def change_visible_channels(n_channel_clicks, selected_scans, scan_id_dicts, current_btn_text):
     default_options = [
         {"label": "mut", "value": "mut"},
@@ -412,6 +426,7 @@ def change_visible_channels(n_channel_clicks, selected_scans, scan_id_dicts, cur
     Input({"type": "select_all", "group": MATCH}, "value"),
     prevent_initial_call=True,
 )
+@time_profile
 def select_all_scans_in_group(select_all_chk):
     if select_all_chk is True:
         return tuple(True for _ in dash.ctx.outputs_list)
@@ -423,23 +438,19 @@ def select_all_scans_in_group(select_all_chk):
     Output("metadata_table", "data"),
     Output("metadata_table", "columns"),
     Output("metadata_table", "hidden_columns"),
-    Output("metadata_text_tip", "hidden"),
 
-    Input({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
-    # Input("first_page_tabs", "active_tab"),
+    Input("metadata_show_btn", "n_clicks"),
 
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
-    # State("first_page_tabs", "active_tab"),
+    State("first_page_tabs", "active_tab"),
     prevent_initial_call=True,
 )
-# def update_metadata_table(select_click, change_active_tab, selected_scans, scan_id_dicts, currently_active_tab):
-def update_metadata_table(select_click, selected_scans, scan_id_dicts):
-    # if currently_active_tab != "metadata":
-    #     dash.exceptions.PreventUpdate
+@time_profile
+def update_metadata_table(show_click, selected_scans, scan_id_dicts, currently_active_tab):
 
     if not any(selected_scans):
-        return [], [], [], False
+        return [], [], []
 
     selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
 
@@ -455,7 +466,7 @@ def update_metadata_table(select_click, selected_scans, scan_id_dicts):
     new_columns = [{"name": key, "id": key, "hideable": True} for key in sorted(all_displayable_keys)]
     new_hidden_columns = [k for k in all_displayable_keys if k not in default_display_keys]
 
-    return filtered_metadata, new_columns, new_hidden_columns, True
+    return filtered_metadata, new_columns, new_hidden_columns
 
 
 @app.callback(
@@ -465,6 +476,7 @@ def update_metadata_table(select_click, selected_scans, scan_id_dicts):
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
 )
+@time_profile
 def update_user_groups(group_selected_click, current_groups, selected_scans, scan_id_dicts):
     if any(selected for selected in selected_scans):
         selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
@@ -479,21 +491,3 @@ if __name__ == "__main__":
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
     # print('THIS IS STARTING')
     app.run_server(debug=True)
-
-#
-# def make_scan_quality_indicators(quality_dict, uid):
-#     indicators = []
-#     for ch in ["mut", "muf", "mur"]:
-#         if quality_dict[ch] == "good":
-#             ch_indicator = html.Span(f"{ch} ",
-#                                      style={"color": "green"},
-#                                      id={"type": "quality_indicator", "channel": ch, "uid": uid})
-#         else:
-#             ch_indicator = html.Span(f"{ch} ",
-#                                      style={"color": "red"},
-#                                      id={"type": "quality_indicator", "channel": ch, "uid": uid})
-#         ch_tooltip = dbc.Tooltip({quality_dict[ch]},
-#                                  target={"type": "quality_indicator", "channel": ch, "uid": uid},
-#                                  placement="top")
-#         indicators.extend([ch_indicator, ch_tooltip])
-#     return indicators
