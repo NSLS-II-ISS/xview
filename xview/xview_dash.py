@@ -16,8 +16,6 @@ from dash_elements.app_math import calc_mus, LarchCalculator
 
 import time
 
-def time_now_str():
-    return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "new ISS app"
@@ -312,6 +310,10 @@ def update_plot(
                     print(APP_DATA.get_processing_parameters(uid, channel))
                     if label not in [trace.name for trace in fig.data]:
                         fig.add_scatter(x=x, y=y, name=label)
+                        fig.update_layout(xaxis_title="Energy (eV)", 
+                                          yaxis_title="χμ(E)", 
+                                          xaxis_title_font_size=20, 
+                                          yaxis_title_font_size=20)
 
     return fig, updated_previous_data
 

@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 
 import plotly.graph_objects as go
 
-from xas.tiled_io import group_node_by_metadata_key, sort_nodes_by_metadata_key, build_scan_tree
+from xas.tiled_io import group_node_by_metadata_key, sort_nodes_by_metadata_key, build_scan_tree_table
 import time
 
 def time_profile(func):
@@ -25,14 +25,14 @@ def build_scangroup_interactable(scangroup_node, group_label):
     ])
 
     scan_labels = [html.Div([
-        dbc.Checkbox(id={"type": "scan_check", "uid": "bleh", "group": group_label}, style={"display": "inline-block"}),
+        dbc.Checkbox(id={"type": "scan_check", "uid": k, "group": group_label}, style={"display": "inline-block"}),
         html.Div(i,
                  style={"display": "inline-block", "padding": "3px", "padding-right": "20px"}, ),
-        # *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
+        *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
         html.Br(),
         ])
-        for i in range(len(scangroup_node))
-        # for i, (k, v) in enumerate(scangroup_node.items())
+        # for i in range(len(scangroup_node))
+        for i, (k, v) in enumerate(scangroup_node.items())
     ]
     return [select_all] + scan_labels
 
@@ -101,19 +101,15 @@ def build_nested_accordion(base_node, groupby_keys: list[str], sort_key:str=None
     return dbc.Accordion(accordion_items, start_collapsed=True, always_open=True, )
 
 
+@time_profile
 def _build_nested_accordion(scan_tree, _label=""):
     current_key = scan_tree.columns[0]
 
     if current_key == "node":
         sg_node = scan_tree.iloc[0, 0]
-        # accordion_items = [
-        #     dbc.AccordionItem(
-        #         build_scangroup_interactable(sg_node, group_label=_label)
-        #     )
-        # ]
         return build_scangroup_interactable(sg_node, group_label=_label)
+    
     else:
-
         accordion_items = [
             dbc.AccordionItem(
                 _build_nested_accordion(scan_tree[scan_tree[current_key] == unique_val].drop(current_key, axis=1),
@@ -122,25 +118,13 @@ def _build_nested_accordion(scan_tree, _label=""):
             )
             for unique_val in scan_tree[current_key].unique()
         ]
-        # c_values = scan_tree[current_key]
-        # for c_unique_value in c_values.unique():
-        #     sub_tree = scan_tree[scan_tree[current_key] == c_unique_value]
-        #     next_list = _build_nested_accordion(sub_tree.drop(current_key, axis=1))
-            # return [c_unique_value] + next_list
-
+        
     return dbc.Accordion(accordion_items, start_collapsed=True, always_open=True, )
 
-# _build_nested_accordion(df_node)
-
-# @time_profile
-# def build_proposal_accordion(proposal_node, groupby_keys, sort_key=None, reverse_order=False):
-#     proposal_accordion = build_nested_accordion(proposal_node, groupby_keys, sort_key=sort_key,
-#                                                 reverse_order=reverse_order)
-#     return html.Div(proposal_accordion, style={"max-height": "700px", "overflow-y": "scroll"})
 
 @time_profile
 def build_proposal_accordion(proposal_node, groupby_keys, sort_key=None, reverse_order=False):
-    scan_tree = build_scan_tree(proposal_node, groupby_keys)
+    scan_tree = build_scan_tree_table(proposal_node, groupby_keys)
     proposal_accordion = _build_nested_accordion(scan_tree)
     return html.Div(proposal_accordion, style={"max-height": "700px", "overflow-y": "scroll"})
 
