@@ -28,11 +28,11 @@ def build_scangroup_interactable(scangroup_node, group_label):
         dbc.Checkbox(id={"type": "scan_check", "uid": k, "group": group_label}, style={"display": "inline-block"}),
         html.Div(i,
                  style={"display": "inline-block", "padding": "3px", "padding-right": "20px"}, ),
-        *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
+        # *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
         html.Br(),
         ])
-        # for i in range(len(scangroup_node))
-        for i, (k, v) in enumerate(scangroup_node.items())
+        for i, k in enumerate(scangroup_node)
+        # for i, (k, v) in enumerate(scangroup_node.items())
     ]
     return [select_all] + scan_labels
 
@@ -118,7 +118,7 @@ def _build_nested_accordion(scan_tree, _label=""):
             )
             for unique_val in scan_tree[current_key].unique()
         ]
-        
+
     return dbc.Accordion(accordion_items, start_collapsed=True, always_open=True, )
 
 
@@ -265,9 +265,24 @@ normalization_scheme_panel = dbc.Card([
             id="xas_normalization_radioitems",
         ),
         html.Div(id="propagate_params_dummy_component"),
-        html.Div(dbc.Button("propagate", id="propagate_btn"), style={"text-align": "right"})
+        dbc.Row([
+            dbc.Col([
+                dbc.Checklist(
+                    options = [
+                        {"label": "plot pre-edge", "value": "pre_edge"},
+                        {"label": "plot post-edge", "value": "post_edge"},
+                    ],
+                    id="normalization_parameter_plot_checklist",
+                ),
+                html.Div(
+                    dbc.Button("propagate", id="propagate_btn"),
+                    style={"text-align": "right"},
+                ),
+            ], align="end")    
+        ])
     ]),
 ],
     body=True,
-    id="norm_scheme_panel")
+    id="norm_scheme_panel",
+)
 
