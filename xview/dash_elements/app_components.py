@@ -227,11 +227,8 @@ grouping_tab = dbc.Tab([
 ], label="Grouping", tab_id="grouping")
 
 
-
-
-
-normalization_scheme_panel = dbc.Card([
-    html.Div("XAS Normalization Parameters", className="mb-3"),
+xas_normalization_scheme_tab = dbc.Tab([
+    html.Div("XAS Normalization Parameters", className="my-2"),
     html.Div([
         dbc.InputGroup([
             dbc.InputGroupText(["E", html.Sub("0")]),
@@ -275,17 +272,88 @@ normalization_scheme_panel = dbc.Card([
                         {"label": "plot pre-edge", "value": "pre_edge"},
                         {"label": "plot post-edge", "value": "post_edge"},
                     ],
+                    value=[],
                     id="normalization_parameter_plot_checklist",
                 ),
-                html.Div(
-                    dbc.Button("propagate", id="propagate_btn"),
-                    style={"text-align": "right"},
-                ),
+                # html.Div(
+                #     dbc.Button("propagate", id="propagate_btn"),
+                #     style={"text-align": "right"},
+                # ),
             ], align="end")    
         ])
     ]),
 ],
-    body=True,
-    id="norm_scheme_panel",
+    # body=True,
+    label="XAS",
+    tab_id="xas_normalization_scheme_tab",
 )
 
+
+k_space_tab = dbc.Tab([
+    html.Div("Spline range", className="mt-2"),
+    dbc.InputGroup([
+        dbc.Input(id="k_spline_start_input", type="number"),
+        dbc.InputGroupText("⮕"),
+        dbc.Input(id="k_spline_stop_input", type="number"),
+    ]),
+    
+    html.Div("Spline clamping"),
+    dbc.Row([
+        dbc.Col(
+            dbc.InputGroup([
+                dbc.InputGroupText("low"),
+                dbc.Input(id="spline_clamp_low_input", type="number"),
+            ])
+        ),
+        dbc.Col(
+            dbc.InputGroup([
+                dbc.InputGroupText("high"),
+                dbc.Input(id="spline_clamp_high_input", type="number"),
+            ])
+        )
+    ]),
+    
+    dbc.Row([
+        dbc.Col(
+            dbc.InputGroup([
+                dbc.InputGroupText("Rbkg"),
+                dbc.Input(id="rbkg_input", type="number"),
+            ]),
+        ),
+        dbc.Col(
+            dbc.InputGroup([
+                dbc.InputGroupText("k-wt."),
+                dbc.Input(id="k_weight_input", type="number"),
+            ])
+        )
+    ], class_name="my-2"),
+    
+    dbc.InputGroup([
+        dbc.InputGroupText("Window"),
+        dbc.Select(
+            options=[
+                {"label": "Hanning", "value": "hanning"},
+                {"label": "Parzen", "value": "parzen"},
+            ],
+            value="hanning",
+        ),
+    ], class_name="my-2"),
+
+],
+    label="k-space",
+    tab_id="k_space_tab",
+)
+
+# processing_params_panel = dbc.Card([
+#     dbc.CardHeader(
+#         dbc.Tabs([
+#             xas_normalization_scheme_tab,
+#             dbc.Tab(html.Div("aaaaaaa"), label="test"),
+#         ])
+#     )
+# ])
+# ], body=True)
+processing_params_panel = dbc.Tabs([
+    xas_normalization_scheme_tab,
+    k_space_tab,
+], id="processing_params_panel_tabs")

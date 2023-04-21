@@ -35,7 +35,7 @@ app.layout = dbc.Container([
                     dbc.Col(dbc.Input(id="cycle_input", placeholder="cycle")),
                     dbc.Col(dbc.Input(id="proposal_input", placeholder="proposal")),
                     dbc.Col(
-                        dbc.Button("search", id="search_btn", n_clicks=0, style={"width": "100%"}),
+                        dbc.Button("search", id="search_btn", n_clicks=0),
                         width=2,
                         # style={"text-align": "right"},
                     ),
@@ -105,9 +105,9 @@ app.layout = dbc.Container([
                         dbc.Card([
                             dbc.Checklist(
                                 options=[
-                                    {"label": "transmission", "value": "mutrans"},
-                                    {"label": "fluorescence", "value": "mufluor"},
-                                    {"label": "reference", "value": "murefer"},
+                                    {"label": "Transmission", "value": "mutrans"},
+                                    {"label": "Fluorescence", "value": "mufluor"},
+                                    {"label": "Reference", "value": "murefer"},
                                 ],
                                 id="channel_checklist",
                             ),
@@ -122,7 +122,7 @@ app.layout = dbc.Container([
                         class_name="mb-2"),
                     dbc.Row([
                         dcc.Store(id="xas_normalization_scheme"),
-                        app_components.normalization_scheme_panel,
+                        app_components.processing_params_panel,
                     ])
                 ], style={"max-height": "700px", "overflow-y": "auto"}),
             ]),
@@ -279,6 +279,7 @@ def update_stored_normalization_scheme(
     State("channel_checklist", "value"),
 
     # State("xas_normalization_scheme", "data"),
+    State("processing_params_panel_tabs", "active_tab"),
     State("xas_normalization_radioitems", "value"),
     State("normalization_parameter_plot_checklist", "value"),
 
@@ -294,6 +295,7 @@ def update_plot(
     previous_data,
     selected_channels,
     # larch_normalization_kwargs,
+    current_param_tab,
     xas_normalization_selection,
     normalization_plot_selection,
 ):
@@ -305,38 +307,52 @@ def update_plot(
 
     if dash.ctx.triggered_id == "plot_btn":
         if selected_channels is not None:
-            for i, id_dict in enumerate(compress(selected_scan_id_dicts, selected_scans)):
-                # norm_parameters = dict()
-                for channel in selected_channels:
-                    uid = id_dict["uid"]
-                    # # only calculate automatic parameters for first scan, then propagate to the rest
-                    # if i == 0:
-                    #     x, y, label = APP_DATA.get_plotting_data(uid, 
-                    #                                              channel, 
-                    #                                              kind=xas_normalization_selection)
-                    #     norm_parameters = APP_DATA.get_processing_parameters(uid, channel)
-                    # else:
-                    #     x, y, label = APP_DATA.get_plotting_data(uid, 
-                    #                                              channel, 
-                    #                                              kind=xas_normalization_selection, 
-                    #                                              processing_parameters=norm_parameters)
-                    
-                    x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
+            if current_param_tab == "xas_normalization_scheme_tab":
+                for i, id_dict in enumerate(compress(selected_scan_id_dicts, selected_scans)):
+                    # norm_parameters = dict()
+                    for channel in selected_channels:
+                        uid = id_dict["uid"]
+                        # # only calculate automatic parameters for first scan, then propagate to the rest
+                        # if i == 0:
+                        #     x, y, label = APP_DATA.get_plotting_data(uid, 
+                        #                                              channel, 
+                        #                                              kind=xas_normalization_selection)
+                        #     norm_parameters = APP_DATA.get_processing_parameters(uid, channel)
+                        # else:
+                        #     x, y, label = APP_DATA.get_plotting_data(uid, 
+                        #                                              channel, 
+                        #                                              kind=xas_normalization_selection, 
+                        #                                              processing_parameters=norm_parameters)
+                        
+                        x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
 
-                    if label not in [trace.name for trace in fig.data]:
-                        fig.add_scatter(x=x, y=y, name=label)
-                    if xas_normalization_selection == "mu":
-                        if "pre_edge" in normalization_plot_selection:
-                            pre_edge_curve = APP_DATA.get_processed_data(uid, channel)["pre_edge"]
-                            fig.add_scatter(x=x, y=pre_edge_curve, name="pre-edge", line_color="green")
-                        if "post_edge" in normalization_plot_selection:
-                            post_edge_curve = APP_DATA.get_processed_data(uid, channel)["post_edge"]
-                            fig.add_scatter(x=x, y=post_edge_curve, name="post-edge", line_color="purple")
+                        if label not in [trace.name for trace in fig.data]:
+                            fig.add_scatter(x=x, y=y, name=label)
+                        if xas_normalization_selection == "mu":
+                            if "pre_edge" in normalization_plot_selection:
+                                pre_edge_curve = APP_DATA.get_processed_data(uid, channel)["pre_edge"]
+                                fig.add_scatter(x=x, y=pre_edge_curve, name="pre-edge", line_color="green")
+                            if "post_edge" in normalization_plot_selection:
+                                post_edge_curve = APP_DATA.get_processed_data(uid, channel)["post_edge"]
+                                fig.add_scatter(x=x, y=post_edge_curve, name="post-edge", line_color="purple")
+                fig.update_layout(xaxis_title="Energy (eV)", 
+                                  yaxis_title="μ(E)", 
+                                  xaxis_title_font_size=20, 
+                                  yaxis_title_font_size=20)
+                
+            elif current_param_tab == "k_space_tab":
+                for i, id_dict in enumerate(compress(selected_scan_id_dicts, selected_scans)):
+                    for channel in selected_channels:
+                        uid = id_dict["uid"]
+                        k = APP_DATA.get_processed_data(uid, channel)["k"]
+                        chi = APP_DATA.get_processed_data(uid, channel)["chi"]
+                        label = f"χ {channel} {APP_DATA.get_metadata(uid)['scan_id']}"
+                        fig.add_scatter(x=k, y=chi, name=label)
+                fig.update_layout(xaxis_title="k", 
+                                  yaxis_title="χ(k)", 
+                                  xaxis_title_font_size=20, 
+                                  yaxis_title_font_size=20)
 
-            fig.update_layout(xaxis_title="Energy (eV)", 
-                                yaxis_title="μ(E)", 
-                                xaxis_title_font_size=20, 
-                                yaxis_title_font_size=20)
 
     return fig, updated_previous_data
 
