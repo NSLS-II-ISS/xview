@@ -227,6 +227,9 @@ grouping_tab = dbc.Tab([
 ], label="Grouping", tab_id="grouping")
 
 
+
+
+
 normalization_scheme_panel = dbc.Card([
     html.Div("XAS Normalization Parameters", className="mb-3"),
     html.Div([

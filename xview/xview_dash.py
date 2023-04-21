@@ -306,25 +306,25 @@ def update_plot(
     if dash.ctx.triggered_id == "plot_btn":
         if selected_channels is not None:
             for i, id_dict in enumerate(compress(selected_scan_id_dicts, selected_scans)):
+                # norm_parameters = dict()
                 for channel in selected_channels:
                     uid = id_dict["uid"]
-                    # only calculate automatic parameters for first scan, then propagate to the rest
-                    if i == 0:
-                        x, y, label = APP_DATA.get_plotting_data(uid, 
-                                                                 channel, 
-                                                                 kind=xas_normalization_selection)
-                        norm_parameters = APP_DATA.get_processing_parameters(uid, channel)
-                    else:
-                        x, y, label = APP_DATA.get_plotting_data(uid, 
-                                                                 channel, 
-                                                                 kind=xas_normalization_selection, 
-                                                                 processing_parameters=norm_parameters)
+                    # # only calculate automatic parameters for first scan, then propagate to the rest
+                    # if i == 0:
+                    #     x, y, label = APP_DATA.get_plotting_data(uid, 
+                    #                                              channel, 
+                    #                                              kind=xas_normalization_selection)
+                    #     norm_parameters = APP_DATA.get_processing_parameters(uid, channel)
+                    # else:
+                    #     x, y, label = APP_DATA.get_plotting_data(uid, 
+                    #                                              channel, 
+                    #                                              kind=xas_normalization_selection, 
+                    #                                              processing_parameters=norm_parameters)
+                    
+                    x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
+
                     if label not in [trace.name for trace in fig.data]:
                         fig.add_scatter(x=x, y=y, name=label)
-                        fig.update_layout(xaxis_title="Energy (eV)", 
-                                          yaxis_title="μ(E)", 
-                                          xaxis_title_font_size=20, 
-                                          yaxis_title_font_size=20)
                     if xas_normalization_selection == "mu":
                         if "pre_edge" in normalization_plot_selection:
                             pre_edge_curve = APP_DATA.get_processed_data(uid, channel)["pre_edge"]
@@ -332,6 +332,11 @@ def update_plot(
                         if "post_edge" in normalization_plot_selection:
                             post_edge_curve = APP_DATA.get_processed_data(uid, channel)["post_edge"]
                             fig.add_scatter(x=x, y=post_edge_curve, name="post-edge", line_color="purple")
+
+            fig.update_layout(xaxis_title="Energy (eV)", 
+                                yaxis_title="μ(E)", 
+                                xaxis_title_font_size=20, 
+                                yaxis_title_font_size=20)
 
     return fig, updated_previous_data
 
@@ -355,7 +360,7 @@ def propagate_processing_parameters(
     for id_dict in compress(scan_id_dicts, selected_scans):
         uid = id_dict["uid"]
         for channel in selected_channels:
-            APP_DATA.set_processing_parameters(uid, channel, larch_normalization_kwargs)
+            _ = APP_DATA.get_processed_data(uid, channel, processing_parameters=larch_normalization_kwargs)
     return []
 
 
@@ -437,9 +442,9 @@ def change_ability_to_plot_params(xas_normalization_selection):
 @time_profile
 def change_visible_channels(n_channel_clicks, selected_scans, scan_id_dicts, current_btn_text):
     default_options = [
-        {"label": "mut", "value": "mut"},
-        {"label": "muf", "value": "muf"},
-        {"label": "mur", "value": "mur"},
+        {"label": "transmission", "value": "mutrans"},
+        {"label": "fluorescence", "value": "mufluor"},
+        {"label": "reference", "value": "murefer"},
     ]
 
     if current_btn_text == "see more" and any(selected_scans):
