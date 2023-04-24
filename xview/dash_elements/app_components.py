@@ -30,7 +30,7 @@ def build_scangroup_interactable(scangroup_node, group_label):
                  style={"display": "inline-block", "padding": "3px", "padding-right": "20px"}, ),
         # *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
         html.Br(),
-        ])
+        ], id={"type": "scan_interactable", "uid": k})
         for i, k in enumerate(scangroup_node)
         # for i, (k, v) in enumerate(scangroup_node.items())
     ]
@@ -153,9 +153,15 @@ def build_filter_input(filter_index):
 
 
 @time_profile
-def build_user_scan_group(group_label, uids):
+def build_user_scan_group(group_label, uids, relevant_channels):
+    channel_list = html.Div(
+        [dbc.Label("Relevant channels"), html.Br()] + [html.Span(f"{ch} ", style={"white-space": "pre"}) for ch in relevant_channels]    ,
+    )
+    uid_list = html.Div(
+        [dbc.Label("Scan uids", class_name="mt-3")] + [html.P(uid) for uid in uids]
+    )
     return dbc.AccordionItem(
-        [html.P(uid) for uid in uids],
+        [channel_list] + [uid_list],
         title=group_label
     )
 
@@ -205,6 +211,17 @@ metadata_tab = dbc.Tab([
 
 
 grouping_tab = dbc.Tab([
+    dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Enter name for scan group:")),
+        dbc.ModalBody(dbc.Input(id="user_group_name_input")),
+        dbc.ModalFooter(
+            html.Div(
+                dbc.Button("enter", id="user_group_name_enter_btn"),
+                style={"text-align": "right"},
+            )
+        )
+    ], id="user_group_name_modal", is_open=False),
+
     dbc.Row([
         dbc.Col([
             dbc.Row([
@@ -275,10 +292,10 @@ xas_normalization_scheme_tab = dbc.Tab([
                     value=[],
                     id="normalization_parameter_plot_checklist",
                 ),
-                # html.Div(
-                #     dbc.Button("propagate", id="propagate_btn"),
-                #     style={"text-align": "right"},
-                # ),
+                html.Div(
+                    dbc.Button("propagate", id="propagate_btn"),
+                    style={"text-align": "right"},
+                ),
             ], align="end")    
         ])
     ]),

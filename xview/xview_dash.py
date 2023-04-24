@@ -15,7 +15,7 @@ from dash_elements.app_components import build_proposal_accordion, build_filter_
 from dash_elements.app_math import calc_mus, LarchCalculator
 
 import time
-
+import threading
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "new ISS app"
@@ -99,6 +99,7 @@ app.layout = dbc.Container([
                 ], align="start", class_name="mb-3"),
             ], id="search_input_panel", body=True, class_name="mb-2"),
             dbc.Row([
+                # dbc.Button("test", id="test_btn"),
                 dbc.Col(dbc.Spinner(html.Div(id="proposal_accordion_loc"), color="primary")),
                 dbc.Col([
                     dbc.Row(
@@ -191,10 +192,40 @@ def show_proposal_accordion(
         return
     if not groupby_dropdown_choice:  # check if empty or None
         groupby_dropdown_choice = ("sample_name", "scan_name",)
+
     return build_proposal_accordion(proposal_node,
                                     groupby_keys=groupby_dropdown_choice,
                                     sort_key=sort_dropdown_choice,
                                     reverse_order=reverse_sort_checked)
+
+
+# @app.callback(
+#     Output({"type": "scan_interactable", "uid": ALL}, "children"),
+#     Input("test_btn", "n_clicks"),
+#     State({"type": "scan_interactable", "uid": ALL}, "children"),
+#     State({"type": "scan_interactable", "uid": ALL}, "id"),
+#     prevent_initial_call=True, 
+# )
+# def thread_test(test_btn_click, 
+#                 current_interatables_children, 
+#                 current_interatables_id_dicts):
+
+#     updated_interactables = []
+#     for current_children, id_dict in zip(current_interatables_children, current_interatables_id_dicts):
+#         uid = id_dict["uid"]
+#         scan_quality = APP_DATA.get_metadata(uid)["scan_quality"]
+#         quality_indicators = app_components.make_scan_quality_indicators(scan_quality, uid)
+#         current_children.extend(quality_indicators)
+#         updated_interactables.append(current_children)
+
+#     # def my_func():
+#     #     for i in range(30):
+#     #         print(i)
+#     #         time.sleep(1)
+#     # thread = threading.Thread(target=my_func, daemon=True)
+#     # thread.start()
+#     return updated_interactables
+
 
 
 @app.callback(
@@ -422,7 +453,7 @@ def update_normalization_scheme_panel(
     new_params.pop("nvict")
 
     updated_values = [val if val is not None else new_val for val, new_val in zip(current_values, new_params.values())]
-    updated_values = [round(val, ndigits=2) for val in updated_values]
+    updated_values = [round(val, ndigits=3) for val in updated_values]
 
     return tuple(updated_values)
 
@@ -458,9 +489,9 @@ def change_ability_to_plot_params(xas_normalization_selection):
 @time_profile
 def change_visible_channels(n_channel_clicks, selected_scans, scan_id_dicts, current_btn_text):
     default_options = [
-        {"label": "transmission", "value": "mutrans"},
-        {"label": "fluorescence", "value": "mufluor"},
-        {"label": "reference", "value": "murefer"},
+        {"label": "Transmission", "value": "mutrans"},
+        {"label": "Fluorescence", "value": "mufluor"},
+        {"label": "Reference", "value": "murefer"},
     ]
 
     if current_btn_text == "see more" and any(selected_scans):
@@ -530,19 +561,50 @@ def update_metadata_table(show_click, selected_scans, scan_id_dicts, currently_a
 
 
 @app.callback(
-    Output("scan_group_accordion", "children"),
+    Output("user_group_name_modal", "is_open"),
+    Output("user_group_name_input", "value"),
     Input("group_selected_btn", "n_clicks"),
+    Input("user_group_name_enter_btn", "n_clicks"),
+    State("scan_group_accordion", "children"),
+    State("channel_checklist", "value"),
+)
+def show_user_group_name_modal(
+    group_selected_click,
+    enter_btn_click,
+    current_groups,
+    selected_channels
+):
+    default_group_name = f"Group {len(current_groups)+1}"
+    if selected_channels is not None:
+        if dash.ctx.triggered_id == "group_selected_btn":
+            return True, default_group_name
+    return False, ""
+
+
+@app.callback(
+    Output("scan_group_accordion", "children"),
+    # Input("group_selected_btn", "n_clicks"),
+    Input("user_group_name_enter_btn", "n_clicks"),
     State("scan_group_accordion", "children"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State("user_group_name_input", "value"),
+    State("channel_checklist", "value"),
 )
 @time_profile
-def update_user_groups(group_selected_click, current_groups, selected_scans, scan_id_dicts):
+def update_user_groups(
+    group_selected_click, 
+    current_groups, 
+    selected_scans, 
+    scan_id_dicts,
+    group_label,
+    selected_channels,
+):
     if any(selected for selected in selected_scans):
         selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
-        new_group_label = f"Group {len(current_groups)+1}"
-        new_group = build_user_scan_group(new_group_label, selected_uids)
+        new_group = build_user_scan_group(group_label, selected_uids, selected_channels)
         current_groups.append(new_group)
+        APP_DATA.create_user_group_in_metadata(selected_uids, group_label, selected_channels)
     return current_groups
 
 
