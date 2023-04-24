@@ -292,10 +292,6 @@ xas_normalization_scheme_tab = dbc.Tab([
                     value=[],
                     id="normalization_parameter_plot_checklist",
                 ),
-                html.Div(
-                    dbc.Button("propagate", id="propagate_btn"),
-                    style={"text-align": "right"},
-                ),
             ], align="end")    
         ])
     ]),

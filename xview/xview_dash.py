@@ -124,6 +124,12 @@ app.layout = dbc.Container([
                     dbc.Row([
                         dcc.Store(id="xas_normalization_scheme"),
                         app_components.processing_params_panel,
+                    ]),
+                    dbc.Row([
+                        html.Div(
+                            dbc.Button("propagate", id="propagate_btn"),
+                            style={"text-align": "right"},
+                    ),
                     ])
                 ], style={"max-height": "700px", "overflow-y": "auto"}),
             ]),
