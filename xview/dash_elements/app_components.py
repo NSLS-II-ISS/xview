@@ -25,7 +25,7 @@ def build_scangroup_interactable(scangroup_node, group_label):
     ])
 
     scan_labels = [html.Div([
-        dbc.Checkbox(id={"type": "scan_check", "uid": k, "group": group_label}, style={"display": "inline-block"}),
+        dbc.Checkbox(id={"type": "scan_check", "uid": k, "group": group_label, "group_index": i}, style={"display": "inline-block"}),
         html.Div(i,
                  style={"display": "inline-block", "padding": "3px", "padding-right": "20px"}, ),
         # *make_scan_quality_indicators(v.metadata["scan_quality"], uid=k),
@@ -113,7 +113,7 @@ def _build_nested_accordion(scan_tree, _label=""):
         accordion_items = [
             dbc.AccordionItem(
                 _build_nested_accordion(scan_tree[scan_tree[current_key] == unique_val].drop(current_key, axis=1),
-                                        _label=(_label + unique_val)),
+                                        _label=(_label + unique_val + " ")),
                 title=unique_val,
             )
             for unique_val in scan_tree[current_key].unique()
@@ -152,18 +152,32 @@ def build_filter_input(filter_index):
     ], )
 
 
-@time_profile
-def build_user_scan_group(group_label, uids, relevant_channels):
+# @time_profile
+# def build_user_scan_group(group_label, uids, relevant_channels):
+#     channel_list = html.Div(
+#         [dbc.Label("Relevant channels"), html.Br()] + [html.Span(f"{ch} ", style={"white-space": "pre"}) for ch in relevant_channels]    ,
+#     )
+#     uid_list = html.Div(
+#         [dbc.Label("Scan uids", class_name="mt-3")] + [html.P(uid) for uid in uids]
+#     )
+#     return dbc.AccordionItem(
+#         [channel_list] + [uid_list],
+#         title=group_label
+#     )
+
+
+def build_user_group_card(group_label: str, scan_names: list[str], relevant_channels: list[str]):
     channel_list = html.Div(
         [dbc.Label("Relevant channels"), html.Br()] + [html.Span(f"{ch} ", style={"white-space": "pre"}) for ch in relevant_channels]    ,
     )
-    uid_list = html.Div(
-        [dbc.Label("Scan uids", class_name="mt-3")] + [html.P(uid) for uid in uids]
+    scan_list = html.Div(
+        [html.P(name) for name in scan_names]
     )
-    return dbc.AccordionItem(
-        [channel_list] + [uid_list],
-        title=group_label
-    )
+    return dbc.Card([channel_list, scan_list], id={"type": "user_group_card", "group": group_label})
+
+
+def build_user_group_label(group_label: str):
+    return dbc.ListGroupItem(group_label, action=True, id={"type": "user_group_label", "group": group_label})
 
 
 visualization_tab = dbc.Tab([
@@ -232,13 +246,14 @@ grouping_tab = dbc.Tab([
                 ),
             ], justify="center"),
             dbc.Row([
-                dbc.Accordion([
-                    # dbc.ListGroupItem("test"),
-                ], id="scan_group_accordion"),
+                dbc.ListGroup([], id="user_group_list"),
+                html.Div(id="group_info_store_loc"),
+                # dbc.Accordion([
+                # ], id="scan_group_accordion"),
             ]),
         ]),
         dbc.Col([
-            html.H1("Placeholder"),
+            html.Div(id="display_user_group_loc"),
         ])
     ],)
 ], label="Grouping", tab_id="grouping")

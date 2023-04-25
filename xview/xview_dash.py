@@ -11,7 +11,7 @@ from xas.tiled_io import filter_node_by_metadata_key, filter_node_for_proposal, 
 from xas.analysis import check_scan
 
 from dash_elements import app_components
-from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_scan_group
+from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_group_card
 from dash_elements.app_math import calc_mus, LarchCalculator
 
 import time
@@ -309,8 +309,8 @@ def update_stored_normalization_scheme(
     Input("plot_btn", "n_clicks"),
     Input("clear_btn", "n_clicks"),
 
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
     State("spectrum_plot", "figure"),
     State("previous_plot_data", "data"),
     State("channel_checklist", "value"),
@@ -361,7 +361,8 @@ def update_plot(
                         #                                              kind=xas_normalization_selection, 
                         #                                              processing_parameters=norm_parameters)
                         
-                        x, y, label = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
+                        x, y, _ = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
+                        label = f"{channel} {id_dict['group']} {id_dict['group_index']}"
 
                         if label not in [trace.name for trace in fig.data]:
                             fig.add_scatter(x=x, y=y, name=label)
@@ -383,7 +384,7 @@ def update_plot(
                         uid = id_dict["uid"]
                         k = APP_DATA.get_processed_data(uid, channel)["k"]
                         chi = APP_DATA.get_processed_data(uid, channel)["chi"]
-                        label = f"χ {channel} {APP_DATA.get_metadata(uid)['scan_id']}"
+                        label = f"χ {channel} {id_dict['group']} {id_dict['group_index']}"
                         fig.add_scatter(x=k, y=chi, name=label)
                 fig.update_layout(xaxis_title="k", 
                                   yaxis_title="χ(k)", 
@@ -397,8 +398,8 @@ def update_plot(
 @app.callback(
     Output("propagate_params_dummy_component", "children"),
     Input("propagate_btn", "n_clicks"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
     State("channel_checklist", "value"),
     State("xas_normalization_scheme", "data"),
 )
@@ -426,8 +427,8 @@ def propagate_processing_parameters(
     Output("xas_polynom_order_input", "value"),
     
     Input("plot_btn", "n_clicks"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
     State("channel_checklist", "value"),
     
     State("xas_e0_input", "value"),
@@ -487,8 +488,8 @@ def change_ability_to_plot_params(xas_normalization_selection):
     Output("channel_checklist", "options"),
     Output("change_visible_channels_btn", "children"),
     Input("change_visible_channels_btn", "n_clicks"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
     State("change_visible_channels_btn", "children"),
     prevent_initial_call=True,
 )
@@ -519,7 +520,7 @@ def change_visible_channels(n_channel_clicks, selected_scans, scan_id_dicts, cur
 
 
 @app.callback(
-    Output({"type": "scan_check", "uid": ALL, "group": MATCH}, "value"),
+    Output({"type": "scan_check", "uid": ALL, "group": MATCH, "group_index": ALL}, "value"),
     Input({"type": "select_all", "group": MATCH}, "value"),
     prevent_initial_call=True,
 )
@@ -538,8 +539,8 @@ def select_all_scans_in_group(select_all_chk):
 
     Input("metadata_show_btn", "n_clicks"),
 
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
     State("first_page_tabs", "active_tab"),
     prevent_initial_call=True,
 )
@@ -571,7 +572,7 @@ def update_metadata_table(show_click, selected_scans, scan_id_dicts, currently_a
     Output("user_group_name_input", "value"),
     Input("group_selected_btn", "n_clicks"),
     Input("user_group_name_enter_btn", "n_clicks"),
-    State("scan_group_accordion", "children"),
+    State("user_group_list", "children"),
     State("channel_checklist", "value"),
 )
 def show_user_group_name_modal(
@@ -588,28 +589,31 @@ def show_user_group_name_modal(
 
 
 @app.callback(
-    Output("scan_group_accordion", "children"),
-    # Input("group_selected_btn", "n_clicks"),
+    # Output("scan_group_accordion", "children"),
+    Output("user_group_list", "children"),
     Input("user_group_name_enter_btn", "n_clicks"),
-    State("scan_group_accordion", "children"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "value"),
-    State({"type": "scan_check", "uid": ALL, "group": ALL}, "id"),
+    # State("scan_group_accordion", "children"),
+    State("user_group_list", "children"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
+    State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
     State("user_group_name_input", "value"),
     State("channel_checklist", "value"),
 )
 @time_profile
-def update_user_groups(
-    group_selected_click, 
+def update_user_group_list(
+    group_enter_click, 
     current_groups, 
-    selected_scans, 
+    selected_scans,
     scan_id_dicts,
     group_label,
     selected_channels,
 ):
-    if any(selected for selected in selected_scans):
+    if any(selected_scans):
         selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
-        new_group = build_user_scan_group(group_label, selected_uids, selected_channels)
-        current_groups.append(new_group)
+        scan_names = [f"{id_dict['group']} {id_dict['group_index']}" for id_dict in compress(scan_id_dicts, selected_scans)]
+        # new_group = build_user_group_card(group_label, scan_names, selected_channels)
+        new_group_label = app_components.build_user_group_label(group_label)
+        current_groups.append(new_group_label)
         APP_DATA.create_user_group_in_metadata(selected_uids, group_label, selected_channels)
     return current_groups
 
