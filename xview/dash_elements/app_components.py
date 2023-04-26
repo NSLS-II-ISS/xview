@@ -168,12 +168,12 @@ def build_filter_input(filter_index):
 
 def build_user_group_card(group_label: str, scan_names: list[str], relevant_channels: list[str]):
     channel_list = html.Div(
-        [dbc.Label("Relevant channels"), html.Br()] + [html.Span(f"{ch} ", style={"white-space": "pre"}) for ch in relevant_channels]    ,
+        [dbc.Label("Relevant channels"), html.Br()] + [html.Span(f"{ch} ", style={"white-space": "pre"}) for ch in relevant_channels],
     )
     scan_list = html.Div(
         [html.P(name) for name in scan_names]
     )
-    return dbc.Card([channel_list, scan_list], id={"type": "user_group_card", "group": group_label})
+    return dbc.Card([channel_list, scan_list], id={"type": "user_group_card", "group": group_label}, body=True)
 
 
 def build_user_group_label(group_label: str):
@@ -239,22 +239,28 @@ grouping_tab = dbc.Tab([
     dbc.Row([
         dbc.Col([
             dbc.Row([
-                dbc.Col(
+                dbc.Col([
                     dbc.Button("Group selected scans", id="group_selected_btn", class_name="my-2"),
+                    dbc.Popover("select relevant channels to create group", 
+                                id="select_channels_grouping_tip", 
+                                target="group_selected_btn",
+                                trigger="legacy",
+                                is_open=False,),
+                    ],
                     width=6,
                     class_name="text-center",
                 ),
             ], justify="center"),
             dbc.Row([
                 dbc.ListGroup([], id="user_group_list"),
-                html.Div(id="group_info_store_loc"),
+                html.Div([], id="group_info_store_loc"),
                 # dbc.Accordion([
                 # ], id="scan_group_accordion"),
             ]),
-        ]),
+        ], width=4),
         dbc.Col([
             html.Div(id="display_user_group_loc"),
-        ])
+        ], width=8)
     ],)
 ], label="Grouping", tab_id="grouping")
 

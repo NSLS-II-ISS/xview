@@ -117,8 +117,8 @@ app.layout = dbc.Container([
                                        size="sm",
                                        n_clicks=0,
                                        id="change_visible_channels_btn"),
-                        ],
-                            body=True
+                        ], 
+                            body=True, 
                         ),
                         class_name="mb-2"),
                     dbc.Row([
@@ -570,6 +570,7 @@ def update_metadata_table(show_click, selected_scans, scan_id_dicts, currently_a
 @app.callback(
     Output("user_group_name_modal", "is_open"),
     Output("user_group_name_input", "value"),
+    Output("select_channels_grouping_tip", "is_open"),
     Input("group_selected_btn", "n_clicks"),
     Input("user_group_name_enter_btn", "n_clicks"),
     State("user_group_list", "children"),
@@ -582,18 +583,22 @@ def show_user_group_name_modal(
     selected_channels
 ):
     default_group_name = f"Group {len(current_groups)+1}"
-    if selected_channels is not None:
-        if dash.ctx.triggered_id == "group_selected_btn":
-            return True, default_group_name
-    return False, ""
+    if dash.ctx.triggered_id == "group_selected_btn":
+        if selected_channels is None:
+            return False, "", True
+        else:
+            return True, default_group_name, False
+    return False, "", False
 
 
 @app.callback(
     # Output("scan_group_accordion", "children"),
     Output("user_group_list", "children"),
+    Output("group_info_store_loc", "children"),
     Input("user_group_name_enter_btn", "n_clicks"),
     # State("scan_group_accordion", "children"),
     State("user_group_list", "children"),
+    State("group_info_store_loc", "children"),
     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
     State("user_group_name_input", "value"),
@@ -602,7 +607,8 @@ def show_user_group_name_modal(
 @time_profile
 def update_user_group_list(
     group_enter_click, 
-    current_groups, 
+    current_group_labels, 
+    currently_stored_groups,
     selected_scans,
     scan_id_dicts,
     group_label,
@@ -613,9 +619,33 @@ def update_user_group_list(
         scan_names = [f"{id_dict['group']} {id_dict['group_index']}" for id_dict in compress(scan_id_dicts, selected_scans)]
         # new_group = build_user_group_card(group_label, scan_names, selected_channels)
         new_group_label = app_components.build_user_group_label(group_label)
-        current_groups.append(new_group_label)
+        new_group_card = build_user_group_card(group_label, scan_names, selected_channels)
+        new_group_info = dcc.Store(data=[new_group_card], id={"type": "user_group_info_store", "group": group_label})
+        current_group_labels.append(new_group_label)
+        currently_stored_groups.append(new_group_info)
         APP_DATA.create_user_group_in_metadata(selected_uids, group_label, selected_channels)
-    return current_groups
+    return current_group_labels, currently_stored_groups
+
+
+@app.callback(
+    Output("display_user_group_loc", "children"),
+    Input({"type": "user_group_label", "group": ALL}, "n_clicks"),
+    State({"type": "user_group_info_store", "group": ALL}, "data"),
+    State({"type": "user_group_info_store", "group": ALL}, "id"),
+    prevent_initial_call=True,
+)
+def show_selected_group_card(
+    group_click,
+    stored_groups_data,
+    stored_groups_id_dicts,
+):
+    selected_group_label = dash.ctx.triggered_id["group"]
+    for data, id_dict in zip(stored_groups_data, stored_groups_id_dicts):
+        if id_dict["group"] == selected_group_label:
+            selected_group_data = data
+            break
+    
+    return [dbc.Card(selected_group_data)]
 
 
 if __name__ == "__main__":
