@@ -171,9 +171,16 @@ def build_user_group_card(group_label: str, scan_names: list[str], relevant_chan
         [dbc.Label("Relevant channels"), html.Br()] + [html.Span(f"{ch} ", style={"white-space": "pre"}) for ch in relevant_channels],
     )
     scan_list = html.Div(
-        [html.P(name) for name in scan_names]
+        [dbc.Checkbox(label=name, id={"type": "user_group_scan_checkbox", "name": name, "group": group_label}, value=False) 
+         for name in scan_names],
+        style={"padding": "12px"}
     )
-    return dbc.Card([channel_list, scan_list], id={"type": "user_group_card", "group": group_label}, body=True)
+    group_btns = dbc.Row([
+        dbc.Col(dbc.Button("add scans", id="user_group_add_btn"), style={"text-align": "left"}),
+        dbc.Col(dbc.Button("remove scans", id="user_group_remove_btn"), style={"text-align": "right"}),
+    ], justify="between")
+    # return dbc.Card([channel_list, scan_list, group_btns], id={"type": "user_group_card", "group": group_label}, body=True)
+    return dbc.Card([channel_list, scan_list, group_btns], id="user_group_card", body=True)
 
 
 def build_user_group_label(group_label: str):

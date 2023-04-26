@@ -648,6 +648,23 @@ def show_selected_group_card(
     return [dbc.Card(selected_group_data)]
 
 
+# @app.callback(
+#     Output("user_group_card", "children"),
+#     Output({"type": "user_group_info_store", "group": ALL}, "data"),
+#     Input("user_group_add_btn", "n_clicks"),
+#     Input("user_group_remove_btn", "n_clicks"),
+#     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
+#     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
+# )
+# def update_scans_in_user_group(
+#     group_add_click,
+#     group_remove_click,
+#     proposal_scan_selections,
+#     proposal_scan_id_dicts,
+# ):
+    
+
+
 if __name__ == "__main__":
     ISS_SANDBOX = tiled_io.get_iss_sandbox()
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
