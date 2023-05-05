@@ -14,6 +14,7 @@ from dash_elements import app_components
 from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_group_card
 from dash_elements.app_math import calc_mus, LarchCalculator
 
+import uuid
 import time
 import threading
 
@@ -618,20 +619,24 @@ def update_user_group_list(
         selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
         scan_names = [f"{id_dict['group']} {id_dict['group_index']}" for id_dict in compress(scan_id_dicts, selected_scans)]
         # new_group = build_user_group_card(group_label, scan_names, selected_channels)
+        new_group_uid = str(uuid.uuid4())
         new_group_label = app_components.build_user_group_label(group_label)
-        new_group_card = build_user_group_card(group_label, scan_names, selected_channels)
-        new_group_info = dcc.Store(data=[new_group_card], id={"type": "user_group_info_store", "group": group_label})
+        new_group_card = build_user_group_card(group_label, new_group_uid, scan_names, selected_channels)
+        new_group_info = dcc.Store(data=[new_group_card], 
+                                   id={"type": "user_group_info_store", 
+                                       "group": group_label,
+                                       "group_uid": new_group_uid})
         current_group_labels.append(new_group_label)
         currently_stored_groups.append(new_group_info)
-        APP_DATA.create_user_group_in_metadata(selected_uids, group_label, selected_channels)
+        APP_DATA.create_user_group_in_metadata(selected_uids, group_label, selected_channels, group_uid=new_group_uid)
     return current_group_labels, currently_stored_groups
 
 
 @app.callback(
     Output("display_user_group_loc", "children"),
     Input({"type": "user_group_label", "group": ALL}, "n_clicks"),
-    State({"type": "user_group_info_store", "group": ALL}, "data"),
-    State({"type": "user_group_info_store", "group": ALL}, "id"),
+    State({"type": "user_group_info_store", "group": ALL, "group_uid": ALL}, "data"),
+    State({"type": "user_group_info_store", "group": ALL, "group_uid": ALL}, "id"),
     prevent_initial_call=True,
 )
 def show_selected_group_card(
@@ -640,6 +645,7 @@ def show_selected_group_card(
     stored_groups_id_dicts,
 ):
     selected_group_label = dash.ctx.triggered_id["group"]
+    # selected_group_data = []
     for data, id_dict in zip(stored_groups_data, stored_groups_id_dicts):
         if id_dict["group"] == selected_group_label:
             selected_group_data = data
@@ -647,22 +653,19 @@ def show_selected_group_card(
     
     return [dbc.Card(selected_group_data)]
 
-
-# @app.callback(
-#     Output("user_group_card", "children"),
-#     Output({"type": "user_group_info_store", "group": ALL}, "data"),
-#     Input("user_group_add_btn", "n_clicks"),
-#     Input("user_group_remove_btn", "n_clicks"),
-#     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
-#     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
-# )
-# def update_scans_in_user_group(
-#     group_add_click,
-#     group_remove_click,
-#     proposal_scan_selections,
-#     proposal_scan_id_dicts,
-# ):
     
+# @app.callback(
+#     Output({"type": "user_group_info_store", "group": ALL, "group_uid": MATCH}, "data"),
+#     Input("user_group_add_btn", "n_clicks"),
+#     State({"type": "user_group_card", "group_uid": MATCH}, "id"),
+#     prevent_initial_call=True,
+# )
+# def add_scan_to_user_group(
+#     add_scan_click,
+#     active_card_id_dict,
+# ):
+#     print(add_scan_click)
+#     return []
 
 
 if __name__ == "__main__":

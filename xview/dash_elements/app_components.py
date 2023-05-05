@@ -166,12 +166,15 @@ def build_filter_input(filter_index):
 #     )
 
 
-def build_user_group_card(group_label: str, scan_names: list[str], relevant_channels: list[str]):
+def build_user_group_card(group_label: str, group_uid, scan_names: list[str], relevant_channels: list[str]):
     channel_list = html.Div(
         [dbc.Label("Relevant channels"), html.Br()] + [html.Span(f"{ch} ", style={"white-space": "pre"}) for ch in relevant_channels],
     )
     scan_list = html.Div(
-        [dbc.Checkbox(label=name, id={"type": "user_group_scan_checkbox", "name": name, "group": group_label}, value=False) 
+        [dbc.Checkbox(
+            label=name, 
+            id={"type": "user_group_scan_checkbox", "name": name, "group": group_label, "group_uid": group_uid}, 
+            value=False) 
          for name in scan_names],
         style={"padding": "12px"}
     )
@@ -180,7 +183,7 @@ def build_user_group_card(group_label: str, scan_names: list[str], relevant_chan
         dbc.Col(dbc.Button("remove scans", id="user_group_remove_btn"), style={"text-align": "right"}),
     ], justify="between")
     # return dbc.Card([channel_list, scan_list, group_btns], id={"type": "user_group_card", "group": group_label}, body=True)
-    return dbc.Card([channel_list, scan_list, group_btns], id="user_group_card", body=True)
+    return dbc.Card([channel_list, scan_list, group_btns], id={"type": "user_group_card", "group_uid": group_uid}, body=True)
 
 
 def build_user_group_label(group_label: str):
@@ -266,7 +269,10 @@ grouping_tab = dbc.Tab([
             ]),
         ], width=4),
         dbc.Col([
-            html.Div(id="display_user_group_loc"),
+            html.Div(
+                # initialize with dummy card to avoid callback id error
+                # [dbc.Card({"type": "user_group_card", "group_uid": 0})],
+                id="display_user_group_loc"),
         ], width=8)
     ],)
 ], label="Grouping", tab_id="grouping")
