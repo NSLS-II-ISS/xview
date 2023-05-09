@@ -206,35 +206,6 @@ def show_proposal_accordion(
                                     reverse_order=reverse_sort_checked)
 
 
-# @app.callback(
-#     Output({"type": "scan_interactable", "uid": ALL}, "children"),
-#     Input("test_btn", "n_clicks"),
-#     State({"type": "scan_interactable", "uid": ALL}, "children"),
-#     State({"type": "scan_interactable", "uid": ALL}, "id"),
-#     prevent_initial_call=True, 
-# )
-# def thread_test(test_btn_click, 
-#                 current_interatables_children, 
-#                 current_interatables_id_dicts):
-
-#     updated_interactables = []
-#     for current_children, id_dict in zip(current_interatables_children, current_interatables_id_dicts):
-#         uid = id_dict["uid"]
-#         scan_quality = APP_DATA.get_metadata(uid)["scan_quality"]
-#         quality_indicators = app_components.make_scan_quality_indicators(scan_quality, uid)
-#         current_children.extend(quality_indicators)
-#         updated_interactables.append(current_children)
-
-#     # def my_func():
-#     #     for i in range(30):
-#     #         print(i)
-#     #         time.sleep(1)
-#     # thread = threading.Thread(target=my_func, daemon=True)
-#     # thread.start()
-#     return updated_interactables
-
-
-
 @app.callback(
     Output("filters_loc", "children"),
     Output("remove_filter_btn", "style"),
