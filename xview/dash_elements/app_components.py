@@ -178,12 +178,18 @@ def build_user_group_card(group_label: str, group_uid, scan_names: list[str], re
          for name in scan_names],
         style={"padding": "12px"}
     )
-    group_btns = dbc.Row([
-        dbc.Col(dbc.Button("add scans", id="user_group_add_btn"), style={"text-align": "left"}),
-        dbc.Col(dbc.Button("remove scans", id="user_group_remove_btn"), style={"text-align": "right"}),
-    ], justify="between")
+    # group_btns = dbc.Row([
+    #     dbc.Col(dbc.Button("add scans", id="user_group_add_btn", n_clicks=0),
+    #             style={"text-align": "left"}),
+    #     dbc.Col(dbc.Button("remove scans", id="user_group_remove_btn", n_clicks=0), 
+    #             style={"text-align": "right"}),
+    # ], justify="between")
     # return dbc.Card([channel_list, scan_list, group_btns], id={"type": "user_group_card", "group": group_label}, body=True)
-    return dbc.Card([channel_list, scan_list, group_btns], id={"type": "user_group_card", "group_uid": group_uid}, body=True)
+    return dbc.Card([channel_list, scan_list], 
+                    id={"type": "user_group_card", 
+                        "group": group_label, 
+                        "group_uid": group_uid},
+                    body=True)
 
 
 def build_user_group_label(group_label: str):
@@ -234,6 +240,14 @@ metadata_tab = dbc.Tab([
 ], label="Metadata", tab_id="metadata")
 
 
+# dummy component to prevent errors with callbacks and comp ids
+dummy_group_card = dbc.Card(
+    [],
+    id={"type": "user_group_card", "group_uid": 0},
+    body=True,
+    style={"visibility": "hidden"},
+)
+
 grouping_tab = dbc.Tab([
     dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("Enter name for scan group:")),
@@ -269,11 +283,30 @@ grouping_tab = dbc.Tab([
             ]),
         ], width=4),
         dbc.Col([
-            html.Div(
+            html.Div([
                 # initialize with dummy card to avoid callback id error
-                # [dbc.Card({"type": "user_group_card", "group_uid": 0})],
-                id="display_user_group_loc"),
-        ], width=8)
+                dummy_group_card,
+            ],
+            id="display_user_group_loc",
+            style={"padding-bottom": "12px"}),
+
+            dbc.Row([
+                dbc.Col(
+                    dbc.Button("add scans", 
+                            id="user_group_add_btn",
+                            style={"visibility": "hidden"},),
+                    align="start,"
+                ),
+                dbc.Col(
+                    html.Div(
+                        dbc.Button("remove scans", 
+                                id="user_group_remove_btn",
+                                style={"visibility": "hidden"}),
+                        style={"text-align": "right"},
+                    ),
+                ),
+            ], ),
+        ], width=6)
     ],)
 ], label="Grouping", tab_id="grouping")
 

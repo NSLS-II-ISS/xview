@@ -634,6 +634,11 @@ def update_user_group_list(
 
 @app.callback(
     Output("display_user_group_loc", "children"),
+
+    # used to make these buttons hidden until a group info card is shown
+    Output("user_group_add_btn", "style"),
+    Output("user_group_remove_btn", "style"),
+
     Input({"type": "user_group_label", "group": ALL}, "n_clicks"),
     State({"type": "user_group_info_store", "group": ALL, "group_uid": ALL}, "data"),
     State({"type": "user_group_info_store", "group": ALL, "group_uid": ALL}, "id"),
@@ -651,21 +656,48 @@ def show_selected_group_card(
             selected_group_data = data
             break
     
-    return [dbc.Card(selected_group_data)]
+    return [dbc.Card(selected_group_data)], {"visibility": "visible"}, {"visibility": "visible"}
 
-    
+
+
+
 # @app.callback(
-#     Output({"type": "user_group_info_store", "group": ALL, "group_uid": MATCH}, "data"),
+#     Output("user_group_add_btn", "style"),
+#     Output("user_group_remove_btn", "style"),
+#     # Input({"type": "user_group_card", "group": ALL, "group_uid": ALL}, "id"),
+#     Input("display_user_group_loc", "children"),
+# )
+# def change_user_group_btns_visibility(
+#     current_user_group_cards
+# ):
+#     active_card = current_user_group_cards[0]
+#     print(active_card)
+    
+#     # check if the currently active card is the dummy card (group_uid = 0)
+#     if active_card["props"]["id"]["group_uid"] == 0:
+#         return {"visibility": "hidden"}, {"visibility": "hidden"}
+#     else: 
+#         return {"visibility": "visible"}, {"visibility": "visible"}
+    
+
+# @app.callback(
+#     Output({"type": "user_group_info_store", "group": MATCH, "group_uid": MATCH}, "data"),
 #     Input("user_group_add_btn", "n_clicks"),
-#     State({"type": "user_group_card", "group_uid": MATCH}, "id"),
+#     State({"type": "user_group_card", "group": MATCH, "group_uid": MATCH}, "id"),
+#     # State({"type": "user_group_info_store", "group": MATCH, "group_uid": MATCH}, "data"),
 #     prevent_initial_call=True,
 # )
 # def add_scan_to_user_group(
 #     add_scan_click,
 #     active_card_id_dict,
+#     active_card_data,
 # ):
 #     print(add_scan_click)
-#     return []
+#     if add_scan_click == 0:
+#         return [dbc.Card(active_card_data)]
+#     else:
+#         print(active_card_data)
+#         return []
 
 
 if __name__ == "__main__":
