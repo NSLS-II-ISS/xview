@@ -18,7 +18,7 @@ import uuid
 import time
 import threading
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], use_pages=True)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "new ISS app"
 
 app.layout = dbc.Container([
@@ -145,10 +145,6 @@ app.layout = dbc.Container([
     ],
         style={"max-height": "800px", "overflow-y": "visible"}),
     
-    html.Br(),
-    html.Div([dcc.Link(f"test link / {page['path']}", href=page["relative_path"]) for page in dash.page_registry.values()]),
-    html.Div(dash.page_container),
-
 ], fluid=True)
 
 
