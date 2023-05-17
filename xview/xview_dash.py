@@ -11,14 +11,14 @@ from xas.tiled_io import filter_node_by_metadata_key, filter_node_for_proposal, 
 from xas.analysis import check_scan
 
 from dash_elements import app_components
-from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_group_card
+from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_group_card, time_profile
 from dash_elements.app_math import calc_mus, LarchCalculator
 
 import uuid
 import time
 import threading
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], use_pages=True)
 app.title = "new ISS app"
 
 app.layout = dbc.Container([
@@ -130,7 +130,7 @@ app.layout = dbc.Container([
                         html.Div(
                             dbc.Button("propagate", id="propagate_btn"),
                             style={"text-align": "right"},
-                    ),
+                        ),
                     ])
                 ], style={"max-height": "700px", "overflow-y": "auto"}),
             ]),
@@ -144,18 +144,12 @@ app.layout = dbc.Container([
         ], width=8),
     ],
         style={"max-height": "800px", "overflow-y": "visible"}),
-    # dbc.Row(html.Div("test text"))
+    
+    html.Br(),
+    html.Div([dcc.Link(f"test link / {page['path']}", href=page["relative_path"]) for page in dash.page_registry.values()]),
+    html.Div(dash.page_container),
+
 ], fluid=True)
-
-
-def time_profile(func):
-    def wrapper(*args, **kwargs):
-        t1 = time.time()
-        res = func(*args, **kwargs)
-        t2 = time.time()
-        print(f"{func.__name__!r} duration: {t2 - t1}")
-        return res
-    return wrapper
 
 
 @app.callback(
@@ -630,45 +624,21 @@ def show_selected_group_card(
     return [dbc.Card(selected_group_data)], {"visibility": "visible"}, {"visibility": "visible"}
 
 
-
-
-# @app.callback(
-#     Output("user_group_add_btn", "style"),
-#     Output("user_group_remove_btn", "style"),
-#     # Input({"type": "user_group_card", "group": ALL, "group_uid": ALL}, "id"),
-#     Input("display_user_group_loc", "children"),
-# )
-# def change_user_group_btns_visibility(
-#     current_user_group_cards
-# ):
-#     active_card = current_user_group_cards[0]
-#     print(active_card)
-    
-#     # check if the currently active card is the dummy card (group_uid = 0)
-#     if active_card["props"]["id"]["group_uid"] == 0:
-#         return {"visibility": "hidden"}, {"visibility": "hidden"}
-#     else: 
-#         return {"visibility": "visible"}, {"visibility": "visible"}
-    
-
+# Another pass at adding/removing scans from user groups
 # @app.callback(
 #     Output({"type": "user_group_info_store", "group": MATCH, "group_uid": MATCH}, "data"),
 #     Input("user_group_add_btn", "n_clicks"),
 #     State({"type": "user_group_card", "group": MATCH, "group_uid": MATCH}, "id"),
-#     # State({"type": "user_group_info_store", "group": MATCH, "group_uid": MATCH}, "data"),
-#     prevent_initial_call=True,
+#     State({"type": "user_group_info_store", "group": MATCH, "group_uid": MATCH}, "data")
 # )
-# def add_scan_to_user_group(
-#     add_scan_click,
+# def update_group_info(
+#     add_scans_clicks,
 #     active_card_id_dict,
-#     active_card_data,
+#     active_card_data
 # ):
-#     print(add_scan_click)
-#     if add_scan_click == 0:
-#         return [dbc.Card(active_card_data)]
-#     else:
-#         print(active_card_data)
-#         return []
+    
+#     print(active_card_data)
+#     return [dbc.Card(active_card_data)]
 
 
 if __name__ == "__main__":
@@ -676,3 +646,4 @@ if __name__ == "__main__":
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
     # print('THIS IS STARTING')
     app.run_server(debug=True)
+    

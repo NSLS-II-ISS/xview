@@ -1,3 +1,6 @@
+"""Contains builder functions to dynamically create new components in app,
+as well as global components that can be imported and directly used in layout"""
+
 import dash
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
@@ -8,6 +11,7 @@ from xas.tiled_io import group_node_by_metadata_key, sort_nodes_by_metadata_key,
 import time
 
 def time_profile(func):
+    """decorator to print the time duration of a function call in seconds"""
     def wrapper(*args, **kwargs):
         t1 = time.time()
         res = func(*args, **kwargs)
@@ -240,7 +244,7 @@ metadata_tab = dbc.Tab([
 ], label="Metadata", tab_id="metadata")
 
 
-# dummy component to prevent errors with callbacks and comp ids
+# dummy component to prevent errors with callbacks and component ids
 dummy_group_card = dbc.Card(
     [],
     id={"type": "user_group_card", "group_uid": 0},
@@ -306,6 +310,7 @@ grouping_tab = dbc.Tab([
                     ),
                 ),
             ], ),
+
         ], width=6)
     ],)
 ], label="Grouping", tab_id="grouping")
