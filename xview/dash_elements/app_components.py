@@ -1,5 +1,7 @@
-"""Contains builder functions to dynamically create new components in app,
-as well as global components that can be imported and directly used in layout"""
+"""
+Contains builder functions to dynamically create new components in app,
+as well as global components that can be imported and directly used in the layout.
+"""
 
 import dash
 from dash import html, dcc, dash_table

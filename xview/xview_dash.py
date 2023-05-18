@@ -1,3 +1,9 @@
+"""
+Main dash application. Run this file to start an instance of the app.
+
+Houses the main app layout container, and all (for now) callback functions.
+"""
+
 import dash
 from dash import html, dcc, Input, Output, State, ALL, MATCH
 import dash_bootstrap_components as dbc
@@ -12,15 +18,15 @@ from xas.analysis import check_scan
 
 from dash_elements import app_components
 from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_group_card, time_profile
-from dash_elements.app_math import calc_mus, LarchCalculator
 
 import uuid
-import time
-import threading
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "new ISS app"
 
+# everything in `app.layout` is pretty much wrappers around html code
+# I use this for arranging components on the webpage:
+# https://dash-bootstrap-components.opensource.faculty.ai/docs/components/layout/
 app.layout = dbc.Container([
     html.H1("XDash",
             style={
@@ -185,8 +191,10 @@ def show_proposal_accordion(
             if all([key, value, toggle]):
                 proposal_node = filter_node_by_metadata_key(proposal_node, key, value)
 
+    # prevent accordion from showing when user hits `apply` if they haven't searched yet
     if n_search_clicks == 0:
         return
+    
     if not groupby_dropdown_choice:  # check if empty or None
         groupby_dropdown_choice = ("sample_name", "scan_name",)
 
