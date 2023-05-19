@@ -106,7 +106,6 @@ app.layout = dbc.Container([
                 ], align="start", class_name="mb-3"),
             ], id="search_input_panel", body=True, class_name="mb-2"),
             dbc.Row([
-                # dbc.Button("test", id="test_btn"),
                 dbc.Col(dbc.Spinner(html.Div(id="proposal_accordion_loc"), color="primary")),
                 dbc.Col([
                     dbc.Row(
@@ -187,7 +186,6 @@ def show_proposal_accordion(
 
     if other_filter_keys and other_filter_values:
         for key, value, toggle in zip(other_filter_keys, other_filter_values, other_filter_toggles):
-            # print(key, value, toggle)
             if all([key, value, toggle]):
                 proposal_node = filter_node_by_metadata_key(proposal_node, key, value)
 
@@ -214,6 +212,7 @@ def show_proposal_accordion(
 )
 @time_profile
 def update_filter_selection(add_filter_click, remove_filter_click, current_filters):
+    """Either add or remove a new filter based on user input"""
     updated_filters = current_filters
 
     if dash.ctx.triggered_id == "add_filter_btn":
@@ -236,6 +235,7 @@ def update_filter_selection(add_filter_click, remove_filter_click, current_filte
     return updated_filters, remove_btn_visibility
 
 
+# TODO: create similar callback for k-space params
 @app.callback(
     Output("xas_normalization_scheme", "data"),
     Input("xas_e0_input", "value"),
@@ -255,8 +255,8 @@ def update_stored_normalization_scheme(
     post_edge_stop_input,
     post_edge_polynom_order_input,
 ):
-    """Returns dict of `larch.xafs.pre_edge` keyword-argument pairs
-    to be stored as json in a `dcc.Store` object"""
+    """Returns dict of `larch.xafs.pre_edge` keyword-argument pairs to be stored as json in a 
+    `dcc.Store` object. Updates whenever one of the normalization GUI inputs changes."""
     larch_pre_edge_kwargs = dict(
         # step and nvict could be implemented as inputs later
         e0=e0_input,
@@ -272,6 +272,7 @@ def update_stored_normalization_scheme(
 
 
 # TODO implement plot undo button using stored previous data
+# ^ this could still be implemented but I don't think it fits with the current GUI setup
 @app.callback(
     Output("spectrum_plot", "figure"),
     Output("previous_plot_data", "data"),
@@ -315,27 +316,23 @@ def update_plot(
     if dash.ctx.triggered_id == "plot_btn":
         if selected_channels is not None:
             if current_param_tab == "xas_normalization_scheme_tab":
-                for i, id_dict in enumerate(compress(selected_scan_id_dicts, selected_scans)):
-                    # norm_parameters = dict()
+
+                # common pattern I use to iterate over the uids for selected scans
+                for id_dict in compress(selected_scan_id_dicts, selected_scans):
+                    uid = id_dict["uid"]
+                
                     for channel in selected_channels:
-                        uid = id_dict["uid"]
-                        # # only calculate automatic parameters for first scan, then propagate to the rest
-                        # if i == 0:
-                        #     x, y, label = APP_DATA.get_plotting_data(uid, 
-                        #                                              channel, 
-                        #                                              kind=xas_normalization_selection)
-                        #     norm_parameters = APP_DATA.get_processing_parameters(uid, channel)
-                        # else:
-                        #     x, y, label = APP_DATA.get_plotting_data(uid, 
-                        #                                              channel, 
-                        #                                              kind=xas_normalization_selection, 
-                        #                                              processing_parameters=norm_parameters)
                         
+                        # TODO: possibly make it so normalization parameters are only automatically
+                        # calculated for first scan then propagated to the rest
+
                         x, y, _ = APP_DATA.get_plotting_data(uid, channel, kind=xas_normalization_selection)
                         label = f"{channel} {id_dict['group']} {id_dict['group_index']}"
 
+                        # prevents data from being re-plotted (could be removed)
                         if label not in [trace.name for trace in fig.data]:
                             fig.add_scatter(x=x, y=y, name=label)
+                        
                         if xas_normalization_selection == "mu":
                             if "pre_edge" in normalization_plot_selection:
                                 pre_edge_curve = APP_DATA.get_processed_data(uid, channel)["pre_edge"]
@@ -343,6 +340,7 @@ def update_plot(
                             if "post_edge" in normalization_plot_selection:
                                 post_edge_curve = APP_DATA.get_processed_data(uid, channel)["post_edge"]
                                 fig.add_scatter(x=x, y=post_edge_curve, name="post-edge", line_color="purple")
+
                 fig.update_layout(xaxis_title="Energy (eV)", 
                                   yaxis_title="μ(E)", 
                                   xaxis_title_font_size=20, 
@@ -365,8 +363,9 @@ def update_plot(
     return fig, updated_previous_data
 
 
+# TODO: also update parameters from k-space tab 
 @app.callback(
-    Output("propagate_params_dummy_component", "children"),
+    Output("propagate_params_dummy_component", "children"), # used b/c all dash callbacks require an output
     Input("propagate_btn", "n_clicks"),
     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "value"),
     State({"type": "scan_check", "uid": ALL, "group": ALL, "group_index": ALL}, "id"),
@@ -381,6 +380,7 @@ def propagate_processing_parameters(
         selected_channels,
         larch_normalization_kwargs,
 ):
+    """Updates the processing parameters within the app's DataManager for selected scans"""
     for id_dict in compress(scan_id_dicts, selected_scans):
         uid = id_dict["uid"]
         for channel in selected_channels:
@@ -417,6 +417,8 @@ def update_normalization_scheme_panel(
 
     *current_values,
 ):
+    """When the plot button is clicked this callback makes it so the XAS normalization parameter inputs
+    are automatically filled in using values from the first selected scan and first selected channel"""
     if selected_channels is None:
         raise dash.exceptions.PreventUpdate
     first_selected_id_dict = list(compress(selected_scan_id_dicts, selected_scans))[0]
@@ -437,10 +439,10 @@ def update_normalization_scheme_panel(
 
 @app.callback(
     Output("normalization_parameter_plot_checklist", "options"),
-    # Output("normalization_parameter_plot_checklist", "value"),
     Input("xas_normalization_radioitems", "value"), 
 )
 def change_ability_to_plot_params(xas_normalization_selection):
+    """Disables pre-edge and post-edge plotting if 'mu' is not selected"""
     if xas_normalization_selection == "mu":
         plot_options = [
             {"label": "plot pre-edge", "value": "pre_edge"},
@@ -552,6 +554,7 @@ def show_user_group_name_modal(
     current_groups,
     selected_channels
 ):
+    """Opens a small window for the user to input the newly created group name"""
     default_group_name = f"Group {len(current_groups)+1}"
     if dash.ctx.triggered_id == "group_selected_btn":
         if selected_channels is None:
@@ -561,6 +564,10 @@ def show_user_group_name_modal(
     return False, "", False
 
 
+# Currently when groups are created the label/`dbc.ListGroupItem` is created and displayed,
+# but the group card is shoved into a `dcc.Store` and only accessed when displayed by user.
+# This may need to be changed in the future since it makes it very difficult to edit info
+# inside a group card after it is created.
 @app.callback(
     # Output("scan_group_accordion", "children"),
     Output("user_group_list", "children"),
@@ -587,7 +594,6 @@ def update_user_group_list(
     if any(selected_scans):
         selected_uids = [id_dict["uid"] for id_dict in compress(scan_id_dicts, selected_scans)]
         scan_names = [f"{id_dict['group']} {id_dict['group_index']}" for id_dict in compress(scan_id_dicts, selected_scans)]
-        # new_group = build_user_group_card(group_label, scan_names, selected_channels)
         new_group_uid = str(uuid.uuid4())
         new_group_label = app_components.build_user_group_label(group_label)
         new_group_card = build_user_group_card(group_label, new_group_uid, scan_names, selected_channels)
@@ -604,7 +610,7 @@ def update_user_group_list(
 @app.callback(
     Output("display_user_group_loc", "children"),
 
-    # used to make these buttons hidden until a group info card is shown
+    # these outputs are used to make the buttons hidden until a group info card is shown
     Output("user_group_add_btn", "style"),
     Output("user_group_remove_btn", "style"),
 
@@ -619,7 +625,6 @@ def show_selected_group_card(
     stored_groups_id_dicts,
 ):
     selected_group_label = dash.ctx.triggered_id["group"]
-    # selected_group_data = []
     for data, id_dict in zip(stored_groups_data, stored_groups_id_dicts):
         if id_dict["group"] == selected_group_label:
             selected_group_data = data
@@ -648,6 +653,5 @@ def show_selected_group_card(
 if __name__ == "__main__":
     ISS_SANDBOX = tiled_io.get_iss_sandbox()
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
-    # print('THIS IS STARTING')
     app.run_server(debug=True)
     
