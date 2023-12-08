@@ -193,7 +193,11 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 if self.checkBox_inv_bin.checkState():
                     spectrum = -spectrum
                     y_label = f'- {y_label}'
-                self.figure_data.ax.plot(df[energy_key], spectrum, label = i.text().split('.')[0] + ' ' + mu_channel)
+                try:
+                    energy = df[energy_key]
+                except:
+                    energy = np.arange(spectrum.size)
+                self.figure_data.ax.plot(energy, spectrum, label = i.text().split('.')[0] + ' ' + mu_channel)
 
             self.parent.set_figure(self.figure_data.ax,self.canvas,label_x='Energy (eV)', label_y=y_label)
 
