@@ -218,7 +218,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     energy = df[energy_key]
                 except:
                     energy = np.arange(spectrum.size)
-                self.figure_data.ax.plot(df[energy_key], spectrum, label='.'.join(fname.split('.')[:-1]) + ' ' + mu_channel)
+                self.figure_data.ax.plot(energy, spectrum, label='.'.join(fname.split('.')[:-1]) + ' ' + mu_channel)
 
             self.parent.set_figure(self.figure_data.ax,self.canvas,label_x='Energy (eV)', label_y=y_label)
 
