@@ -560,13 +560,13 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                                             self.cloud_dispatcher.load_to_dropbox(tiff_file,
                                                                                   year=ds.md['year'],
                                                                                   cycle=ds.md['cycle'],
-                                                                                  proposal=ds.md['PROPOSAL'])
+                                                                                  proposal=ds.md['proposal'])
 
                         if send_to_dropbox:
                             self.cloud_dispatcher.load_to_dropbox(filename_new,
                                                                   year = ds.md['year'],
                                                                   cycle = ds.md['cycle'],
-                                                                  proposal = ds.md['PROPOSAL'])
+                                                                  proposal = ds.md['proposal'])
 
 
         def _intersect_metadata_dicts(self, md_list):

@@ -151,6 +151,22 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             self.listWidget_data_numerator.addItems(self.keys)
             self.listWidget_data_denominator.addItems(self.keys)
 
+    def get_energy_key(self, df):
+        energy_key = ''
+        for key in ['johann_main_crystal_motor_cr_main_roll',
+                    'johann_aux2_crystal_motor_cr_aux2_roll',
+                    'johann_aux3_crystal_motor_cr_aux3_roll',
+                    'johann_aux4_crystal_motor_cr_aux4_roll',
+                    'johann_aux5_crystal_motor_cr_aux5_roll',
+                    'energy', 'timestamp',]:
+            if key in df.keys():
+                energy_key = key
+                break
+        if energy_key != 'energy':
+            print(f'x axis column data is taken from {energy_key}')
+        return energy_key
+
+
     def plot_xas_data(self):
         selected_items = (self.list_data.selectedItems())
         update_figure([self.figure_data.ax], self.toolbar, self.canvas)
@@ -158,7 +174,9 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             message_box('Warning','Please select numerator and denominator')
             return
 
-        energy_key = 'energy'
+
+            # energy_key = key
+
 
         handles = []
 
@@ -166,6 +184,8 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             path = f'{self.working_folder}/{i.text()}'
             print(path)
             df, header = load_binned_df_from_file(path)
+
+            energy_key = self.get_energy_key(df)
 
             denominator_name = self.listWidget_data_denominator.selectedItems()[0].text()
             numerators_names = [b.text() for b in self.listWidget_data_numerator.selectedItems()]
@@ -193,11 +213,8 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 if self.checkBox_inv_bin.checkState():
                     spectrum = -spectrum
                     y_label = f'- {y_label}'
-                try:
-                    energy = df[energy_key]
-                except:
-                    energy = np.arange(spectrum.size)
-                self.figure_data.ax.plot(energy, spectrum, label = i.text().split('.')[0] + ' ' + mu_channel)
+                fname = i.text()
+                self.figure_data.ax.plot(df[energy_key], spectrum, label='.'.join(fname.split('.')[:-1]) + ' ' + mu_channel)
 
             self.parent.set_figure(self.figure_data.ax,self.canvas,label_x='Energy (eV)', label_y=y_label)
 
