@@ -375,6 +375,8 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                             axes = tuple(i for i in range(1, len(ext_data[k].shape)))
                             ext_data[k] /= (np.expand_dims(denominator, axes) * denominator_sign)
 
+            energy_key = self.get_energy_key(df)
+            energy = df[energy_key]
 
             for numerator, numerator_name in zip(numerators, numerators_names):
                 if self.checkBox_ratio.checkState():
@@ -390,7 +392,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     spectrum = -spectrum
                 try:
                     df_norm = {}
-                    df_norm['energy'] = df['energy'].values
+                    df_norm['energy'] = energy
                     df_norm['mut'] = -np.log(df['it'].values / df['i0'].values)
                     df_norm['muf'] = df['iff'].values / df['i0'].values
                     df_norm['mur'] = -np.log(df['ir'].values / df['it'].values)
@@ -401,12 +403,12 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 #md['mu_channel']= mu_channel
                 #print(f'Channel {mu_channel}')
                 if ds_first is None:
-                    ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
+                    ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=energy, mu=spectrum, filename=filepath,
                                 datatype='experiment', ext_data=ext_data, df=df_norm)
                     ds_first = ds
                 # print('make first dataset')
                 else:
-                    ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=df['energy'], mu=spectrum, filename=filepath,
+                    ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=energy, mu=spectrum, filename=filepath,
                                 datatype='experiment', process=False, xasdataset=ds_first, ext_data=ext_data, df=df_norm)
                 # print('copying parameters from the first dataset')
 
