@@ -35,13 +35,12 @@ else:
 
 class UIXviewProject(*uic.loadUiType(ui_path)):
         def __init__(self, db_proc=None,
-                     cloud_dispatcher = None,
                      parent=None,*args, **kwargs):
 
             super().__init__(*args, **kwargs)
             self.setupUi(self)
             self.parent = parent
-            self.cloud_dispatcher = cloud_dispatcher
+            # self.cloud_dispatcher = cloud_dispatcher
             self.db_proc = db_proc
             self.parent.project.datasets_changed.connect(self.update_project_list)
             self.addCanvas()
@@ -551,22 +550,22 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                         np.savetxt(fid, table)
                         fid.close()
 
-                        if hasattr(ds, 'ext_data') and (ds.ext_data is not None):
-                            if 'pil100k_image' in ds.ext_data.keys():
-                                tiff_files = dump_tiff_images(filename_new, None, ds.ext_data, df_red=ds.df.fillna(0), zip=True)
-                                if send_to_dropbox:
-                                    if tiff_files is not None:
-                                        for tiff_file in tiff_files:
-                                            self.cloud_dispatcher.load_to_dropbox(tiff_file,
-                                                                                  year=ds.md['year'],
-                                                                                  cycle=ds.md['cycle'],
-                                                                                  proposal=ds.md['proposal'])
-
-                        if send_to_dropbox:
-                            self.cloud_dispatcher.load_to_dropbox(filename_new,
-                                                                  year = ds.md['year'],
-                                                                  cycle = ds.md['cycle'],
-                                                                  proposal = ds.md['proposal'])
+                        # if hasattr(ds, 'ext_data') and (ds.ext_data is not None):
+                        #     if 'pil100k_image' in ds.ext_data.keys():
+                        #         tiff_files = dump_tiff_images(filename_new, None, ds.ext_data, df_red=ds.df.fillna(0), zip=True)
+                        #         if send_to_dropbox:
+                        #             if tiff_files is not None:
+                        #                 for tiff_file in tiff_files:
+                        #                     self.cloud_dispatcher.load_to_dropbox(tiff_file,
+                        #                                                           year=ds.md['year'],
+                        #                                                           cycle=ds.md['cycle'],
+                        #                                                           proposal=ds.md['proposal'])
+                        #
+                        # if send_to_dropbox:
+                        #     self.cloud_dispatcher.load_to_dropbox(filename_new,
+                        #                                           year = ds.md['year'],
+                        #                                           cycle = ds.md['cycle'],
+                        #                                           proposal = ds.md['proposal'])
 
 
         def _intersect_metadata_dicts(self, md_list):
