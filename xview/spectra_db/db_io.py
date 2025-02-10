@@ -3,8 +3,8 @@ from bluesky_live.run_builder import RunBuilder
 
 
 from event_model import compose_run
-# from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
-# from suitcase.mongo_normalized import Serializer
+from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
+from suitcase.mongo_normalized import Serializer
 import time as ttime
 import pkg_resources
 spectrum_start_path = pkg_resources.resource_filename('xview', 'spectra_db/spectrum_start.json')

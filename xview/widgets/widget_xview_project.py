@@ -25,6 +25,8 @@ from xview.dialogs.MetadataDialog import MetadataDialog
 # from xview.spectra_db.db_io import save_spectrum_to_db
 from matplotlib import pyplot as plt
 from os.path import expanduser
+from scipy.stats import zscore
+
 
 
 if platform == 'darwin':
@@ -587,23 +589,37 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
         def merge_datasets(self):
             selection = self.list_project.selectedIndexes()
             if selection != []:
+                # here we check that what teh limits are
+                energy_min = []
+                energy_max = []
+                for indx, obj in enumerate(selection):
+                    _ds = self.parent.project._datasets[selection[indx].row()]
+                    energy_min.append(_ds.energy[0])
+                    energy_max.append(_ds.energy[-1])
+                #print(energy_min)
+                #print(energy_max)
+                energy_min_median = np.median(energy_min)
+                energy_max_median = np.median(energy_max)
 
                 ext_data_list = []
-                mu = self.parent.project._datasets[selection[0].row()].mu
-                energy_master = self.parent.project._datasets[selection[0].row()].energy
+
+                energy_range = np.array(energy_max) -np.array(energy_min)
+                #print(energy_range)
+                master_index = np.argmax(energy_range)
+                #print(master_index)
+                mu = self.parent.project._datasets[selection[master_index].row()].mu
+                energy_master = self.parent.project._datasets[selection[master_index].row()].energy
                 mu_array = np.zeros([len(selection), len(mu)])
-                energy = self.parent.project._datasets[selection[0].row()].energy
-                # _df = {'mut' : np.zeros([len(selection), len(mu)]),
-                #        'muf': np.zeros([len(selection), len(mu)]),
-                #        'mur': np.zeros([len(selection), len(mu)])                       }
+
+
                 merged_files_string = ['# merged files\n']
-                # merged_uids_string = ['# merged uids\n']
-                merged_uids_string_for_md = []
+
                 merged_md_list = []
                 name_list = []
                 for indx, obj in enumerate(selection):
                     _ds = self.parent.project._datasets[selection[indx].row()]
                     energy = _ds.energy
+                    #if (np.abs(energy[0]-energy_min_median)<10) and (np.abs(energy[-1]-energy_max_median)<10):
                     # mu = self.parent.project._datasets[selection[indx].row()].mu.mu
                     mu = _ds.mu
                     mu = np.interp(energy_master, energy, mu)
@@ -624,7 +640,19 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     # merged_uids_string_for_md.append(this_uid)
 
                 merged_name = os.path.commonprefix(name_list) + ' merged'
+                # mask = np.all(mu_array !=0, axis=1)
+                # mu_array = mu_array[mask]
+                np.savetxt('/nsls2/data3/iss/legacy/Sandbox/data.dat', mu_array)
+                self.merge_mu=mu_array
+
+                #evaluate zscore
+                _zscores = zscore(self.merge_mu, axis=1)
+                zscores=np.average(_zscores, axis=1)
+                self.zscores = zscores
+                print(zscores)
+                self.merge_energy =  energy_master
                 mu_merged = np.average(mu_array, axis=0)
+
                 # df = pd.DataFrame({'energy' : energy_master,
                 #                    'mut' : np.average(_df['mut'], axis=0),
                 #                    'muf' : np.average(_df['muf'], axis=0),
@@ -819,8 +847,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
 
                     elif sender_object == 'pushButton_truncate_above':
                         ds.energy = energy[0:indx_energy_to_truncate_at]
-
-                        ds.mu = mu[0:indx_energy_to_truncate_at:]
+                        ds.mu = mu[0:indx_energy_to_truncate_at]
                     ds.update_larch()
                     self.parent.project._datasets[selection[indx].row()] = ds
 
