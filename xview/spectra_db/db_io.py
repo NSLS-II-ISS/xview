@@ -10,6 +10,7 @@ import pkg_resources
 spectrum_start_path = pkg_resources.resource_filename('xview', 'spectra_db/spectrum_start.json')
 import json
 import jsonschema
+import os
 from os import listdir
 from os.path import isfile, join, getmtime
 import numpy as np

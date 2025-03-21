@@ -46,6 +46,16 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_data = widget_xview_data.UIXviewData(db=db, parent=self)
         self.layout_data.addWidget(self.widget_data)
 
+        # try:
+        #     print(None)
+        #     self.widget_wip = widget_xview_wip.UIXviewWIP(db=db, parent=self)
+        #     self.layout_wip.addWidget(self.widget_wip)
+        # except:
+        #     print('it did not work')
+
+
+
+
         self.widget_project = widget_xview_project.UIXviewProject(db_proc=db_proc,
                                                                   cloud_dispatcher = self.cloud_dispatcher,
                                                                   parent=self)
@@ -55,6 +65,9 @@ class XviewGui(*uic.loadUiType(ui_path)):
                                                                   cloud_dispatcher = self.cloud_dispatcher,
                                                                   parent=self)
         self.layout_statistics.addWidget(self.widget_statistics)
+
+
+
 
         # self.widget_databroker = widget_xview_databroker.UIXviewDatabroker(db=db, parent=self)
         # if db_archive_catalog is not None:
