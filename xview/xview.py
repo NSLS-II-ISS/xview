@@ -7,7 +7,7 @@ from isscloudtools.cloud_dispatcher import CloudDispatcher
 from isscloudtools.initialize import get_dropbox_service
 from issfactortools.widgets import widget_main as widget_mcr
 from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker, \
-    widget_xview_rixs , widget_xview_stats
+    widget_xview_rixs , widget_xview_stats, widget_xview_xfit
 
 
 if sys.platform == 'darwin':
@@ -90,6 +90,9 @@ class XviewGui(*uic.loadUiType(ui_path)):
 
         self.widget_mcr = widget_mcr.FactorAnalysisGUI(parent=self)
         self.layout_mcr.addWidget(self.widget_mcr)
+
+        self.widget_xfit = widget_xview_xfit.UIXFIT(parent=self)
+        self.verticalLayout_for_xfit.addWidget(self.widget_xfit)
 
 
 
