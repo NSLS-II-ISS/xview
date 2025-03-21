@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Xview</class>
+ <widget class="QMainWindow" name="Xview">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1536</width>
+    <height>837</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Xview</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>10</y>
+      <width>691</width>
+      <height>781</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="layout_plot_data"/>
+   </widget>
+   <widget class="QPushButton" name="push_add_to_project">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>764</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add to project</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_inv_bin">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>720</y>
+      <width>31</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>22</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_ratio">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>660</y>
+      <width>31</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>22</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_log_bin">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>720</y>
+      <width>31</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>22</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="push_plot_data">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>764</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Plot</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>720</y>
+      <width>36</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Log</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>640</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>/</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="push_refresh_folder">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>10</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Refresh</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="push_select_folder">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>14</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Select folder</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listWidget_data_numerator">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>620</y>
+      <width>141</width>
+      <height>81</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listWidget_data_denominator">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>620</y>
+      <width>141</width>
+      <height>81</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>720</y>
+      <width>36</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Invert</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_load_extended_data">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>800</y>
+      <width>151</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>load extended data</string>
+    </property>
+   </widget>
+   <widget class="QTreeView" name="treeView_experiment">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>130</y>
+      <width>751</width>
+      <height>471</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>50</y>
+      <width>578</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label3_2">
+       <property name="text">
+        <string>Proposal</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="spinBox_proposal">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <number>300000</number>
+       </property>
+       <property name="maximum">
+        <number>600000</number>
+       </property>
+       <property name="value">
+        <number>314438</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label3_3">
+       <property name="text">
+        <string>Year</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="spinBox_year">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <number>2016</number>
+       </property>
+       <property name="maximum">
+        <number>2040</number>
+       </property>
+       <property name="value">
+        <number>2025</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label3_4">
+       <property name="text">
+        <string>Cycle</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="spinBox_cycle">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>3</number>
+       </property>
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>80</y>
+      <width>581</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label3_5">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Sort by</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox_sort1">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>25</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string>Sample</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scan</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Condition</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox_sort2">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>25</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string/>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Sample</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scan</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Condition</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox_sort3">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>25</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string/>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Sample</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scan</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Condition</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="push_extract">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>50</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Extract</string>
+    </property>
+   </widget>
+  </widget>
+  <action name="action_open_project">
+   <property name="text">
+    <string>&amp;Open project</string>
+   </property>
+  </action>
+  <action name="action_save_project">
+   <property name="text">
+    <string>&amp;Save project</string>
+   </property>
+  </action>
+  <action name="action_save_datasets_as_text">
+   <property name="text">
+    <string>Save datasets as text</string>
+   </property>
+  </action>
+  <action name="action_exit">
+   <property name="text">
+    <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="action_merge">
+   <property name="text">
+    <string>Merge</string>
+   </property>
+  </action>
+  <action name="action_rename">
+   <property name="text">
+    <string>Rename</string>
+   </property>
+  </action>
+  <action name="action_remove">
+   <property name="text">
+    <string>Remove</string>
+   </property>
+  </action>
+  <action name="action_combine_and_save_as_text">
+   <property name="text">
+    <string>Combine and save as text</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
