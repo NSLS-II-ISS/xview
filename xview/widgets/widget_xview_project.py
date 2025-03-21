@@ -37,12 +37,12 @@ else:
 
 class UIXviewProject(*uic.loadUiType(ui_path)):
         def __init__(self, db_proc=None,
-                     parent=None,*args, **kwargs):
+                     parent=None, cloud_dispatcher = None, *args, **kwargs):
 
             super().__init__(*args, **kwargs)
             self.setupUi(self)
             self.parent = parent
-            # self.cloud_dispatcher = cloud_dispatcher
+            self.cloud_dispatcher = cloud_dispatcher
             self.db_proc = db_proc
             self.parent.project.datasets_changed.connect(self.update_project_list)
             self.addCanvas()
