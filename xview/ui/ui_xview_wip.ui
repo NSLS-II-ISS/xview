@@ -131,32 +131,6 @@
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLabel" name="label3_2">
-       <property name="text">
-        <string>Proposal</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="spinBox_proposal">
-       <property name="maximumSize">
-        <size>
-         <width>90</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="minimum">
-        <number>300000</number>
-       </property>
-       <property name="maximum">
-        <number>600000</number>
-       </property>
-       <property name="value">
-        <number>333333</number>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="label3_3">
        <property name="text">
         <string>Year</string>
@@ -164,22 +138,33 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="spinBox_year">
+      <widget class="QComboBox" name="comboBox_year">
        <property name="maximumSize">
         <size>
-         <width>60</width>
+         <width>80</width>
          <height>25</height>
         </size>
        </property>
-       <property name="minimum">
-        <number>2016</number>
-       </property>
-       <property name="maximum">
-        <number>2040</number>
-       </property>
-       <property name="value">
-        <number>2025</number>
-       </property>
+       <item>
+        <property name="text">
+         <string/>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Sample</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scan</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Condition</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
@@ -190,22 +175,70 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="spinBox_cycle">
+      <widget class="QComboBox" name="comboBox_cycle">
        <property name="maximumSize">
         <size>
          <width>50</width>
          <height>25</height>
         </size>
        </property>
-       <property name="minimum">
-        <number>1</number>
+       <item>
+        <property name="text">
+         <string/>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Sample</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scan</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Condition</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label3_2">
+       <property name="text">
+        <string>Proposal</string>
        </property>
-       <property name="maximum">
-        <number>3</number>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox_proposal">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>25</height>
+        </size>
        </property>
-       <property name="value">
-        <number>1</number>
-       </property>
+       <item>
+        <property name="text">
+         <string/>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Sample</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scan</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Condition</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>
@@ -335,7 +368,7 @@
      </rect>
     </property>
     <property name="value">
-     <number>24</number>
+     <number>0</number>
     </property>
    </widget>
    <widget class="QWidget" name="gridLayoutWidget">
@@ -483,9 +516,9 @@
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>20</y>
-      <width>121</width>
-      <height>36</height>
+      <y>40</y>
+      <width>91</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
