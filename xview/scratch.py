@@ -1409,11 +1409,89 @@ plot_mcr_proj_svd(xview_gui.widget_mcr.model_datasets.item(3).dataset, '/nsls2/d
 plot_mcr_proj_svd(xview_gui.widget_mcr.model_datasets.item(4).dataset, '/nsls2/data/iss/legacy/processed/2022/3/310728/mcr/')
 
 
+#___________________________________
+from pathlib import Path
+from xas.file_io import load_binned_df_from_file, load_binned_df_and_extended_data_from_file
+
+lst = []
+
+
+path = Path(f'/nsls2/data/iss/legacy/processed/2025/1/314438/')
+file_paths = list(path.glob("*.dat"))
+for file in file_paths:
+    print(str(file))
+    _, metadata_str = load_binned_df_from_file(str(file))
+    metadata_dict = {}
+    for line in metadata_str.strip().split("\n")[:-1]:
+        key, value = line.split(": ", 1)  # Split at first occurrence of ": "
+        metadata_dict[key] = value
+    lst.append(metadata_dict)
+
+
+
+
+current_catalog = tiled_catalog.\
+     search(TimeRange(since='2025-01-01', until='2025-04-01')).\
+     search(Key("proposal") == '314438')
+unique_samples_dict = current_catalog.distinct('sample_name', counts=True)
+unique_samples_list = [item['value'] for item in unique_samples_dict['metadata']['start.sample_name']]
+start = ttime.time()
+sample_catalogs = {}
+for sample in unique_samples_list:
+    sample_catalogs[sample]= current_catalog.search(Key("sample_name") == sample)
+print(f'{ttime.time()-start} s')
+
+
+
+
+start = ttime.time()
+current_catalog = tiled_catalog.\
+     search(TimeRange(since='2025-01-01', until='2025-04-01')).\
+     search(Key("proposal") == '314432')
+metadata_list =  []
+for item in current_catalog.values():
+    metadata_list= item.start
+
+
+# unique_samples_dict = current_catalog.distinct('sample_name', counts=True)
+# unique_samples_list = [item['value'] for item in unique_samples_dict['metadata']['start.sample_name']]
 
 
 
 
 
+print(f'{ttime.time()-start} s')
+import os
+import re
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+
+def extract_header_items(directory, item):
+    header_dict = {}
+    pattern = re.compile(fr"^# {re.escape(item)}:\s*(.+)")
+
+    for filename in os.listdir(directory):
+        if filename.endswith(".dat"):
+            file_path = os.path.join(directory, filename)
+            with open(file_path, "r", encoding="utf-8") as file:
+                for line in file:
+                    match = pattern.match(line)
+                    if match:
+                        value = match.group(1)
+                        if value not in header_dict:
+                            header_dict[value] = []
+                        header_dict[value].append(filename)
+
+    return header_dict
+start = ttime.time()
+directory_path = '/nsls2/data3/iss/legacy/processed/2025/1/314438/'
+item_to_extract = "Facility.name"  # Change this to any header item you want to extract
+header_files_dict = extract_header_items(directory_path, item_to_extract)
+print(header_files_dict)
+end = ttime.time()
+print(end-start)
 
 
 
