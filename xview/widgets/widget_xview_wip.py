@@ -137,11 +137,13 @@ class UIXviewWIP(*uic.loadUiType(ui_path)):
 
     def group_files_by_metadata_keys(self, directory, metadata_keys, extension=".dat"):
         """Group files by metadata keys or list them with timestamps if keys are empty."""
-
+        total_num_files = len(glob.glob(f'{directory}*.dat'))
         files_info = []
-
+        jj= 0
         for filename in os.listdir(directory):
             if filename.endswith(extension):
+                jj = jj+1
+                self.progressBar_loading.setValue(int(100*jj/total_num_files))
                 full_path = os.path.join(directory, filename)
                 base_name = os.path.basename(full_path)
                 try:
@@ -178,6 +180,7 @@ class UIXviewWIP(*uic.loadUiType(ui_path)):
 
         import json
         return recursive_sort(json.loads(json.dumps(root)))
+
 
     def populate_tree_model(self, tree_model, data, headers=['Files']):
         """
