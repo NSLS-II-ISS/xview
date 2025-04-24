@@ -9,6 +9,11 @@ from issfactortools.widgets import widget_main as widget_mcr
 from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker, \
     widget_xview_rixs , widget_xview_stats
 
+ENVIRONMENT = 'Old'
+if ENVIRONMENT == 'New':
+    from xview.widgets import widget_xview_wip
+else:
+    widget_xview_wip = None
 
 if sys.platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview-mac.ui')
@@ -46,12 +51,11 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_data = widget_xview_data.UIXviewData(db=db, parent=self)
         self.layout_data.addWidget(self.widget_data)
 
-        # try:
-        #     print(None)
-        #     self.widget_wip = widget_xview_wip.UIXviewWIP(db=db, parent=self)
-        #     self.layout_wip.addWidget(self.widget_wip)
-        # except:
-        #     print('it did not work')
+        try:
+            self.widget_wip = widget_xview_wip.UIXviewWIP(db=db, parent=self)
+            self.layout_wip.addWidget(self.widget_wip)
+        except:
+            print('it did not work')
 
 
 
