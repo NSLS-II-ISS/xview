@@ -62,6 +62,8 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.settings = QSettings('ISS Beamline', 'Xview')
         self.working_folder = self.settings.value('working_folder', defaultValue='/GPFS/xf08id/User Data', type=str)
 
+
+
         if self.working_folder != '/GPFS/xf08id/User Data':
             self.label_working_folder.setText(self.working_folder)
             self.label_working_folder.setToolTip(self.working_folder)

@@ -94,7 +94,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Plot</string>
+     <string>Plot Calibration</string>
     </property>
    </widget>
    <widget class="QPushButton" name="push_refresh_folder">
@@ -144,7 +144,11 @@
     </property>
     <property name="font">
      <font>
+      <family>Cantarell</family>
       <pointsize>20</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
     <property name="text">
@@ -162,7 +166,11 @@
     </property>
     <property name="font">
      <font>
+      <family>Cantarell</family>
       <pointsize>20</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
     <property name="text">
@@ -203,7 +211,11 @@
     </property>
     <property name="font">
      <font>
+      <family>Cantarell</family>
       <pointsize>22</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
     <property name="text">
@@ -224,7 +236,11 @@
     </property>
     <property name="font">
      <font>
+      <family>Cantarell</family>
       <pointsize>22</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
     <property name="text">
@@ -255,7 +271,11 @@
     </property>
     <property name="font">
      <font>
+      <family>Cantarell</family>
       <pointsize>11</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
     <property name="text">
@@ -287,7 +307,7 @@
       <height>371</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="layout_plot_rixs_2"/>
+    <layout class="QVBoxLayout" name="layout_plot_linecut"/>
    </widget>
    <widget class="QCheckBox" name="checkBox_bkg_subtr">
     <property name="enabled">
@@ -303,7 +323,11 @@
     </property>
     <property name="font">
      <font>
+      <family>Cantarell</family>
       <pointsize>22</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
     <property name="text">
@@ -316,10 +340,10 @@
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>550</y>
-      <width>461</width>
-      <height>181</height>
+      <x>360</x>
+      <y>540</y>
+      <width>291</width>
+      <height>161</height>
      </rect>
     </property>
     <property name="title">
@@ -330,8 +354,8 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>245</width>
-       <height>122</height>
+       <width>263</width>
+       <height>140</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout">
@@ -393,6 +417,9 @@
         <property name="singleStep">
          <double>0.100000000000000</double>
         </property>
+        <property name="value">
+         <double>10.000000000000000</double>
+        </property>
        </widget>
       </item>
      </layout>
@@ -409,6 +436,110 @@
     </property>
     <property name="text">
      <string>Parse</string>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBar_h5processing">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>700</y>
+      <width>1000</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>1000</width>
+      <height>200</height>
+     </size>
+    </property>
+    <property name="value">
+     <number>24</number>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_rois">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>400</y>
+      <width>121</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>ROIs</string>
+    </property>
+    <widget class="QWidget" name="verticalLayoutWidget_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>101</width>
+       <height>92</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QCheckBox" name="checkBox_roi1">
+        <property name="text">
+         <string>ROI 1</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBox_roi2">
+        <property name="text">
+         <string>ROI 2</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBox_roi3">
+        <property name="text">
+         <string>ROI 3</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>750</y>
+      <width>311</width>
+      <height>38</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="pushButton_load_session">
+       <property name="text">
+        <string>Load Session</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_save_session">
+       <property name="text">
+        <string>Save Session</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="pushButton_calibrate_with_roi">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>420</y>
+      <width>151</width>
+      <height>36</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Calibrate with ROI</string>
     </property>
    </widget>
   </widget>
