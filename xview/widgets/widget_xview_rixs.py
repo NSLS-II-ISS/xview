@@ -23,7 +23,7 @@ from xas.file_io import load_binned_df_from_file
 import pyqtgraph as pg
 
 from xas.spectrometer import parse_rixs_scan, parse_rixslog_scan
-from xas.vonhamos import ProcessingThread
+from xas.vonhamos import ProcessingThread, ProcessingWorker, ProcessingTask
 from queue import Queue
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 if platform == 'darwin':
@@ -47,6 +47,7 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
 
         self.push_parse_data.clicked.connect(self.parse_rixs_scan)
         self.push_plot_data.clicked.connect(self.plot_rixs_data)
+        self.pushButton_save_calibration_dict.clicked.connect(self.save_calibration_dict)
 
         self.comboBox_sort_files_by.addItems(['Time','Name'])
         self.comboBox_sort_files_by.currentIndexChanged.connect((self.get_file_list))
@@ -56,9 +57,12 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         self.comboBox_data_bkg.currentIndexChanged.connect(self.update_current_bkg)
 
         self.list_data.itemSelectionChanged.connect(self.select_files_to_plot)
+        self.pushButton_calibrate_with_roi.clicked.connect(self.start_calibration_with_rois)
+        self.pushButton_create_xes_data.clicked.connect(self.create_xes_data)
         # self.push_add_to_project.clicked.connect(self.add_data_to_project)
         self.list_data.setContextMenuPolicy(Qt.CustomContextMenu)
         self.list_data.customContextMenuRequested.connect(self.xas_data_context_menu)
+        self.init_processing_thread()
 
         self.list_data.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.addCanvas()
@@ -72,7 +76,7 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         self.last_bkg = ''
         self._selected_files = []
         self.results = {}
-        self.rois = {}
+        self.rois = {'1':None, '2':None, '3':None}
         self.__colors = ['red', 'cyan', 'lime']
         for i in range(1,4):
 
@@ -113,9 +117,13 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         if action == plot_action:
             self.plot_rixs_data()
         if action == plot_calibration_action:
-            self.start_processing(plot_calibration=True, process_scan_file=False)
+            self.start_calibration()
+            # self.start_processing(plot_calibration=True, process_scan_file=False)
         if action == plot_merge_action:
-            self.start_processing(plot_calibration=False, process_scan_file=True)
+            self.merge_and_plot_total()
+
+            pass
+            # self.start_processing(plot_calibration=False, process_scan_file=True)
         # elif action == add_to_project_action:
         #     self.add_data_to_project()
 
@@ -144,12 +152,15 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         self.rixs_image_item = pg.ImageItem(lut=lut)
         self.rixs_plot_item.addItem(self.rixs_image_item)
 
-        self.rixs_overlay_curve = pg.PlotDataItem(pen=pg.mkPen(color='yellow', width=5),
-                                                  symbol='o',
-                                                  symbolSize=5,
-                                                  antialias=True,)
+        self.rixs_overlay_curve = {}
 
-        self.rixs_plot_item.addItem(self.rixs_overlay_curve)
+        for i in ['1', '2', '3']:
+            self.rixs_overlay_curve[i] = pg.PlotDataItem(pen=pg.mkPen(color='yellow', width=5),
+                                                      symbol='o',
+                                                      symbolSize=5,
+                                                      antialias=True,)
+
+            self.rixs_plot_item.addItem(self.rixs_overlay_curve[i])
 
         # self.rixs_plot_item = pg.PlotDataItem(pen=pg.mkPen(color='r', width=2), symbol='o', symbolPen='r', symbolBrush='r', symbolSize=3)
         # self.rixs_view.addItem(self.rixs_plot_item)
@@ -221,15 +232,15 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
                 self.file_list.reverse()
             self.list_data.addItems(self.file_list)
 
-    # def load_files(self, file_paths):
-    #     if file_paths:
-    #         self.file_queue = Queue()
-    #         for path in file_paths:
-    #             self.file_queue.put(path)
-            # self.start_processing()
-            # self.log.appendPlainText(f"📥 Loaded {len(file_paths)} files.\n")
+    def get_selected_files(self):
+        self._selected_files = []
+        for item in self.list_data.selectedIndexes():
+            _file = f'{self.working_folder}/{item.data()}'
+            self._selected_files.append(_file)
+        return self._selected_files
 
-    def start_processing(self, plot_calibration=False, process_scan_file=False):
+
+    def start_processing(self, plot_calibration=False, process_scan_file=False, plot_and_merge=False):
         self._selected_files = []
 
         for item in self.list_data.selectedIndexes():
@@ -262,19 +273,54 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         # self.btn_start.setEnabled(False)
         # self.log.appendPlainText("⚙️ Processing started...\n")
 
+    def get_data_dict_for_plotting(self, plot_type=None):
+        dictionary = {}
+        if plot_type == 'total':
+            dictionary['image'] = self.results['image_total']
+            dictionary['overlay'] = None
+            dictionary['linecut'] = None #{'total': {'x': [], 'y': []}}
+
+        if plot_type == 'auto_calibration':
+            dictionary['image'] = self.results['data']['processed']['image_total']['image']
+            dictionary['overlay'] = {}
+            dictionary['overlay']['auto_calibration'] = {}
+            dictionary['overlay']['auto_calibration']['x'] = self.results['data']['processed']['pixels']['x_centers']
+            dictionary['overlay']['auto_calibration']['y'] = self.results['data']['processed']['pixels']['y_centers']
+
+            dictionary['linecut'] = {}
+            dictionary['linecut']['auto_calibration'] = {}
+            dictionary['linecut']['auto_calibration']['x'] = self.results['data']['processed']['intensity_total']['x']
+            dictionary['linecut']['auto_calibration']['y'] = self.results['data']['processed']['intensity_total']['y']
+            dictionary['linecut']['auto_calibration']['fit'] = self.results['data']['processed']['intensity_total']['fit']
+
+
+        if plot_type == 'roi_calibration':
+            dictionary['image'] = self.results['image_total']
+            dictionary['overlay'] = {}
+            dictionary['linecut'] = {}
+            for key in self.results['data'].keys():
+                dictionary['overlay'][key] = {}
+                dictionary['overlay'][key]['x'] = self.results['data'][key]['processed']['pixels']['x_centers']
+                dictionary['overlay'][key]['y'] = self.results['data'][key]['processed']['pixels']['y_centers']
+
+                dictionary['linecut'][key] = {}
+                dictionary['linecut'][key]['x'] = self.results['data'][key]['processed']['intensity_total']['x']
+                dictionary['linecut'][key]['y'] = self.results['data'][key]['processed']['intensity_total']['y']
+                dictionary['linecut'][key]['fit'] = self.results['data'][key]['processed']['intensity_total']['fit']
+
+        return dictionary
+
     def on_result_ready(self, results):
         print(f"Results is ready.")
         self.results = results
 
-        image = self.results['processed']['image_total']['image']
-        overlay_x = self.results['processed']['pixels']['x_centers']
-        overlay_y = self.results['processed']['pixels']['y_centers']
-        self.plot_rixs_auto_calibration(image=image, overlay_x=overlay_x, overlay_y=overlay_y)
+        dictionary = self.get_data_dict_for_plotting(plot_type=self.results['plot_type'])
+        self.plot_rixs_image(image=dictionary['image'])
+        self.plot_overlay_on_rixs(dictionary=dictionary['overlay'])
+        self.plot_linecut_batch(dictionary=dictionary['linecut'])
 
-        x_data = self.results['processed']['intensity_total']['x']
-        y_data = self.results['processed']['intensity_total']['y']
-        y_fit = self.results['processed']['intensity_total']['fit']
-        self.plot_linecut(x_data=x_data, y_data=y_data, y_fit=y_fit)
+
+
 
     def on_processing_finished(self):
         print(f"Processing finished.")
@@ -287,8 +333,39 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         # self.load_files(self._selected_files)
 
 
+    def plot_rixs_image(self, image=None):
+        try:
+            self.rixs_image_item.setImage(image)
+        except Exception as e:
+            print(e)
 
+    def plot_overlay_on_rixs(self, dictionary=None):
+        if dictionary is not None:
+            for key in dictionary.keys():
+                if key == 'auto_calibration':
+                    self.rixs_overlay_curve['1'].setData(dictionary[key]['y'], dictionary[key]['x'])
+                else:
+                    self.rixs_overlay_curve[key].setData(dictionary[key]['y'], dictionary[key]['x'])
+        else:
+            self.rixs_overlay_curve['1'].setData([], [])
 
+    def plot_linecut_batch(self, dictionary=None):
+        self.figure_linecut.ax.clear()
+        if dictionary is not None:
+            try:
+                for key in dictionary:
+                    self.figure_linecut.ax.plot(dictionary[key]['x'], dictionary[key]['y'], color='k', marker='o')
+                    self.figure_linecut.ax.plot(dictionary[key]['x'], dictionary[key]['fit'], color='r')
+            except Exception as e:
+                print(e)
+        else:
+            self.figure_linecut.ax.plot([], [], color='k', marker='o')
+            pass
+
+        self.figure_linecut.ax.set_xlabel('Energy (eV)')
+        self.figure_linecut.ax.set_ylabel('Intensity')
+        self.figure_linecut.tight_layout()
+        self.canvas_linecut.draw_idle()
 
         # f = h5py.File(current_file, 'r')
         # uid_herfds = list(f.keys())
@@ -365,9 +442,12 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
     def plot_rixs_auto_calibration(self, image=None, overlay_x=None, overlay_y=None):
         try:
             self.rixs_image_item.setImage(image)
-            self.rixs_overlay_curve.setData(overlay_y, overlay_x)
+            self.rixs_overlay_curve['1'].setData(overlay_y, overlay_x)
         except Exception as e:
             print(e)
+
+
+
 
 
 
@@ -396,7 +476,7 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
             x_pix_center = self.results['results']['pixel_centers']['x_pix_centers']
             y_pix_center = self.results['results']['pixel_centers']['y_pix_centers']
             try:
-                self.rixs_overlay_curve.setData(y_pix_center, x_pix_center)
+                self.rixs_overlay_curve['1'].setData(y_pix_center, x_pix_center)
             except Exception as e:
                 print(e)
             # self.figure_rixs.ax.set_xlabel('Pixel')
@@ -474,6 +554,8 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
 
 
 
+
+
     def add_data_to_project(self):
         if self.comboBox_data_numerator.currentText() != -1 and self.comboBox_data_denominator.currentText() != -1:
             for item in self.list_data.selectedItems():
@@ -542,6 +624,7 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
             # else:
             #     self.session_dict['rois'][index] = self.get_line_roi_geometery(index)
             self.rixs_plot_item.removeItem(self.rois[index])
+            self.rois[index] = None
 
 
 
@@ -562,12 +645,17 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         width = self.rois[roi_index].size().y()
         return {'p1': (p1.x(), p1.y()), 'p2': (p2.x(), p2.y()), 'width': width}
 
-    def get_calibration_with_rois_dict(self):
-        dictionary = {}
-        for i in ['1', '2', '3']:
+    def save_calibration_dict(self):
+        self.calibration_dictionary = {}
 
-            dictionary[i] = None
-            pass
+        _roi_list = ['1', '2', '3']
+        _data_key_list = self.results['data'].keys()
+        if not set(_roi_list).isdisjoint(set(_data_key_list)):
+            for _roi in _data_key_list:
+                self.calibration_dictionary[_roi] = self.results['data'][_roi]['processed']['calibration']
+        else:
+            self.calibration_dictionary['auto'] = self.results['data']['processed']['calibration']
+
 
 
     def get_slice_of_image(self, roi_index, image=None):
@@ -580,6 +668,69 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         mask[rr_int, cc_int] = True
 
         return np.where(mask, image, 0)
+
+    def get_rois_mask(self, image=None):
+        rois_mask = {}
+        for i in ['1', '2', '3']:
+            if self.rois[i] is not None:
+                roi_data, (rr, cc) = self.rois[i].getArrayRegion(image, self.rixs_image_item,
+                                                                         returnMappedCoords=True)
+                mask = np.zeros_like(image, dtype=bool)
+                rr_int = np.clip(np.round(rr).astype(int), 0, image.shape[0] - 1)
+                cc_int = np.clip(np.round(cc).astype(int), 0, image.shape[1] - 1)
+                mask[rr_int, cc_int] = True
+                rois_mask[i] = mask
+        return rois_mask
+
+    def init_processing_thread(self):
+        self.processor = ProcessingWorker()
+
+
+        self.thread = QThread()
+        self.processor.moveToThread(self.thread)
+        # self.thread.started.connect(self.start_worker)
+        self.thread.started.connect(self.processor.run)
+
+        # self.thread.started.connect(lambda: QtCore.QTimer.singleShot(0, self.processor.run))
+        self.processor.result_ready.connect(self.on_result_ready)
+        self.processor.finished.connect(self.on_processing_finished)
+        self.processor.finished.connect(self.thread.quit)
+
+        self.thread.start()
+
+    def start_calibration(self):
+        files = self.get_selected_files()
+        task = ProcessingTask(files=files, plot_calibration=True)
+        self.processor.add_task(task)
+
+    def start_calibration_with_rois(self):
+        files = self.get_selected_files()
+        image = self.rixs_image_item.image
+        rois_mask = self.get_rois_mask(image)
+        data = {}
+        data['image'] = image
+        data['rois'] = rois_mask
+        task = ProcessingTask(data=data, calibration_with_rois=True)
+        self.processor.add_task(task)
+
+
+    def merge_and_plot_total(self):
+        files = self.get_selected_files()
+        task = ProcessingTask(files=files, merge_and_plot_total=True)
+        self.processor.add_task(task)
+
+
+    def create_xes_data(self):
+        files = self.get_selected_files()
+        data = {}
+        image = self.rixs_image_item.image
+        rois_mask = self.get_rois_mask(image)
+
+        data['rois'] = rois_mask
+        data['calibration'] = self.calibration_dictionary
+        task = ProcessingTask(files=files, data=data, create_xes_data=True)
+        self.processor.add_task(task)
+
 
 
 

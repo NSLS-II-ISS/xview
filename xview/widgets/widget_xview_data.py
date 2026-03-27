@@ -340,12 +340,16 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 uid_idx1 = header.find('Scan.uid:') + 10
                 uid_idx2 = header.find('\n', header.find('Scan.uid:'))
                 uid = header[uid_idx1: uid_idx2]
-                md = self.db[uid]['start']
+                if uid == 'xes':
+                    md = {}
+                else:
+                    md = self.db[uid]['start']
             except KeyError:
                 try:
                     uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
                     md = self.db[uid]['start']
                 except:
+                    md = {}
                     pass
 
             if md == {}:
