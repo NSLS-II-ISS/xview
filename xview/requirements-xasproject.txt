@@ -1,0 +1,5 @@
+PyQt5
+xraylarch
+pandas
+numpy
+pickle
