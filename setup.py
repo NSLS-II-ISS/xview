@@ -54,6 +54,7 @@ setup(
         'xview': [
             'xview/spectra_db/*.json',
             'xview/ui/*.ui',
+            'xview/dialogs/*.ui'
         ]
     },
     install_requires=requirements,

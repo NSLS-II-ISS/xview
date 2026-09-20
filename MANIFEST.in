@@ -17,3 +17,4 @@ include xview/_version.py
 
 include xview/ui/*.ui
 include xview/spectra_db/*.json
+include xview/dialogs/*.ui
