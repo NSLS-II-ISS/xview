@@ -155,7 +155,12 @@ class UIXviewData(*uic.loadUiType(ui_path)):
 
     def get_energy_key(self, df):
         energy_key = ''
-        for key in ['johann_main_crystal_motor_cr_main_roll',
+        for key in ['energy_main',
+                    'energy_aux2',
+                    'energy_aux3',
+                    'energy_aux4',
+                    'energy_aux5',
+                    'johann_main_crystal_motor_cr_main_roll',
                     'johann_aux2_crystal_motor_cr_aux2_roll',
                     'johann_aux3_crystal_motor_cr_aux3_roll',
                     'johann_aux4_crystal_motor_cr_aux4_roll',

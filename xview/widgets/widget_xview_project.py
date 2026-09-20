@@ -622,7 +622,10 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     #if (np.abs(energy[0]-energy_min_median)<10) and (np.abs(energy[-1]-energy_max_median)<10):
                     # mu = self.parent.project._datasets[selection[indx].row()].mu.mu
                     mu = _ds.mu
-                    mu = np.interp(energy_master, energy, mu)
+                    if energy[0] > energy[-1]:
+                        mu = np.interp(energy_master[::-1], energy[::-1], mu[::-1])
+                    else:
+                        mu = np.interp(energy_master, energy, mu)
                     mu_array[indx, :] = mu
 
                     # _df['mut'][indx, :] = _ds.df['mut']
@@ -642,7 +645,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 merged_name = os.path.commonprefix(name_list) + ' merged'
                 # mask = np.all(mu_array !=0, axis=1)
                 # mu_array = mu_array[mask]
-                np.savetxt('/nsls2/data3/iss/legacy/Sandbox/data.dat', mu_array)
+                np.savetxt('/nsls2/data/iss/legacy/Sandbox/data.dat', mu_array)
                 self.merge_mu=mu_array
 
                 #evaluate zscore
@@ -650,7 +653,10 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 zscores=np.average(_zscores, axis=1)
                 self.zscores = zscores
                 print(zscores)
-                self.merge_energy =  energy_master
+                if energy_master[0] > energy_max[-1]:
+                    self.merge_energy = energy_master[::-1]
+                else:
+                    self.merge_energy =  energy_master
                 mu_merged = np.average(mu_array, axis=0)
 
                 # df = pd.DataFrame({'energy' : energy_master,
