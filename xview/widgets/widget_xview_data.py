@@ -35,6 +35,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
 
         self.db = db
         self.parent = parent
+        self._initializing = True
         self.push_select_folder.clicked.connect(self.select_working_folder)
         self.push_refresh_folder.clicked.connect(self.get_file_list)
         self.push_plot_data.clicked.connect(self.plot_xas_data)
@@ -57,9 +58,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.last_numerator= ''
         self.last_denominator = ''
         self.listWidget_data_numerator.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.lineEdit_default_path.returnPressed.connect(self.handle_default_path)
-        self.comboBox_year.currentIndexChanged.connect(self.handle_year_changed)
-        self.comboBox_cycle.currentIndexChanged.connect(self.handle_cycle_changed)
+
         # self.comboBox_proposal.currentIndexChanged.connect(self.handle_proposal_changed)
 
         # Persistent settings
@@ -77,7 +76,16 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             except:
                 pass
 
+        self._initializing = False
+
+        self.lineEdit_default_path.returnPressed.connect(self.handle_default_path)
+        self.comboBox_year.currentIndexChanged.connect(self.handle_year_changed)
+        self.comboBox_cycle.currentIndexChanged.connect(self.handle_cycle_changed)
+
     def handle_default_path(self):
+        if self._initializing:
+            return
+
         default_path = Path(self.lineEdit_default_path.text())
         if default_path.exists():
             self.comboBox_year.clear()
@@ -86,6 +94,9 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             self.handle_cycle_changed()
 
     def handle_year_changed(self):
+        if self._initializing:
+            return
+
         default_path = Path(self.lineEdit_default_path.text())
         current_year_text = self.comboBox_year.currentText()
         current_year_path = default_path.joinpath(current_year_text)
@@ -94,6 +105,9 @@ class UIXviewData(*uic.loadUiType(ui_path)):
 
 
     def handle_cycle_changed(self):
+        if self._initializing:
+            return
+        
         default_path = Path(self.lineEdit_default_path.text())
         current_year_text = self.comboBox_year.currentText()
         current_cycle_text = self.comboBox_cycle.currentText()
@@ -106,12 +120,15 @@ class UIXviewData(*uic.loadUiType(ui_path)):
     def populate_path_combobox(self):
         default_path, year_path, cycle_path, current_year, current_cycle, current_proposal = self.get_default_year_cycle_proposal_path()
         self.lineEdit_default_path.setText(default_path)
+        # self.comboBox_year.clear()
         self.comboBox_year.addItems(self.get_combobox_entries(default_path))
         self.comboBox_year.setCurrentText(str(current_year))
 
+        # self.comboBox_cycle.clear()
         self.comboBox_cycle.addItems(self.get_combobox_entries(year_path))
         self.comboBox_cycle.setCurrentText(str(current_cycle))
 
+        # self.comboBox_proposal.clear()
         self.comboBox_proposal.addItems(self.get_combobox_entries(cycle_path))
         self.comboBox_proposal.setCurrentText(str(current_proposal))
 
