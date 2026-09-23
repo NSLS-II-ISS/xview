@@ -25,7 +25,7 @@ from xview.dialogs.FileMetadataDialog import FileMetadataDialog
 if platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data.ui')
+    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data_new.ui')
 
 
 class UIXviewData(*uic.loadUiType(ui_path)):
@@ -57,6 +57,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.last_numerator= ''
         self.last_denominator = ''
         self.listWidget_data_numerator.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.lineEdit_default_path.returnPressed.connect(self.handle_default_path)
+        self.comboBox_year.currentIndexChanged.connect(self.handle_year_changed)
+        self.comboBox_cycle.currentIndexChanged.connect(self.handle_cycle_changed)
+        # self.comboBox_proposal.currentIndexChanged.connect(self.handle_proposal_changed)
 
         # Persistent settings
         self.settings = QSettings('ISS Beamline', 'Xview')
@@ -67,10 +71,68 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         if self.working_folder != '/GPFS/xf08id/User Data':
             self.label_working_folder.setText(self.working_folder)
             self.label_working_folder.setToolTip(self.working_folder)
+            self.populate_path_combobox()
             try:
                 self.get_file_list()
             except:
                 pass
+
+    def handle_default_path(self):
+        default_path = Path(self.lineEdit_default_path.text())
+        if default_path.exists():
+            self.comboBox_year.clear()
+            self.comboBox_year.addItems(self.get_combobox_entries(default_path))
+            self.handle_year_changed()
+            self.handle_cycle_changed()
+
+    def handle_year_changed(self):
+        default_path = Path(self.lineEdit_default_path.text())
+        current_year_text = self.comboBox_year.currentText()
+        current_year_path = default_path.joinpath(current_year_text)
+        self.comboBox_cycle.clear()
+        self.comboBox_cycle.addItems(self.get_combobox_entries(current_year_path))
+
+
+    def handle_cycle_changed(self):
+        default_path = Path(self.lineEdit_default_path.text())
+        current_year_text = self.comboBox_year.currentText()
+        current_cycle_text = self.comboBox_cycle.currentText()
+
+        current_cycle_path = default_path.joinpath(current_year_text, current_cycle_text)
+        self.comboBox_proposal.clear()
+        self.comboBox_proposal.addItems(self.get_combobox_entries(current_cycle_path))
+
+
+    def populate_path_combobox(self):
+        default_path, year_path, cycle_path, current_year, current_cycle, current_proposal = self.get_default_year_cycle_proposal_path()
+        self.lineEdit_default_path.setText(default_path)
+        self.comboBox_year.addItems(self.get_combobox_entries(default_path))
+        self.comboBox_year.setCurrentText(str(current_year))
+
+        self.comboBox_cycle.addItems(self.get_combobox_entries(year_path))
+        self.comboBox_cycle.setCurrentText(str(current_cycle))
+
+        self.comboBox_proposal.addItems(self.get_combobox_entries(cycle_path))
+        self.comboBox_proposal.setCurrentText(str(current_proposal))
+
+    def get_combobox_entries(self, path):
+        with os.scandir(path) as _posix:
+            entries = [entry.name for entry in _posix if entry.is_dir()]
+            sorted_entries = sorted(entries, reverse=True)
+        return sorted_entries
+
+
+    def get_default_year_cycle_proposal_path(self):
+        path = Path(self.working_folder)
+        default_path = str(Path(*path.parts[:-3]))
+        year_path = str(Path(*path.parts[:-2]))
+        cycle_path = str(Path(*path.parts[:-1]))
+
+        current_year = str(Path(*path.parts[-3:-2]))
+        current_cycle = str(Path(*path.parts[-2:-1]))
+        current_proposal = str(Path(*path.parts[-1:]))
+
+        return default_path, year_path, cycle_path, current_year, current_cycle, current_proposal
 
     def xas_data_context_menu(self,QPos):
         menu = QMenu()
@@ -109,8 +171,14 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.canvas.draw()
 
     def select_working_folder(self):
-        self.working_folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select a folder", self.working_folder,
-                                                                        QtWidgets.QFileDialog.ShowDirsOnly)
+        default_path = Path(self.lineEdit_default_path.text())
+        current_year_text = self.comboBox_year.currentText()
+        current_cycle_text = self.comboBox_cycle.currentText()
+        current_proposal_text = self.comboBox_proposal.currentText()
+        self.working_folder = str(default_path.joinpath(current_year_text, current_cycle_text, current_proposal_text))
+
+        # self.working_folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select a folder", self.working_folder,
+        #                                                                 QtWidgets.QFileDialog.ShowDirsOnly)
         if self.working_folder:
             self.set_working_folder()
 
