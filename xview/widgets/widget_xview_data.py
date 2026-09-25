@@ -433,11 +433,13 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 if uid == 'xes':
                     md = {}
                 else:
-                    md = self.db[uid]['start']
+                    if self.db is not None:
+                        md = self.db[uid]['start']
             except KeyError:
                 try:
                     uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
-                    md = self.db[uid]['start']
+                    if self.db is not None:
+                        md = self.db[uid]['start']
                 except:
                     md = {}
                     pass
