@@ -21,6 +21,7 @@ from isstools.dialogs.BasicDialogs import message_box
 from xas.file_io import load_binned_df_from_file, load_binned_df_and_extended_data_from_file
 import copy
 from xview.dialogs.FileMetadataDialog import FileMetadataDialog
+from larch.io import read_ascii
 
 if platform == 'darwin':
     ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
@@ -435,11 +436,19 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                 else:
                     if self.db is not None:
                         md = self.db[uid]['start']
+                    else:
+                        larch_group = read_ascii(path)
+                        md = dict(larch_group.attrs)
+                        md['e0'] = larch_group.attrs.scan_edge_energy_ev
             except KeyError:
                 try:
                     uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
                     if self.db is not None:
                         md = self.db[uid]['start']
+                    else:
+                        larch_group = read_ascii(path)
+                        md = dict(larch_group.attrs)
+                        md['e0'] = larch_group.attrs.scan_edge_energy_ev
                 except:
                     md = {}
                     pass
