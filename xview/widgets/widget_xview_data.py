@@ -437,7 +437,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     if self.db is not None:
                         md = self.db[uid]['start']
                     else:
-                        larch_group = read_ascii(fliepath)
+                        larch_group = read_ascii(filepath)
                         md = dict(larch_group.attrs)
                         md['e0'] = larch_group.attrs.scan_edge_energy_ev
             except KeyError:
