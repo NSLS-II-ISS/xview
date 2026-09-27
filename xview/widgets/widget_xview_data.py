@@ -439,7 +439,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     else:
                         larch_group = read_ascii(filepath)
                         md = dict(larch_group.attrs)
-                        md['e0'] = larch_group.attrs.scan_edge_energy_ev
+                        if "ISS (8-ID)" in md.values():
+                            md['e0'] = larch_group.attrs.scan_edge_energy_ev
+                        elif "QAS" in md.values():
+                            md['e0'] = larch_group.attrs.e0
             except KeyError:
                 try:
                     uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
@@ -448,7 +451,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     else:
                         larch_group = read_ascii(filepath)
                         md = dict(larch_group.attrs)
-                        md['e0'] = larch_group.attrs.scan_edge_energy_ev
+                        if "ISS (8-ID)" in md.values():
+                            md['e0'] = larch_group.attrs.scan_edge_energy_ev
+                        elif "QAS" in md.values():
+                            md['e0'] = larch_group.attrs.e0
                 except:
                     md = {}
                     pass
