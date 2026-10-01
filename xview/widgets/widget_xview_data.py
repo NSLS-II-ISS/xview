@@ -495,17 +495,24 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     df_norm = pd.DataFrame(df_norm)
                 except:
                     df_norm = None
+
+                if df_norm is not None:
+                    _mu_ref = df_norm['mur'][~np.isnan(df_norm['mur'])]
+                    ds_muref = XASDataSet(name=f"{name} reference", md=md, energy=energy, mu=_mu_ref, filename=filepath,
+                                          datatype='experiment', ext_data=ext_data, df_norm=None)
+                else:
+                    ds_muref = None
                 # attempt to add dictionary
                 #md['mu_channel']= mu_channel
                 #print(f'Channel {mu_channel}')
                 if ds_first is None:
                     ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=energy, mu=spectrum, filename=filepath,
-                                datatype='experiment', ext_data=ext_data, df=df_norm)
+                                datatype='experiment', ext_data=ext_data, df=df_norm, ds_muref=ds_muref)
                     ds_first = ds
                 # print('make first dataset')
                 else:
                     ds = XASDataSet(name=(f'{name} {mu_channel}'), md=md, energy=energy, mu=spectrum, filename=filepath,
-                                datatype='experiment', process=False, xasdataset=ds_first, ext_data=ext_data, df=df_norm)
+                                datatype='experiment', process=False, xasdataset=ds_first, ext_data=ext_data, df=df_norm, ds_muref=ds_muref)
                 # print('copying parameters from the first dataset')
 
             # print('dataset energy id', ds.energy)
