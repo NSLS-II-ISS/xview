@@ -485,9 +485,11 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 self.current_plot_in = 'R'
 
         def save_xas_project(self):
-            options = QtWidgets.QFileDialog.DontUseNativeDialog
-            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save XAS project as', self.parent.widget_data.working_folder,
-                                                                'XAS project files (*.xas)', options=options)
+            # options = QtWidgets.QFileDialog.DontUseNativeDialog
+            # filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save XAS project as', self.parent.widget_data.working_folder,
+            #                                                     'XAS project files (*.xas)', options=options)
+
+            filename = self._create_analysis_folder()
             if filename:
                 if Path(filename).suffix != '.xas':
                     filename = filename + '.xas'
@@ -514,11 +516,13 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
             selection = self.list_project.selectedIndexes()
             if selection != []:
                 ret = self.message_box_save_datasets_as()
-                options = QtWidgets.QFileDialog.DontUseNativeDialog
-                # if not send_to_dropbox:
-                pathname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose folder...',
-                                                                  self.parent.widget_data.working_folder,
-                                                                  options=options)
+                pathname = self._create_analysis_folder()
+
+                # options = QtWidgets.QFileDialog.DontUseNativeDialog
+                # # if not send_to_dropbox:
+                # pathname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose folder...',
+                #                                                   self.parent.widget_data.working_folder,
+                #                                                   options=options)
                 # else:
                 #     pathname = f'{expanduser("~")}/tmp'
                 separator = '#______________________________________________________\n'
@@ -584,6 +588,12 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     keys_intersected.append(k)
             md_common = {k : md_list[0][k] for k in md_list[0].keys() if k in keys_intersected}
             return md_common
+
+        def _create_analysis_folder(self):
+            base_dir = Path(self.parent.widget_data.working_folder)
+            analysis_folder = base_dir.joinpath('analysis')
+            analysis_folder.mkdir(parents=False, exist_ok=True)
+            return str(analysis_folder)
 
 
         def merge_datasets(self):
@@ -729,9 +739,10 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     md.append(ds.name)
 
                 self.mu_array = mu_array
-                options = QtWidgets.QFileDialog.DontUseNativeDialog
-                filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save XAS project', self.parent.widget_data.working_folder,
-                                                                    'XAS dataset (*.dat)', options=options)
+                filename = self._create_analysis_folder()
+                # options = QtWidgets.QFileDialog.DontUseNativeDialog
+                # filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save XAS project', self.parent.widget_data.working_folder,
+                #                                                     'XAS dataset (*.dat)', options=options)
                 if filename:
                     if Path(filename).suffix != '.xas':
                         filename = filename + '.xas'
