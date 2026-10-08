@@ -3,7 +3,7 @@ import os
 import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
-import pkg_resources
+from xview.resources import resource_filename
 from PyQt5 import QtGui, QtWidgets, QtCore, uic
 from PyQt5.Qt import QSplashScreen, QObject
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, QTimer, QDateTime
@@ -30,9 +30,9 @@ from scipy.stats import zscore
 
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project-mac.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_project-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_project.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_project.ui')
 
 
 class UIXviewProject(*uic.loadUiType(ui_path)):
@@ -526,7 +526,7 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                 # else:
                 #     pathname = f'{expanduser("~")}/tmp'
                 separator = '#______________________________________________________\n'
-                if pathname is not '':
+                if pathname != '':
                     for indx, obj in enumerate(selection):
                         ds = self.parent.project._datasets[selection[indx].row()]
                         filename = ds.name
@@ -966,7 +966,4 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
 
 
 ########
-
-
-
 

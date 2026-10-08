@@ -1,7 +1,7 @@
 import os
 import matplotlib.patches as mpatches
 import numpy as np
-import pkg_resources
+from xview.resources import resource_filename
 from PyQt5 import QtGui, QtWidgets, QtCore, uic
 from PyQt5.Qt import QSplashScreen, QObject
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, QTimer, QDateTime
@@ -25,10 +25,7 @@ from xview.dialogs.MetadataDialog import MetadataDialog
 from os.path import expanduser
 
 
-if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_stats-mac.ui')
-else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_stats.ui')
+ui_path = resource_filename('xview', 'ui/ui_xview_stats.ui')
 
 
 class UIXviewStats(*uic.loadUiType(ui_path)):

@@ -2,7 +2,7 @@ import os
 import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
-import pkg_resources
+from xview.resources import resource_filename
 
 from PyQt5 import  QtWidgets, QtCore, uic
 from PyQt5.QtCore import QSettings
@@ -27,9 +27,9 @@ from tiled.client import from_uri
 from databroker.queries import TimeRange, Key
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_data-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_wip.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_wip.ui')
 
 class ExperimentTreeModel(QStandardItemModel):
     def __init__(self, parent=None):

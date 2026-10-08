@@ -2,7 +2,7 @@ import os
 import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
-import pkg_resources
+from xview.resources import resource_filename
 
 from PyQt5 import  QtWidgets, QtCore, uic
 from PyQt5.QtCore import QSettings, QThread
@@ -36,9 +36,9 @@ from xview.xfit_classes.workers import Worker_Run_Feff_Calculation as worker_fef
 from xview.xfit_classes.utils import read_lineEdit_and_perform_sanity_check, get_default_feff_parameters
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xfit.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xfit.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xfit.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xfit.ui')
 
 
 ATOMIC_SYMBOL_DICT = {'element': [atomic_symbol(i) for i in range(20, 93)]}
@@ -79,6 +79,7 @@ class UIXFIT(*uic.loadUiType(ui_path)):
         self.thread_worker_matproj = QThread()
         self.worker_matproj = worker_matproj(formula=formula)
         self.worker_matproj.moveToThread(self.thread_worker_matproj)
+        self.worker_matproj.failed.connect(self.show_worker_error)
         self.thread_worker_matproj.started.connect(self.worker_matproj.run)
         self.worker_matproj.finished.connect(self.thread_worker_matproj.quit)
         self.worker_matproj.finished.connect(self.populate_materials_structure)
@@ -86,6 +87,9 @@ class UIXFIT(*uic.loadUiType(ui_path)):
         self.worker_matproj.finished.connect(self.worker_matproj.deleteLater)
         self.thread_worker_matproj.start()
 
+
+    def show_worker_error(self, message):
+        QtWidgets.QMessageBox.warning(self, "Calculation failed", message)
 
     def get_finished_status(self):
         print('Search complete')
@@ -102,17 +106,17 @@ class UIXFIT(*uic.loadUiType(ui_path)):
             self._treeWidget = {}
             print("Loading Structure...\n")
             for key, doc in self.documents.items():
-                _name_list = [doc.material_id.string,
+                _name_list = [str(doc.material_id),
                               doc.formula_pretty,
                               f"{doc.symmetry.crystal_system}",
                               f"{doc.energy_above_hull:2.3f}",
                               f"{not doc.theoretical}"]
                 _status, _status_experimentally_observed = self.check_if_feff_files_will_be_good(doc)  # Must be removed when pymatgen update the code
-                self._treeWidget[doc.material_id.string] = self._make_item(parent=_parent, item_list=_name_list)
+                self._treeWidget[str(doc.material_id)] = self._make_item(parent=_parent, item_list=_name_list)
                 if _status:
-                    self._treeWidget[doc.material_id.string].setBackground(0, QColor('yellow'))
+                    self._treeWidget[str(doc.material_id)].setBackground(0, QColor('yellow'))
                 if _status_experimentally_observed:
-                    self._treeWidget[doc.material_id.string].setBackground(4, QColor('lime'))
+                    self._treeWidget[str(doc.material_id)].setBackground(4, QColor('lime'))
             self.structure_found = True
         else:
             print('No strucutre found')
@@ -158,7 +162,7 @@ class UIXFIT(*uic.loadUiType(ui_path)):
                 if self._treeWidget[key].checkState(0) == 2:
                     self.treeWidget_paths_dict['paths'][key] = os.path.join(STRUCTURE_FOLDER,
                                                                             self.documents[key].formula_pretty, key)
-                    default_feff_parameters = get_default_feff_parameters(title=self.documents[key].material_id.string)
+                    default_feff_parameters = get_default_feff_parameters(title=str(self.documents[key].material_id))
                     feff_dict = FEFFDictSet_modified(absorbing_atom=absorbing_atom,
                                             structure=self.documents[key].structure,
                                             spectrum="EXAFS",
@@ -177,6 +181,7 @@ class UIXFIT(*uic.loadUiType(ui_path)):
         self.thread_feff_runner = QThread()
         self.worker_feff = worker_feff(feff_path=path_dict)
         self.worker_feff.moveToThread(self.thread_feff_runner)
+        self.worker_feff.failed.connect(self.show_worker_error)
         self.thread_feff_runner.started.connect(self.worker_feff.run)
         self.worker_feff.finished.connect(self.thread_feff_runner.quit)
         # self.worker_feff.finished.connect(self.populate_materials_structure)

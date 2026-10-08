@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xview"
+dynamic = ["version", "dependencies"]
+description = "ISS data visualisation"
+readme = "README.rst"
+requires-python = ">=3.10"
+license = "BSD-3-Clause"
+authors = [{name = "Brookhaven National Laboratory", email = "istavitski@bnl.gov"}]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Repository = "https://github.com/NSLS-II-ISS/xview"
+
+[project.scripts]
+xview = "xview.xview:main"
+xview-dash = "xview.xview_dash:main"
+
+[project.optional-dependencies]
+dash = ["dash>=3,<4", "dash-bootstrap-components>=2,<3", "plotly>=6,<7", "tiled[client]>=0.1,<1"]
+legacy = ["databroker>=1.2,<2", "bluesky-widgets>=0.0.15", "bluesky-live>=0.0.8", "event-model>=1.19,<2", "suitcase-mongo-normalized>=0.7", "jsonschema>=4,<5", "qtpy>=2.4,<3"]
+test = ["pytest>=8,<10", "build>=1.2,<2"]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+include = ["xview*"]
+exclude = ["xview.tests*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+xview = ["spectra_db/*.json", "ui/*.ui", "dialogs/*.ui", "assets/*.css"]
+
+[tool.setuptools_scm]
+fallback_version = "0+unknown"
+
+[tool.pytest.ini_options]
+testpaths = ["xview/tests"]

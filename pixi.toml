@@ -1,0 +1,30 @@
+[workspace]
+name = "xview"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+# The ISS packages still use APIs removed in Python 3.12 / setuptools 81.
+python = "3.10.*"
+pip = ">=25"
+pyqt = ">=5.15,<6"
+setuptools = ">=77,<81"
+setuptools-scm = ">=8"
+python-build = ">=1.2,<2"
+
+[pypi-dependencies]
+xview = { path = ".", editable = true, extras = ["test", "dash"] }
+xas = { git = "https://github.com/NSLS-II-ISS/xas.git", rev = "f46a6b072d49f08a6ea21debc6477880a5622dd9" }
+isstools = { git = "https://github.com/NSLS-II-ISS/isstools.git", rev = "547ca388d28b70ba270bcfc319266ec83dcb9e41" }
+issfactortools = { git = "https://github.com/NSLS-II-ISS/issfactortools.git", rev = "0f0f8e5fd3a3c46b801842c979d4505eb4b63516" }
+# Imported by the ISS packages but absent from their dependency metadata.
+pymcr = ">=0.5,<1"
+opencv-python-headless = ">=4.10,<5"
+
+[tasks]
+start = "python -m xview.xview"
+dash = "python -m xview.xview_dash"
+test = { cmd = "python -m pytest", env = { QT_QPA_PLATFORM = "offscreen", MPLBACKEND = "Agg" } }
+build = "python -m build --no-isolation"
+check = { cmd = "python -m pip check", env = { PIP_DISABLE_PIP_VERSION_CHECK = "1" } }
+smoke = "python scripts/smoke_gui.py"

@@ -21,6 +21,8 @@ parts/
 sdist/
 var/
 venv/
+.venv/
+.pixi/
 *.egg-info/
 .installed.cfg
 *.egg

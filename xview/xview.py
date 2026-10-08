@@ -1,12 +1,10 @@
 import sys
-import pkg_resources
+from xview.resources import resource_filename
 from PyQt5 import  QtWidgets, uic
 # from xview.xasproject.xasproject import XASProject
 from xas.xasproject import XASProject
-from isscloudtools.cloud_dispatcher import CloudDispatcher
-from isscloudtools.initialize import get_dropbox_service
 from issfactortools.widgets import widget_main as widget_mcr
-from xview.widgets import widget_xview_data, widget_xview_project, widget_xview_databroker, \
+from xview.widgets import widget_xview_data, widget_xview_project, \
     widget_xview_rixs , widget_xview_stats, widget_xview_xfit
 
 ENVIRONMENT = 'Old'
@@ -16,10 +14,10 @@ else:
     widget_xview_wip = None
 
 if sys.platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview-mac.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview-mac.ui')
     print('mac')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview.ui')
 
 class XviewGui(*uic.loadUiType(ui_path)):
     def __init__(self,
@@ -37,12 +35,14 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.project = XASProject()
 
         try:
+            from isscloudtools.initialize import get_dropbox_service
             self.dropbox_service = get_dropbox_service()
-        except:
+        except Exception:
             print("Cloud services cannot be connected")
             self.dropbox_service = None
 
         try:
+            from isscloudtools.cloud_dispatcher import CloudDispatcher
             self.cloud_dispatcher = CloudDispatcher(dropbox_service=self.dropbox_service)
         except Exception as e:
             print(f'Could not initialize cloud dispatcher:\n{e}')
@@ -51,11 +51,9 @@ class XviewGui(*uic.loadUiType(ui_path)):
         self.widget_data = widget_xview_data.UIXviewData(db=db, parent=self)
         self.layout_data.addWidget(self.widget_data)
 
-        try:
+        if widget_xview_wip is not None:
             self.widget_wip = widget_xview_wip.UIXviewWIP(db=db, parent=self)
             self.layout_wip.addWidget(self.widget_wip)
-        except:
-            print('it did not work')
 
 
 
@@ -108,9 +106,13 @@ class XviewGui(*uic.loadUiType(ui_path)):
         canvas.draw_idle()
 
 
-if __name__ == '__main__':
+def main():
     app = QtWidgets.QApplication(sys.argv)
     main = XviewGui()
     main.show()
 
-    sys.exit(app.exec_())
+    return app.exec_()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -2,7 +2,7 @@ import os
 import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
-import pkg_resources
+from xview.resources import resource_filename
 
 from PyQt5 import  QtWidgets, QtCore, uic
 from PyQt5.QtCore import QSettings
@@ -22,17 +22,20 @@ from xas.file_io import load_binned_df_from_file, load_binned_df_and_extended_da
 import copy
 from xview.dialogs.FileMetadataDialog import FileMetadataDialog
 from larch.io import read_ascii
+from xview.file_cache import BinnedFileCache
+from xview.plotting import plot_scan
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_data-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data_new.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_data_new.ui')
 
 
 class UIXviewData(*uic.loadUiType(ui_path)):
     def __init__(self, db=None, parent=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
+        self._preview_cache = BinnedFileCache(load_binned_df_from_file)
 
         self.db = db
         self.parent = parent
@@ -172,7 +175,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         selected_items = (self.list_data.selectedItems())
         for i in selected_items:
             path = f'{self.working_folder}/{i.text()}'
-            _, header = load_binned_df_from_file(path)
+            _, header = self._preview_cache.load(path)
             self.file_md_widget = FileMetadataDialog(path, header, parent=self)
             self.file_md_widget.show()
 
@@ -209,6 +212,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
         self.get_file_list()
 
     def get_file_list(self):
+        self._preview_cache.clear()
         if self.working_folder:
             self.list_data.clear()
 
@@ -223,7 +227,10 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             self.list_data.addItems(self.file_list)
 
     def select_files_to_plot(self):
-        df, header = load_binned_df_from_file(f'{self.working_folder}/{self.list_data.currentItem().text()}')
+        item = self.list_data.currentItem()
+        if item is None:
+            return
+        df, header = self._preview_cache.load(Path(self.working_folder) / item.text())
         keys = df.keys()
         refined_keys = []
         for key in keys:
@@ -261,67 +268,32 @@ class UIXviewData(*uic.loadUiType(ui_path)):
 
 
     def plot_xas_data(self):
-        selected_items = (self.list_data.selectedItems())
-        update_figure([self.figure_data.ax], self.toolbar, self.canvas)
-        if not(self.listWidget_data_denominator.selectedItems() and self.listWidget_data_numerator.selectedItems()):
-            message_box('Warning','Please select numerator and denominator')
+        selected_items = self.list_data.selectedItems()
+        numerators = [item.text() for item in self.listWidget_data_numerator.selectedItems()]
+        denominators = self.listWidget_data_denominator.selectedItems()
+        if not (numerators and denominators):
+            message_box('Warning', 'Please select numerator and denominator')
+            return
+        if not selected_items:
             return
 
+        update_figure([self.figure_data.ax], self.toolbar, self.canvas)
+        labels = []
+        for item in selected_items:
+            path = Path(self.working_folder) / item.text()
+            frame, _ = self._preview_cache.load(path)
+            labels = plot_scan(
+                self.figure_data.ax, frame, item.text(), self.get_energy_key(frame),
+                numerators, denominators[0].text(),
+                ratio=self.checkBox_ratio.isChecked(),
+                logarithm=self.checkBox_log_bin.isChecked(),
+                invert=self.checkBox_inv_bin.isChecked(),
+            )
 
-            # energy_key = key
-
-
-        handles = []
-
-        for i in selected_items:
-            path = f'{self.working_folder}/{i.text()}'
-            print(path)
-            df, header = load_binned_df_from_file(path)
-
-            energy_key = self.get_energy_key(df)
-
-            denominator_name = self.listWidget_data_denominator.selectedItems()[0].text()
-            numerators_names = [b.text() for b in self.listWidget_data_numerator.selectedItems()]
-
-            numerators =[]
-            for numerator_name in numerators_names:
-                numerators.append(np.array(df[numerator_name]))
-
-            denominator = np.array(df[denominator_name])
-            spectra = []
-            y_label = ''
-            for numerator, numerator_name in zip(numerators, numerators_names):
-                if self.checkBox_ratio.checkState():
-                    mu_channel = f'{numerator_name}/{denominator_name}'
-
-                    spectra.append(numerator/denominator)
-                else:
-                    mu_channel = f'{numerator_name}'
-                    spectra.append(numerator)
-                y_label += mu_channel
-            for spectrum in spectra:
-                if self.checkBox_log_bin.checkState():
-                    spectrum = np.log(spectrum)
-                    y_label = f'ln ({y_label})'
-                if self.checkBox_inv_bin.checkState():
-                    spectrum = -spectrum
-                    y_label = f'- {y_label}'
-                fname = i.text()
-                try:
-                    energy = df[energy_key]
-                except:
-                    energy = np.arange(spectrum.size)
-                self.figure_data.ax.plot(energy, spectrum, label='.'.join(fname.split('.')[:-1]) + ' ' + mu_channel)
-
-            self.parent.set_figure(self.figure_data.ax,self.canvas,label_x='Energy (eV)', label_y=y_label)
-
-            self.figure_data.ax.set_xlabel('Energy (eV)')
-            self.figure_data.ax.set_ylabel(y_label)
-            # last_trace = self.figure_data.ax.get_lines()[len(self.figure_data.ax.get_lines()) - 1]
-            # patch = mpatches.Patch(color=last_trace.get_color(), label=i.text())
-            # handles.append(patch)
-
-        self.figure_data.ax.legend()
+        # Format the axes once, after all scans and channels have been added.
+        self.parent.set_figure(
+            self.figure_data.ax, self.canvas, label_x='Energy (eV)', label_y=', '.join(labels)
+        )
         self.figure_data.tight_layout()
         self.canvas.draw_idle()
 
@@ -544,7 +516,6 @@ class UIXviewData(*uic.loadUiType(ui_path)):
             print('not found')
         if index:
             self.list_data.setCurrentRow(index)
-
 
 
 

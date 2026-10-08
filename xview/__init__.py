@@ -1,4 +1,7 @@
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("xview")
+except PackageNotFoundError:
+    __version__ = "0+unknown"

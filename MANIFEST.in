@@ -9,8 +9,10 @@ recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat
 
-include versioneer.py
-include xview/_version.py
+include pyproject.toml
+include pixi.toml
+include pixi.lock
+recursive-include scripts *.py
 
 # If including data files in the package, add them like:
 # include path/to/data_file
@@ -18,3 +20,5 @@ include xview/_version.py
 include xview/ui/*.ui
 include xview/spectra_db/*.json
 include xview/dialogs/*.ui
+include xview/assets/*.css
+recursive-include xview/tests *.py

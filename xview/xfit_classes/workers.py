@@ -1,42 +1,63 @@
-from pymatgen.ext.matproj import MPRester
-from PyQt5.QtCore import QObject, pyqtSignal
-from larch.xafs import feffrunner
+"""Background workers for Materials Project searches and FEFF runs."""
 
-API_KEY = 'MqQSJqQj6Z923DT9I9eZCgvbEM9rbCxT' #iss user AIP gmail
+import os
+
+from PyQt5.QtCore import QObject, pyqtSignal
+
 
 class Worker_Retrive_MatProj_Data(QObject):
     finished = pyqtSignal()
+    failed = pyqtSignal(str)
     progress = pyqtSignal(int)
 
-    def __init__(self, formula='FeO'):
-        super(QObject, self).__init__()
-        self.formula = formula.split(',')
+    def __init__(self, formula='FeO', api_key=None):
+        super().__init__()
+        self.formula_list = list(dict.fromkeys(
+            value.strip() for value in formula.split(',') if value.strip()
+        ))
+        self.api_key = api_key
         self.worker_document = {}
 
-        self.formula_list = [f.strip() for f in self.formula]
-
-
     def run(self):
-        for _formula in self.formula_list:
-            with MPRester(API_KEY) as mpr:
-                _documents = mpr.summary.search(formula=_formula)
+        self.worker_document = {}
+        try:
+            api_key = self.api_key or os.environ.get('MP_API_KEY') or os.environ.get('PMG_MAPI_KEY')
+            if not api_key:
+                raise ValueError('Set MP_API_KEY to your Materials Project API key before searching.')
+            if not self.formula_list:
+                return
+            from mp_api.client import MPRester
 
-            for _d in _documents:
-                _material_id = _d.material_id.string
-                self.worker_document[_material_id] = _d
+            documents = {}
+            with MPRester(api_key) as mpr:
+                for index, formula in enumerate(self.formula_list, start=1):
+                    for document in mpr.materials.summary.search(formula=formula):
+                        documents[str(document.material_id)] = document
+                    self.progress.emit(index * 100 // len(self.formula_list))
+            self.worker_document = documents
+        except Exception as exc:
+            self.failed.emit(str(exc))
+        finally:
+            self.finished.emit()
 
-        self.finished.emit()
 
 class Worker_Run_Feff_Calculation(QObject):
     finished = pyqtSignal()
+    failed = pyqtSignal(str)
     progress = pyqtSignal(int)
 
     def __init__(self, feff_path):
-        super(QObject, self).__init__()
+        super().__init__()
         self.feff_path = feff_path
 
-
     def run(self):
-        for key in self.feff_path:
-            feffrunner(folder=self.feff_path[key], feffinp='feff.inp').run()
-        self.finished.emit()
+        try:
+            from larch.xafs import feffrunner
+
+            for index, folder in enumerate(self.feff_path.values(), start=1):
+                feffrunner(folder=folder, feffinp='feff.inp').run()
+                self.progress.emit(index * 100 // len(self.feff_path))
+        except Exception as exc:
+            self.failed.emit(str(exc))
+        finally:
+            self.finished.emit()

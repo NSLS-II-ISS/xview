@@ -1,7 +1,7 @@
 import os
 import matplotlib.patches as mpatches
 import numpy as np
-import pkg_resources
+from xview.resources import resource_filename
 import copy
 from PyQt5 import  QtWidgets, QtCore, uic
 from PyQt5.QtCore import QSettings
@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from sys import platform
 from pathlib import Path
-from matplotlib import cm
+from matplotlib import colormaps
 import json
 
 from matplotlib.figure import Figure
@@ -27,9 +27,9 @@ from xas.vonhamos import ProcessingThread, ProcessingWorker, ProcessingTask
 from queue import Queue
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_data-mac.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_data-mac.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_rixs.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_rixs.ui')
 
 pg.setConfigOption('leftButtonPan', False)
 
@@ -147,7 +147,7 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         # self.rixs_view = self.rixs_plot_area.addViewBox(lockAspect=False, invertY=True)
         # self.rixs_view.setBackgroundColor('w')
 
-        cmap = cm.get_cmap('jet')
+        cmap = colormaps['jet']
         lut = (cmap(np.linspace(0, 1, 256))[:, :3] *255).astype(np.ubyte)
         self.rixs_image_item = pg.ImageItem(lut=lut)
         self.rixs_plot_item.addItem(self.rixs_image_item)
@@ -730,7 +730,6 @@ class UIXviewRIXS(*uic.loadUiType(ui_path)):
         data['calibration'] = self.calibration_dictionary
         task = ProcessingTask(files=files, data=data, create_xes_data=True)
         self.processor.add_task(task)
-
 
 
 

@@ -16,8 +16,8 @@ from xas import tiled_io
 from xas.tiled_io import filter_node_by_metadata_key, filter_node_for_proposal, sort_nodes_by_metadata_key
 from xas.analysis import check_scan
 
-from dash_elements import app_components
-from dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_group_card, time_profile
+from xview.dash_elements import app_components
+from xview.dash_elements.app_components import build_proposal_accordion, build_filter_input, build_user_group_card, time_profile
 
 import uuid
 
@@ -650,8 +650,13 @@ def show_selected_group_card(
 #     return [dbc.Card(active_card_data)]
 
 
-if __name__ == "__main__":
+def main():
+    global ISS_SANDBOX, APP_DATA
     ISS_SANDBOX = tiled_io.get_iss_sandbox()
     APP_DATA = tiled_io.DataManager(ISS_SANDBOX)
-    app.run_server(debug=True)
+    app.run(debug=True)
     
+
+
+if __name__ == '__main__':
+    main()

@@ -1,7 +1,7 @@
 import os
 import matplotlib.patches as mpatches
 import numpy as np
-import pkg_resources
+from xview.resources import resource_filename
 
 from PyQt5 import  QtWidgets, QtCore, uic
 from PyQt5.QtCore import QSettings, QThread
@@ -39,9 +39,9 @@ from isstools.dialogs.BasicDialogs import message_box
 
 
 if platform == 'darwin':
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_databroker.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_databroker.ui')
 else:
-    ui_path = pkg_resources.resource_filename('xview', 'ui/ui_xview_databroker.ui')
+    ui_path = resource_filename('xview', 'ui/ui_xview_databroker.ui')
 
 
 class UIXviewDatabroker(*uic.loadUiType(ui_path)):

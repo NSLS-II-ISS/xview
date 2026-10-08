@@ -6,8 +6,8 @@ from event_model import compose_run
 from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
 from suitcase.mongo_normalized import Serializer
 import time as ttime
-import pkg_resources
-spectrum_start_path = pkg_resources.resource_filename('xview', 'spectra_db/spectrum_start.json')
+from xview.resources import resource_filename
+spectrum_start_path = resource_filename('xview', 'spectra_db/spectrum_start.json')
 import json
 import jsonschema
 import os
