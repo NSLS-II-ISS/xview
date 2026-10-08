@@ -22,6 +22,7 @@ from xas.file_io import load_binned_df_from_file, load_binned_df_and_extended_da
 import copy
 from xview.dialogs.FileMetadataDialog import FileMetadataDialog
 from larch.io import read_ascii
+from xview._metadata import scan_metadata
 from xview.file_cache import BinnedFileCache
 from xview.plotting import plot_scan
 
@@ -410,11 +411,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                         md = self.db[uid]['start']
                     else:
                         larch_group = read_ascii(filepath)
-                        md = dict(larch_group.attrs)
-                        if "ISS (8-ID)" in md.values():
-                            md['e0'] = larch_group.attrs.scan_edge_energy_ev
-                        elif "QAS" in md.values():
-                            md['e0'] = larch_group.attrs.e0
+                        md = scan_metadata(larch_group.attrs)
             except KeyError:
                 try:
                     uid = header[header.find('UID:') + 5:header.find('\n', header.find('UID:'))]
@@ -422,11 +419,7 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                         md = self.db[uid]['start']
                     else:
                         larch_group = read_ascii(filepath)
-                        md = dict(larch_group.attrs)
-                        if "ISS (8-ID)" in md.values():
-                            md['e0'] = larch_group.attrs.scan_edge_energy_ev
-                        elif "QAS" in md.values():
-                            md['e0'] = larch_group.attrs.e0
+                        md = scan_metadata(larch_group.attrs)
                 except:
                     md = {}
                     pass
@@ -475,15 +468,18 @@ class UIXviewData(*uic.loadUiType(ui_path)):
                     spectrum = np.log(spectrum)
                 if self.checkBox_inv_bin.checkState():
                     spectrum = -spectrum
-                try:
-                    df_norm = {}
-                    df_norm['energy'] = energy
-                    df_norm['mut'] = -np.log(df['it'].values / df['i0'].values)
-                    df_norm['muf'] = df['iff'].values / df['i0'].values
-                    df_norm['mur'] = -np.log(df['ir'].values / df['it'].values)
-                    df_norm = pd.DataFrame(df_norm)
-                except:
-                    df_norm = None
+                # Keep each available channel independently: a transmission-only
+                # scan can still carry the simultaneous reference foil.
+                df_norm = {'energy': np.asarray(energy)}
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    for key, num, den, logarithm in (
+                            ('mut', 'it', 'i0', True),
+                            ('muf', 'iff', 'i0', False),
+                            ('mur', 'ir', 'it', True)):
+                        if num in df and den in df:
+                            ratio = df[num].to_numpy() / df[den].to_numpy()
+                            df_norm[key] = -np.log(ratio) if logarithm else ratio
+                df_norm = pd.DataFrame(df_norm)
                 # attempt to add dictionary
                 #md['mu_channel']= mu_channel
                 #print(f'Channel {mu_channel}')

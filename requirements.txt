@@ -1,12 +1,15 @@
 # Desktop runtime. ISS packages are installed separately; see README.rst.
 numpy>=1.26,<3
-pandas>=2.2,<3
+pandas>=2.2,<4
 scipy>=1.12,<2
 matplotlib>=3.8,<4
-PyQt5>=5.15.10,<6
+PyQt5>=5.15.11,<6
 pyqtgraph>=0.13.7,<0.15
 xraylarch>=0.9.81
 xraydb>=4.5,<5
 pymatgen>=2024.5
 mp-api>=0.41,<1
 tabulate>=0.9,<1
+xas
+isstools
+issfactortools[gui]

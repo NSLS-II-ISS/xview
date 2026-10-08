@@ -469,15 +469,16 @@ class UIXviewProject(*uic.loadUiType(ui_path)):
                     # ds.extract_ft_force(window=window)
                     self._normalize_ds_in_full(ds, window=window)
                     if self.checkBox_show_chir_mag.checkState():
-                        self.figure_project.ax.plot(ds.r, ds.chir_mag, label=ds.name)
+                        self.figure_project.ax.plot(ds.r, ds.chir_mag * ds.r**window['r_weight'], label=ds.name)
                     if self.checkBox_show_chir_im.checkState():
-                        self.figure_project.ax.plot(ds.r, ds.chir_im, label=(ds.name + ' Im'))
+                        self.figure_project.ax.plot(ds.r, ds.chir_im * ds.r**window['r_weight'], label=(ds.name + ' Im'))
                     if self.checkBox_show_chir_re.checkState():
-                        self.figure_project.ax.plot(ds.r, ds.chir_re, label=(ds.name + ' Re'))
+                        self.figure_project.ax.plot(ds.r, ds.chir_re * ds.r**window['r_weight'], label=(ds.name + ' Re'))
                     # if self.checkBox_show_chir_pha.checked:
                     #    self.figure_project.ax.plot(ds.r, ds.chir_pha, label=(ds.name + ' Ph'))
 
-                self.parent.set_figure(self.figure_project.ax, self.canvas_project, label_y=r'$\chi  \mu$' + '(k)',
+                self.parent.set_figure(self.figure_project.ax, self.canvas_project,
+                                label_y=f"R^{window['r_weight']} chi(R)",
                                 label_x='R (' + r'$\AA$' + ')')
                 if self.checkBox_force_range_R.checkState():
                     self.figure_project.ax.set_xlim(float(self.lineEdit_range_R_lo.text()),

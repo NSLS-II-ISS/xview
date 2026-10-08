@@ -105,6 +105,15 @@ class XviewGui(*uic.loadUiType(ui_path)):
         axis.set_xlabel(label_x, size='13')
         canvas.draw_idle()
 
+    def closeEvent(self, event):
+        """Stop the RIXS worker before Qt destroys its thread and widgets."""
+        self.widget_rixs.processor.stop()
+        self.widget_rixs.thread.quit()
+        if not self.widget_rixs.thread.wait(5000):
+            event.ignore()
+            return
+        super().closeEvent(event)
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
